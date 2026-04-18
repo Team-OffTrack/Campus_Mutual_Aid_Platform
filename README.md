@@ -41,3 +41,16 @@
 /tests          # 测试代码目录
 .gitignore      # Git 忽略配置文件
 README.md       # 项目主说明文档
+
+```
+
+## ❤️ 鸣谢
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/snnbyyds"><img src="https://github.com/snnbyyds.png" width="50" /><br /><sub><b>snnbyyds</b></sub></a></td>
+    <td align="center"><a href="https://github.com/nanchenwuyue"><img src="https://q1.qlogo.cn/g?b=qq&nk=157619362&s=100" width="50" /><br /><sub><b>nanchenwuyue</b></sub></a></td>
+    <td align="center"><a href="https://github.com/HarrisonHuH"><img src="https://q1.qlogo.cn/g?b=qq&nk=1436179815&s=100" width="50" /><br /><sub><b>HarrisonHuH</b></sub></a></td>
+    <td align="center"><a href="https://github.com/lbb-and-a-little-rabbit"><img src="https://github.com/lbb-and-a-little-rabbit.png" width="50" /><br /><sub><b>dtor</b></sub></a></td>
+  </tr>
+</table>
