@@ -1,3 +1,56 @@
-# SEC-II-2026 大作业交付物仓库
-## 各阶段交付物提交时间
-1. P0, P1最晚于2026年4月22日晚上23:59分提交
+# 智慧校园互助平台 (Smart Campus Mutual Aid Platform)
+
+本项目是一个面向大学生的校园互助服务平台，旨在通过技术手段解决校园生活中的各类需求（如快递代取、学习辅导、二手交易、组队匹配等），促进学生间的合作与互助。
+
+---
+
+## 👥 团队成员与分工
+
+| 角色 | 成员 | 核心职责与目标 |
+| :--- | :--- | :--- |
+| **需求负责人** | 侯乔岳 | 执行用户调研，编写需求规格说明书，进行用例建模与用户故事编写。 |
+| **架构负责人** | 杨佳兴 | 负责技术选型与架构设计，撰写架构决策记录（ADR），指导技术实现。 |
+| **开发负责人** | 胡皓轩 | 制定编码规范，进行代码审查，分配开发任务并解决技术难题。 |
+| **测试负责人** | 沈诺 | 设计测试计划与用例，执行测试并跟踪缺陷修复，保障产品质量。 |
+
+---
+
+## 🛠 技术栈
+
+* **前端**: 
+* **后端**: Node.js
+* **版本控制**: Git (采用 main + dev + feature 分支策略)
+* **CI/CD**: GitHub Actions
+
+### AI 工具链
+* **AI 编程助手**: GitHub Copilot (集成于 VS Code，负责代码补全与提示)
+* **AI 对话工具**: Gemini (用于文档生成、需求分析及自然语言处理)
+* **AI 代码审查**: CodeRabbit (集成于 Git 仓库，自动检测潜在问题)
+
+---
+
+## 📁 项目结构
+
+```text
+/docs           # 项目文档目录 (版本控制与可追溯)
+  /P0           # 基础规范文档 (如：团队章程.md、AI协作契约.md)
+  /P1           # 业务需求相关文档
+/src            # 源代码目录
+  /client       # 前端代码 (React 架构)
+  /server       # 后端代码 (Node.js 架构)
+/tests          # 测试代码目录
+.gitignore      # Git 忽略配置文件
+README.md       # 项目主说明文档
+
+```
+
+## ❤️ 鸣谢
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/snnbyyds"><img src="https://github.com/snnbyyds.png" width="50" /><br /><sub><b>snnbyyds</b></sub></a></td>
+    <td align="center"><a href="https://github.com/nanchenwuyue"><img src="https://q1.qlogo.cn/g?b=qq&nk=157619362&s=100" width="50" /><br /><sub><b>nanchenwuyue</b></sub></a></td>
+    <td align="center"><a href="https://github.com/HarrisonHuH"><img src="https://q1.qlogo.cn/g?b=qq&nk=1436179815&s=100" width="50" /><br /><sub><b>HarrisonHuH</b></sub></a></td>
+    <td align="center"><a href="https://github.com/lbb-and-a-little-rabbit"><img src="https://github.com/lbb-and-a-little-rabbit.png" width="50" /><br /><sub><b>dtor</b></sub></a></td>
+  </tr>
+</table>
