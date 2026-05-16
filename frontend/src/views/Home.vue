@@ -1,40 +1,89 @@
 <template>
-  <div class="page-container">
-    <van-nav-bar title="校园互助" fixed placeholder>
+  <div class="page home-page">
+    <!-- Top nav bar -->
+    <van-nav-bar title="" fixed placeholder class="home-nav">
       <template #right>
-        <van-icon name="manager" size="22" @click="router.push('/profile')" />
+        <div class="nav-avatar" @click="router.push('/profile')" role="button" aria-label="个人资料">
+          {{ nameInitial }}
+        </div>
       </template>
     </van-nav-bar>
 
-    <div class="welcome-card">
-      <van-icon name="smile-comment" size="48" color="#1989fa" />
-      <h3>欢迎回来，{{ authStore.name }}</h3>
-      <p class="subtitle">校园互助平台，让校园生活更便捷</p>
+    <!-- Hero banner -->
+    <div class="hero-banner">
+      <div class="hero-content">
+        <p class="hero-greeting">{{ greeting }}</p>
+        <h2 class="hero-name">{{ authStore.name || '同学' }}</h2>
+        <p class="hero-tip">有什么需要帮忙的吗？</p>
+      </div>
+      <div class="hero-deco" aria-hidden="true">
+        <div class="deco-ring deco-ring-1"></div>
+        <div class="deco-ring deco-ring-2"></div>
+      </div>
     </div>
 
-    <van-grid :column-num="3" :border="false">
-      <van-grid-item icon="logistics" text="跑腿代取" />
-      <van-grid-item icon="shop" text="二手交易" />
-      <van-grid-item icon="friends" text="组队匹配" />
-      <van-grid-item icon="search" text="失物招领" />
-      <van-grid-item icon="chat" text="在线交流" />
-      <van-grid-item icon="gold-coin" text="积分中心" />
-    </van-grid>
+    <div class="content-wrap">
+      <!-- Stats bar -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <span class="stat-val">0</span>
+          <span class="stat-label">可用积分</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-chip">
+          <span class="stat-val">5.0</span>
+          <span class="stat-label">信誉评分</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-chip">
+          <span class="stat-val">0</span>
+          <span class="stat-label">互助次数</span>
+        </div>
+      </div>
 
-    <!-- Admin entry -->
-    <div v-if="authStore.isAdmin" class="admin-entry">
-      <van-button type="warning" block @click="router.push('/admin/users')">
-        管理后台
-      </van-button>
-    </div>
+      <!-- Feature section -->
+      <div class="section">
+        <h3 class="section-title">功能入口</h3>
+        <div class="feature-grid">
+          <div v-for="feat in features" :key="feat.name"
+               class="feat-card"
+               :style="{ '--fc-bg': feat.bg, '--fc-ic': feat.ic }"
+               role="button" :aria-label="feat.name">
+            <div class="feat-icon-wrap">
+              <van-icon :name="feat.icon" class="feat-icon" />
+            </div>
+            <span class="feat-name">{{ feat.name }}</span>
+            <span class="feat-desc">{{ feat.desc }}</span>
+          </div>
+        </div>
+      </div>
 
-    <div class="logout-btn">
-      <van-button type="default" block @click="handleLogout">退出登录</van-button>
+      <!-- Admin entry -->
+      <div v-if="authStore.isAdmin" class="section">
+        <div class="admin-card" @click="router.push('/admin/users')" role="button">
+          <div class="admin-card-left">
+            <div class="admin-icon-wrap"><van-icon name="setting-o" /></div>
+            <div>
+              <p class="admin-title">管理后台</p>
+              <p class="admin-sub">用户管理 · 数据监控</p>
+            </div>
+          </div>
+          <van-icon name="arrow" class="admin-arrow" />
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="logout-section">
+        <van-button type="default" block round class="logout-btn" @click="handleLogout">
+          退出登录
+        </van-button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useAuthStore } from '@/stores/auth'
@@ -42,9 +91,180 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const nameInitial = computed(() => (authStore.name || '?').charAt(0).toUpperCase())
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  if (h < 6)  return '夜深了'
+  if (h < 12) return '早上好 ☀️'
+  if (h < 14) return '中午好 🌤'
+  if (h < 18) return '下午好 🌈'
+  return '晚上好 🌙'
+})
+
+const features = [
+  { name: '跑腿代取', desc: '帮我取快递', icon: 'logistics',    bg: 'var(--feat-1-bg)', ic: 'var(--feat-1-ic)' },
+  { name: '二手交易', desc: '闲置好物', icon: 'shop',        bg: 'var(--feat-2-bg)', ic: 'var(--feat-2-ic)' },
+  { name: '组队匹配', desc: '一起学习', icon: 'friends',      bg: 'var(--feat-3-bg)', ic: 'var(--feat-3-ic)' },
+  { name: '失物招领', desc: '找回遗失物', icon: 'search',      bg: 'var(--feat-4-bg)', ic: 'var(--feat-4-ic)' },
+  { name: '在线交流', desc: '聊聊吧', icon: 'chat-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)' },
+  { name: '积分中心', desc: '查看余额', icon: 'gold-coin-o', bg: 'var(--feat-6-bg)', ic: 'var(--feat-6-ic)' },
+]
+
 function handleLogout() {
   authStore.logout()
   showToast('已退出')
   router.push('/login')
 }
 </script>
+
+<style scoped>
+.home-page { background: var(--c-bg); }
+
+/* ── Nav ── */
+.home-nav :deep(.van-nav-bar),
+.home-nav :deep(.van-nav-bar__content) { background: var(--g-hero) !important; }
+
+.nav-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.28);
+  border: 2px solid rgba(255,255,255,0.55);
+  color: #fff; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background var(--ease);
+}
+.nav-avatar:hover { background: rgba(255,255,255,0.42); }
+
+/* ── Hero ── */
+.hero-banner {
+  position: relative;
+  background: var(--g-hero);
+  padding: 20px 24px 52px;
+  overflow: hidden;
+}
+
+.hero-content { position: relative; z-index: 2; color: #fff; }
+
+.hero-greeting { font-size: 13px; color: rgba(255,255,255,0.75); margin-bottom: 4px; }
+.hero-name { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.hero-tip { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+.hero-deco { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.deco-ring { position: absolute; border: 2px solid rgba(255,255,255,0.10); border-radius: 50%; }
+.deco-ring-1 { width: 220px; height: 220px; top: -80px; right: -60px; }
+.deco-ring-2 { width: 140px; height: 140px; top: -20px; right: 30px; }
+
+/* ── Stats ── */
+.stats-row {
+  display: flex; align-items: center;
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  margin: -28px 0 0;
+  padding: 16px 0;
+  position: relative; z-index: 10;
+  box-shadow: var(--s-md);
+}
+.stat-chip { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.stat-val { font-size: 18px; font-weight: 700; color: var(--c-primary); }
+.stat-label { font-size: 11px; color: var(--c-text-3); }
+.stat-divider { width: 1px; height: 28px; background: var(--c-border); }
+
+/* ── Sections ── */
+.section { padding-top: 28px; }
+.section-title { font-size: 15px; font-weight: 700; color: var(--c-text-1); margin-bottom: 14px; }
+
+/* ── Feature grid ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.feat-card {
+  background: var(--fc-bg);
+  border-radius: var(--r-md);
+  padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+  cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+.feat-card:active { transform: scale(0.97); box-shadow: var(--s-sm); }
+
+.feat-icon-wrap {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--fc-ic);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 6px;
+}
+.feat-icon { font-size: 22px; color: #fff !important; }
+.feat-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }
+.feat-desc { font-size: 12px; color: var(--c-text-3); }
+
+/* ── Admin card ── */
+.admin-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #FFF8EC;
+  border: 1.5px solid #FFE5A3;
+  border-radius: var(--r-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: background var(--ease);
+}
+.admin-card:active { background: #FFF0CC; }
+.admin-card-left { display: flex; align-items: center; gap: 14px; }
+.admin-icon-wrap {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: #EAB308;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #fff;
+}
+.admin-title { font-size: 15px; font-weight: 600; color: var(--c-text-1); margin-bottom: 2px; }
+.admin-sub { font-size: 12px; color: var(--c-text-3); }
+.admin-arrow { color: var(--c-text-3); font-size: 16px; }
+
+/* ── Logout ── */
+.logout-section { padding-top: 28px; }
+.logout-btn {
+  color: var(--c-text-2) !important; border-color: var(--c-border) !important;
+  background: var(--c-surface) !important; box-shadow: none !important;
+  height: 48px !important; font-size: 14px !important;
+}
+
+/* ════════════════════════════════════════
+   Tablet (≥ 768px) — 3-col grid, wider stats
+   ════════════════════════════════════════ */
+@media (min-width: 768px) {
+  .hero-banner {
+    padding: 32px var(--content-pad, 32px) 60px;
+  }
+  .hero-name { font-size: 28px; }
+
+  .feature-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  .stats-row { margin: -28px 0 0; padding: 20px 0; }
+  .stat-val { font-size: 22px; }
+
+  .logout-section { max-width: 400px; margin: 0 auto; }
+}
+
+/* ════════════════════════════════════════
+   Desktop (≥ 1024px) — 4-col grid, hover effects
+   ════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .hero-banner {
+    padding: 40px 48px 80px;
+  }
+  .hero-name { font-size: 32px; }
+  .deco-ring-1 { width: 360px; height: 360px; top: -140px; right: -100px; }
+  .deco-ring-2 { width: 220px; height: 220px; top: -30px; right: 80px; }
+
+  .feature-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .feat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--s-md);
+  }
+
+  .admin-card:hover { background: #FFF0CC; }
+}
+</style>

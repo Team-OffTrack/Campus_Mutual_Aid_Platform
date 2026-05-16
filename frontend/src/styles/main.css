@@ -1,78 +1,117 @@
-/* Global styles for campus-help frontend */
+/* ============================================================
+   Design System — Campus Help Frontend
+   Tokens → Vant overrides → Responsive layout breakpoints
+   ============================================================ */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  /* Brand palette */
+  --c-primary:       #5C6BF8;
+  --c-primary-deep:  #3E4EC5;
+  --c-primary-soft:  #ECEFFE;
+  --c-accent:        #06B6D4;
+  --c-success:       #22C55E;
+  --c-warning:       #EAB308;
+  --c-danger:        #EF4444;
+
+  /* Text */
+  --c-text-1: #1B1D3A;
+  --c-text-2: #50527A;
+  --c-text-3: #94A3C8;
+
+  /* Surfaces */
+  --c-bg:      #F4F6FF;
+  --c-surface: #FFFFFF;
+  --c-border:  #E4E7F7;
+
+  /* Gradients */
+  --g-hero:    linear-gradient(145deg, #5C6BF8 0%, #9B52F8 100%);
+  --g-btn:     linear-gradient(135deg, #5C6BF8 0%, #7C48EF 100%);
+
+  /* Feature tile colors (bg hex) */
+  --feat-1-bg: #FFF4ED; --feat-1-ic: #FF7849;
+  --feat-2-bg: #EDFAF3; --feat-2-ic: #22C55E;
+  --feat-3-bg: #EDF4FF; --feat-3-ic: #3B82F6;
+  --feat-4-bg: #F5EDFF; --feat-4-ic: #A855F7;
+  --feat-5-bg: #FFF0F7; --feat-5-ic: #EC4899;
+  --feat-6-bg: #FFFBEB; --feat-6-ic: #EAB308;
+
+  /* Radii */
+  --r-sm:  8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+
+  /* Shadows */
+  --s-xs: 0 1px 4px  rgba(91, 106, 248, 0.08);
+  --s-sm: 0 2px 12px rgba(91, 106, 248, 0.10);
+  --s-md: 0 6px 28px rgba(91, 106, 248, 0.14);
+  --s-lg: 0 12px 48px rgba(91, 106, 248, 0.20);
+
+  /* Motion */
+  --ease: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Max content width on desktop */
+  --content-max: 1120px;
+
+  /* Vant theme tokens */
+  --van-primary-color:                #5C6BF8;
+  --van-button-primary-background:    #5C6BF8;
+  --van-button-primary-border-color:  #5C6BF8;
+  --van-cell-background:              transparent;
+  --van-cell-group-background:        transparent;
+  --van-cell-group-inset-padding:     0;
+  --van-field-input-text-color:       #1B1D3A;
+  --van-field-placeholder-text-color: #94A3C8;
+  --van-field-background:             transparent;
+  --van-field-input-min-height:       46px;
+  --van-switch-on-background:         #5C6BF8;
 }
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  background: #f7f8fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC',
+               'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text-1);
   -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
 }
 
-.page-container {
-  min-height: 100vh;
-  padding-bottom: 40px;
+/* ── Vant overrides ── */
+.van-nav-bar__content { height: 52px; }
+.van-button--primary {
+  background: var(--g-btn) !important;
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(92, 107, 248, 0.36) !important;
+}
+.van-button--primary:active { opacity: 0.88; }
+.van-cell { padding: 14px 0 !important; background: transparent !important; }
+.van-cell::after { border-color: var(--c-border) !important; }
+
+/* ── Page scaffold ── */
+.page {
+  min-height: 100dvh;
+  background: var(--c-bg);
+  overflow-x: hidden;
 }
 
-.header {
-  text-align: center;
-  padding: 40px 16px 24px;
+/* ── Card ── */
+.card {
+  background: var(--c-surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--s-sm);
+  overflow: hidden;
 }
 
-.header h2 {
-  font-size: 24px;
-  color: #1989fa;
-  margin-bottom: 8px;
+/* ── Content container (centred, max-width constrained on desktop) ── */
+.content-wrap {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 16px;
 }
-
-.header p {
-  color: #999;
-  font-size: 14px;
-}
-
-.footer-link {
-  text-align: center;
-  margin-top: 16px;
-  color: #999;
-  font-size: 14px;
-}
-
-.footer-link a {
-  color: #1989fa;
-  text-decoration: none;
-}
-
-.welcome-card {
-  text-align: center;
-  padding: 32px 16px;
-}
-
-.welcome-card h3 {
-  margin-top: 12px;
-  font-size: 18px;
-  color: #323233;
-}
-
-.welcome-card .subtitle {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #999;
-}
-
-.logout-btn {
-  margin: 24px 16px;
-}
-
-.admin-entry {
-  margin: 16px;
-}
-
-/* Admin desktop-style pages */
-.admin-container {
-  min-height: 100vh;
-  background: #f7f8fa;
-  padding-bottom: 40px;
-}
+@media (min-width: 768px) { .content-wrap { padding: 0 32px; } }
+@media (min-width: 1024px) { .content-wrap { padding: 0 48px; } }
