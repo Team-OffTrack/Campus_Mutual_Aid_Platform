@@ -1,0 +1,78 @@
+/* Global styles for campus-help frontend */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: #f7f8fa;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-container {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.header {
+  text-align: center;
+  padding: 40px 16px 24px;
+}
+
+.header h2 {
+  font-size: 24px;
+  color: #1989fa;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: #999;
+  font-size: 14px;
+}
+
+.footer-link {
+  text-align: center;
+  margin-top: 16px;
+  color: #999;
+  font-size: 14px;
+}
+
+.footer-link a {
+  color: #1989fa;
+  text-decoration: none;
+}
+
+.welcome-card {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.welcome-card h3 {
+  margin-top: 12px;
+  font-size: 18px;
+  color: #323233;
+}
+
+.welcome-card .subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #999;
+}
+
+.logout-btn {
+  margin: 24px 16px;
+}
+
+.admin-entry {
+  margin: 16px;
+}
+
+/* Admin desktop-style pages */
+.admin-container {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding-bottom: 40px;
+}

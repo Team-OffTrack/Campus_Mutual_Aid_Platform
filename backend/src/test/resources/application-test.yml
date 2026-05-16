@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    # NON_KEYWORDS=USER prevents H2 from treating "user" as a reserved SQL keyword
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;NON_KEYWORDS=USER
+    driver-class-name: org.h2.Driver
+
+  # Disable Flyway for tests — H2 can't execute MySQL-specific DDL
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-h2.sql
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: Y2FtcHVzLWhlbHAtc2VjcmV0LWtleS0yMDI2LW1heC1zZWN1cmUtYW5kLWxvbmc=
+  expiration: 86400000
+
+logging:
+  level:
+    cn.seecoder: DEBUG
