@@ -3,9 +3,7 @@
     <!-- Top nav bar -->
     <van-nav-bar title="" fixed placeholder class="home-nav">
       <template #right>
-        <div class="nav-avatar" @click="router.push('/profile')" role="button" aria-label="个人资料">
-          {{ nameInitial }}
-        </div>
+        <NavActions light />
       </template>
     </van-nav-bar>
 
@@ -102,6 +100,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useAuthStore } from '@/stores/auth'
+import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -147,16 +146,6 @@ function handleLogout() {
 /* ── Nav ── */
 .home-nav :deep(.van-nav-bar),
 .home-nav :deep(.van-nav-bar__content) { background: var(--g-hero) !important; }
-
-.nav-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: rgba(255,255,255,0.28);
-  border: 2px solid rgba(255,255,255,0.55);
-  color: #fff; font-size: 15px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background var(--ease);
-}
-.nav-avatar:hover { background: rgba(255,255,255,0.42); }
 
 /* ── Hero ── */
 .hero-banner {

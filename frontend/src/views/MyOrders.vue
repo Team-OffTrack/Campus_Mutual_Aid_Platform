@@ -1,7 +1,9 @@
 <template>
   <div class="page orders-page">
     <van-nav-bar title="我的订单" left-arrow fixed placeholder
-      class="orders-nav" @click-left="router.push('/')" />
+      class="orders-nav" @click-left="router.push('/')">
+      <template #right><NavActions /></template>
+    </van-nav-bar>
 
     <!-- Tab bar -->
     <div class="tab-bar">
@@ -76,6 +78,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { myOrders } from '@/api/demand'
+import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const orders = ref([])

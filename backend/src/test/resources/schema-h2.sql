@@ -54,3 +54,17 @@ CREATE TABLE IF NOT EXISTS demand (
     FOREIGN KEY (publisher_id) REFERENCES user(user_id) ON DELETE CASCADE,
     FOREIGN KEY (acceptor_id) REFERENCES user(user_id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS notification (
+    notification_id   BIGINT      NOT NULL AUTO_INCREMENT,
+    user_id           BIGINT      NOT NULL,
+    type              VARCHAR(32) NOT NULL,
+    title             VARCHAR(128) NOT NULL,
+    content           TEXT,
+    is_read           INT         NOT NULL DEFAULT 0,
+    related_demand_id BIGINT      DEFAULT NULL,
+    create_time       TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (notification_id),
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (related_demand_id) REFERENCES demand(demand_id) ON DELETE SET NULL
+);

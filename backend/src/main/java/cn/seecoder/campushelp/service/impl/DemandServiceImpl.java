@@ -9,6 +9,7 @@ import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.service.DemandService;
+import cn.seecoder.campushelp.service.NotificationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
@@ -23,10 +24,13 @@ public class DemandServiceImpl implements DemandService {
 
     private final DemandMapper demandMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
-    public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper) {
+    public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
+                             NotificationService notificationService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -111,6 +115,11 @@ public class DemandServiceImpl implements DemandService {
         if ("COMPLETED".equals(demand.getStatus()) || "CANCELLED".equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已结束，无法取消");
         }
+        // Notify acceptor if there is one
+        if (demand.getAcceptorId() != null) {
+            notificationService.notifyDemandCancelled(
+                    demand.getAcceptorId(), demand.getTitle(), demand.getDemandId());
+        }
         demand.setStatus("CANCELLED");
         demandMapper.updateById(demand);
     }
@@ -131,6 +140,10 @@ public class DemandServiceImpl implements DemandService {
 
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = userMapper.selectById(acceptorId);
+
+        // Notify publisher
+        notificationService.notifyDemandAccepted(
+                publisher.getUserId(), demand.getTitle(), demand.getDemandId(), acceptor.getName());
         return DemandResponse.from(demand, publisher, acceptor);
     }
 
@@ -149,6 +162,10 @@ public class DemandServiceImpl implements DemandService {
 
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;
+
+        // Notify publisher
+        notificationService.notifyDemandCompleted(
+                publisher.getUserId(), demand.getTitle(), demand.getDemandId());
         return DemandResponse.from(demand, publisher, acceptor);
     }
 

@@ -2,7 +2,9 @@
   <div class="page profile-page">
     <!-- Nav -->
     <van-nav-bar title="个人资料" left-arrow fixed placeholder
-      class="profile-nav" @click-left="router.back()" />
+      class="profile-nav" @click-left="router.back()">
+      <template #right><NavActions /></template>
+    </van-nav-bar>
 
     <!-- Hero -->
     <div class="profile-hero">
@@ -92,6 +94,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getProfile, updateProfile } from '@/api/user'
+import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const loading = ref(false)

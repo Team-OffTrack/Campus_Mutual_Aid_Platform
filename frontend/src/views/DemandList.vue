@@ -1,7 +1,14 @@
 <template>
   <div class="page list-page">
     <van-nav-bar title="需求广场" left-arrow fixed placeholder
-      class="list-nav" @click-left="router.push('/')" />
+      class="list-nav" @click-left="router.push('/')">
+      <template #right>
+        <div class="nav-right">
+          <van-icon name="plus" size="22" class="nav-plus" @click="router.push('/demands/publish')" />
+          <NavActions />
+        </div>
+      </template>
+    </van-nav-bar>
 
     <!-- Sticky header: search + sort -->
     <div class="list-toolbar">
@@ -95,6 +102,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listDemands } from '@/api/demand'
+import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const demands = ref([])
@@ -182,6 +190,8 @@ onMounted(() => fetchDemands())
 <style scoped>
 .list-page { background: var(--c-bg); padding-bottom: 80px; }
 .list-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-plus { color: var(--c-primary); cursor: pointer; padding: 4px; }
 
 /* Toolbar: search + sort */
 .list-toolbar {

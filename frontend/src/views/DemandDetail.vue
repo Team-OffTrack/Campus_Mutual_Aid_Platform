@@ -1,7 +1,9 @@
 <template>
   <div class="page detail-page">
     <van-nav-bar title="需求详情" left-arrow fixed placeholder
-      class="detail-nav" @click-left="router.back()" />
+      class="detail-nav" @click-left="router.back()">
+      <template #right><NavActions /></template>
+    </van-nav-bar>
 
     <div v-if="demand" class="content-wrap">
       <!-- Header card -->
@@ -130,6 +132,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
+import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
