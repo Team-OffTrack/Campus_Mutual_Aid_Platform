@@ -27,6 +27,6 @@ public interface UserService {
     /** Paginated search across users (admin-only). Keyword matches studentId or name. */
     Page<UserInfoResponse> listUsers(int pageNum, int pageSize, String keyword);
 
-    /** Toggles a user between active (1) and banned (0) — admin-only. */
-    void updateUserStatus(Long userId, Integer status);
+    /** Toggles a user between active (1) and banned (0) — admin-only. Operator cannot target themselves. */
+    void updateUserStatus(Long userId, Integer status, Long operatorId);
 }

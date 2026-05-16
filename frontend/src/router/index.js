@@ -37,6 +37,21 @@ const routes = [
     name: 'AdminUserList',
     component: () => import('@/views/admin/UserList.vue'),
     meta: { admin: true }
+  },
+  {
+    path: '/demands',
+    name: 'DemandList',
+    component: () => import('@/views/DemandList.vue')
+  },
+  {
+    path: '/demands/publish',
+    name: 'DemandPublish',
+    component: () => import('@/views/DemandPublish.vue')
+  },
+  {
+    path: '/demands/:demandId',
+    name: 'DemandDetail',
+    component: () => import('@/views/DemandDetail.vue')
   }
 ]
 

@@ -34,3 +34,21 @@ CREATE TABLE IF NOT EXISTS user_account (
     UNIQUE (user_id),
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS demand (
+    demand_id     BIGINT       NOT NULL AUTO_INCREMENT,
+    publisher_id  BIGINT       NOT NULL,
+    type          VARCHAR(32)  NOT NULL,
+    title         VARCHAR(128) NOT NULL,
+    description   TEXT,
+    location      VARCHAR(255),
+    deadline      TIMESTAMP,
+    reward_type   VARCHAR(32)  DEFAULT 'point',
+    reward_amount INT          DEFAULT 0,
+    is_anonymous  INT          NOT NULL DEFAULT 0,
+    status        VARCHAR(32)  NOT NULL DEFAULT 'OPEN',
+    create_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (demand_id),
+    FOREIGN KEY (publisher_id) REFERENCES user(user_id) ON DELETE CASCADE
+);

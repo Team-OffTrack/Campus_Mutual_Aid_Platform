@@ -4,6 +4,7 @@ import cn.seecoder.campushelp.common.ApiResult;
 import cn.seecoder.campushelp.dto.UserInfoResponse;
 import cn.seecoder.campushelp.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -34,11 +35,13 @@ public class AdminController {
         return ApiResult.success(userService.listUsers(pageNum, pageSize, keyword));
     }
 
-    /** Ban (status=0) or unban (status=1) a user. */
+    /** Ban (status=0) or unban (status=1) a user. Operator cannot target themselves. */
     @PutMapping("/users/{userId}/status")
-    public ApiResult<Void> updateUserStatus(@PathVariable Long userId,
+    public ApiResult<Void> updateUserStatus(Authentication auth,
+                                            @PathVariable Long userId,
                                             @RequestBody Map<String, Integer> body) {
-        userService.updateUserStatus(userId, body.get("status"));
+        Long operatorId = (Long) auth.getPrincipal();
+        userService.updateUserStatus(userId, body.get("status"), operatorId);
         return ApiResult.success();
     }
 }

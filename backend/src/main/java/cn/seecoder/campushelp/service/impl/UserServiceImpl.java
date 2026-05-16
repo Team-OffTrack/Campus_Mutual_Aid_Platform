@@ -162,7 +162,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserStatus(Long userId, Integer status) {
+    public void updateUserStatus(Long userId, Integer status, Long operatorId) {
+        if (userId.equals(operatorId)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "不能封禁自己");
+        }
         User user = findUserOrFail(userId);
         user.setStatus(status);
         userMapper.updateById(user);

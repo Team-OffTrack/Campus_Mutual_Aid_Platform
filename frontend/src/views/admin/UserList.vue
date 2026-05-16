@@ -46,10 +46,12 @@
               {{ user.status === 1 ? '正常' : '封禁' }}
             </td>
             <td>
-              <button class="action-btn" :class="user.status === 1 ? 'btn-ban' : 'btn-ok'"
+              <button v-if="user.userId !== currentUserId"
+                class="action-btn" :class="user.status === 1 ? 'btn-ban' : 'btn-ok'"
                 @click="toggleUser(user)">
                 {{ user.status === 1 ? '封禁' : '解封' }}
               </button>
+              <span v-else class="self-tag">自己</span>
             </td>
           </tr>
         </tbody>
@@ -88,12 +90,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { listUsers, updateUserStatus } from '@/api/admin'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const currentUserId = computed(() => Number(authStore.userId))
 const users = ref([])
 const totalCount = ref(0)
 const keyword = ref('')
@@ -124,7 +129,13 @@ async function fetchUsers() {
   finally { loading.value = false }
 }
 
+onMounted(() => fetchUsers())
+
 function showActions(user) {
+  if (user.userId === currentUserId.value) {
+    showToast('不能操作自己')
+    return
+  }
   currentUser = user
   const label = user.status === 1 ? '封禁该用户' : '解封该用户'
   const color = user.status === 1 ? '#ee0a24' : '#07c160'
@@ -157,6 +168,8 @@ async function onActionSelect() {
 /* Search */
 .search-wrap { padding: 8px 0; background: #fff; }
 .search-wrap :deep(.van-search__content) { background: var(--c-bg); border-radius: 18px; }
+.search-wrap :deep(.van-cell) { padding: 0 !important; }
+.search-wrap :deep(.van-field__control) { line-height: 36px; }
 
 /* Summary */
 .summary-row { padding: 12px 16px 4px; }
@@ -294,6 +307,7 @@ async function onActionSelect() {
   .btn-ban:hover { background: #FEF2F2; }
   .btn-ok { color: var(--c-success); border-color: #BBF7D0; }
   .btn-ok:hover { background: #F0FDF4; }
+	  .self-tag { font-size: 12px; color: var(--c-text-3); }
 
   .table-loading, .table-finished, .table-empty {
     text-align: center; padding: 24px;

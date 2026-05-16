@@ -48,7 +48,8 @@
           <div v-for="feat in features" :key="feat.name"
                class="feat-card"
                :style="{ '--fc-bg': feat.bg, '--fc-ic': feat.ic }"
-               role="button" :aria-label="feat.name">
+               role="button" :aria-label="feat.name"
+               @click="feat.type === 'browse' ? goBrowse() : goPublish(feat.type)">
             <div class="feat-icon-wrap">
               <van-icon :name="feat.icon" class="feat-icon" />
             </div>
@@ -103,13 +104,21 @@ const greeting = computed(() => {
 })
 
 const features = [
-  { name: '跑腿代取', desc: '帮我取快递', icon: 'logistics',    bg: 'var(--feat-1-bg)', ic: 'var(--feat-1-ic)' },
-  { name: '二手交易', desc: '闲置好物', icon: 'shop',        bg: 'var(--feat-2-bg)', ic: 'var(--feat-2-ic)' },
-  { name: '组队匹配', desc: '一起学习', icon: 'friends',      bg: 'var(--feat-3-bg)', ic: 'var(--feat-3-ic)' },
-  { name: '失物招领', desc: '找回遗失物', icon: 'search',      bg: 'var(--feat-4-bg)', ic: 'var(--feat-4-ic)' },
-  { name: '在线交流', desc: '聊聊吧', icon: 'chat-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)' },
-  { name: '积分中心', desc: '查看余额', icon: 'gold-coin-o', bg: 'var(--feat-6-bg)', ic: 'var(--feat-6-ic)' },
+  { name: '跑腿代取', desc: '发布取件需求', icon: 'logistics',    bg: 'var(--feat-1-bg)', ic: 'var(--feat-1-ic)', type: 'errand' },
+  { name: '二手交易', desc: '发布交易信息', icon: 'shop',        bg: 'var(--feat-2-bg)', ic: 'var(--feat-2-ic)', type: 'trade' },
+  { name: '组队匹配', desc: '发布组队需求', icon: 'friends',      bg: 'var(--feat-3-bg)', ic: 'var(--feat-3-ic)', type: 'team' },
+  { name: '失物招领', desc: '发布招领信息', icon: 'search',      bg: 'var(--feat-4-bg)', ic: 'var(--feat-4-ic)', type: 'lost_found' },
+  { name: '学习互助', desc: '发布学习需求', icon: 'chat-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)', type: 'study' },
+  { name: '需求广场', desc: '浏览所有需求', icon: 'gem-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)', type: 'browse' },
 ]
+
+function goPublish(type) {
+  router.push({ path: '/demands/publish', query: { type } })
+}
+
+function goBrowse() {
+  router.push('/demands')
+}
 
 function handleLogout() {
   authStore.logout()

@@ -158,4 +158,41 @@ class UserServiceTest {
         assertEquals(1, page.getTotal());
         assertEquals("用户1", page.getRecords().get(0).getName());
     }
+
+    @Test
+    @DisplayName("Admin cannot ban themselves")
+    void updateUserStatus_selfBan_shouldThrow() {
+        RegisterRequest req = new RegisterRequest();
+        req.setStudentId("admin001");
+        req.setPassword("pass123");
+        req.setName("管理员");
+        userService.register(req);
+
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "admin001"));
+
+        assertThrows(BusinessException.class,
+                () -> userService.updateUserStatus(user.getUserId(), 0, user.getUserId()));
+    }
+
+    @Test
+    @DisplayName("Admin can ban other users")
+    void updateUserStatus_banOther_shouldSucceed() {
+        // Register two users: one operator, one target
+        RegisterRequest r1 = new RegisterRequest();
+        r1.setStudentId("op001"); r1.setPassword("pass123"); r1.setName("操作员");
+        userService.register(r1);
+        RegisterRequest r2 = new RegisterRequest();
+        r2.setStudentId("target001"); r2.setPassword("pass123"); r2.setName("目标用户");
+        userService.register(r2);
+
+        User operator = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "op001"));
+        User target = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "target001"));
+
+        userService.updateUserStatus(target.getUserId(), 0, operator.getUserId());
+        User updated = userMapper.selectById(target.getUserId());
+        assertEquals(0, updated.getStatus());
+    }
 }
