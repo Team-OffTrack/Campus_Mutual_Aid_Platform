@@ -1,0 +1,305 @@
+openapi: 3.0.3
+info:
+  title: 校园互助服务平台 API
+  description: 基于RESTful风格的校园互助平台接口文档，支持用户注册登录、需求发布、接单、评价等核心功能
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: 本地开发环境
+paths:
+  /user/register:
+    post:
+      summary: 用户注册
+      description: 学生通过学号注册账号，支持匿名与多因素认证
+      tags:
+        - 用户模块
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - password
+              properties:
+                studentId:
+                  type: string
+                  description: 学号（唯一）
+                password:
+                  type: string
+                  description: 密码，8位以上含字母数字
+                name:
+                  type: string
+                  description: 姓名（可选）
+                phone:
+                  type: string
+                  description: 手机号（可选）
+                email:
+                  type: string
+                  description: 邮箱（可选）
+      responses:
+        '200':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '400':
+          description: 参数错误/学号已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+  /user/login:
+    post:
+      summary: 用户登录
+      description: 学号密码登录，返回token
+      tags:
+        - 用户模块
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - password
+              properties:
+                studentId:
+                  type: string
+                password:
+                  type: string
+                verifyCode:
+                  type: string
+                  description: 验证码（可选）
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '401':
+          description: 账号或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+  /requirements:
+    post:
+      summary: 发布互助需求
+      description: 发布跑腿、二手、学习、组队、失物招领等需求
+      tags:
+        - 需求模块
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - title
+                - content
+                - location
+                - time
+                - reward
+              properties:
+                type:
+                  type: string
+                  enum: [errand, secondHand, study, team, lostFound, lifeHelp]
+                title:
+                  type: string
+                content:
+                  type: string
+                location:
+                  type: string
+                time:
+                  type: string
+                  format: date-time
+                reward:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [point, cash, donation]
+                    amount:
+                      type: number
+                anonymous:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: 发布成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '401':
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+    get:
+      summary: 浏览需求列表（支持筛选）
+      description: 按类型、关键词、地点筛选，支持分页
+      tags:
+        - 需求模块
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: pageNum
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+  /requirements/{requirementId}/accept:
+    post:
+      summary: 接单
+      description: 用户接取他人发布的需求，生成订单
+      tags:
+        - 需求模块
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requirementId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 接单成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '400':
+          description: 需求已被接取/不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+  /orders/{orderId}:
+    get:
+      summary: 查看订单详情
+      tags:
+        - 订单模块
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '404':
+          description: 订单不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+  /orders/{orderId}/evaluations:
+    post:
+      summary: 提交评价
+      description: 订单完成后双方互相评价
+      tags:
+        - 订单模块
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - score
+              properties:
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: 评价成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+        '400':
+          description: 参数错误（如评分超出1~5范围）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResult'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResult:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        msg:
+          type: string
+          example: 操作成功
+        data:
+          type: object
