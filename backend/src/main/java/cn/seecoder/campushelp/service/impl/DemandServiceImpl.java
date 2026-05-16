@@ -97,7 +97,8 @@ public class DemandServiceImpl implements DemandService {
     public DemandResponse getById(Long demandId) {
         Demand demand = findDemandOrFail(demandId);
         User publisher = userMapper.selectById(demand.getPublisherId());
-        return DemandResponse.from(demand, publisher);
+        User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;
+        return DemandResponse.from(demand, publisher, acceptor);
     }
 
     @Override
@@ -107,11 +108,82 @@ public class DemandServiceImpl implements DemandService {
         if (!demand.getPublisherId().equals(userId)) {
             throw new BusinessException(ResultCode.FORBIDDEN, "只能取消自己的需求");
         }
-        if (!"OPEN".equals(demand.getStatus())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "只能取消进行中的需求");
+        if ("COMPLETED".equals(demand.getStatus()) || "CANCELLED".equals(demand.getStatus())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已结束，无法取消");
         }
         demand.setStatus("CANCELLED");
         demandMapper.updateById(demand);
+    }
+
+    @Override
+    @Transactional
+    public DemandResponse accept(Long demandId, Long acceptorId) {
+        Demand demand = findDemandOrFail(demandId);
+        if (demand.getPublisherId().equals(acceptorId)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "不能接自己的需求");
+        }
+        if (!"OPEN".equals(demand.getStatus())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已被接取或已结束");
+        }
+        demand.setAcceptorId(acceptorId);
+        demand.setStatus("IN_PROGRESS");
+        demandMapper.updateById(demand);
+
+        User publisher = userMapper.selectById(demand.getPublisherId());
+        User acceptor = userMapper.selectById(acceptorId);
+        return DemandResponse.from(demand, publisher, acceptor);
+    }
+
+    @Override
+    @Transactional
+    public DemandResponse complete(Long demandId, Long userId) {
+        Demand demand = findDemandOrFail(demandId);
+        if (!demand.getPublisherId().equals(userId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只有发布者可以确认完成");
+        }
+        if (!"IN_PROGRESS".equals(demand.getStatus())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "只能完成进行中的需求");
+        }
+        demand.setStatus("COMPLETED");
+        demandMapper.updateById(demand);
+
+        User publisher = userMapper.selectById(demand.getPublisherId());
+        User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;
+        return DemandResponse.from(demand, publisher, acceptor);
+    }
+
+    @Override
+    public List<DemandResponse> myOrders(Long userId, String role) {
+        LambdaQueryWrapper<Demand> wrapper = new LambdaQueryWrapper<>();
+        if ("publisher".equals(role)) {
+            wrapper.eq(Demand::getPublisherId, userId);
+        } else {
+            wrapper.eq(Demand::getAcceptorId, userId);
+        }
+        wrapper.orderByDesc(Demand::getCreateTime);
+        List<Demand> demands = demandMapper.selectList(wrapper);
+
+        // Batch-load all relevant users
+        List<Long> userIds = demands.stream().flatMap(d -> {
+            java.util.List<Long> ids = new java.util.ArrayList<>();
+            ids.add(d.getPublisherId());
+            if (d.getAcceptorId() != null) ids.add(d.getAcceptorId());
+            return ids.stream();
+        }).distinct().toList();
+
+        final Map<Long, User> userMap;
+        if (!userIds.isEmpty()) {
+            userMap = userMapper.selectBatchIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getUserId, u -> u));
+        } else {
+            userMap = Map.of();
+        }
+
+        return demands.stream()
+                .map(d -> DemandResponse.from(d,
+                        userMap.get(d.getPublisherId()),
+                        userMap.get(d.getAcceptorId())))
+                .toList();
     }
 
     private Demand findDemandOrFail(Long demandId) {

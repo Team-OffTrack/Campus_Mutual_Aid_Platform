@@ -15,3 +15,15 @@ export function getDemand(demandId) {
 export function cancelDemand(demandId) {
   return client.put(`/demands/${demandId}/cancel`)
 }
+
+export function acceptDemand(demandId) {
+  return client.put(`/demands/${demandId}/accept`)
+}
+
+export function completeDemand(demandId) {
+  return client.put(`/demands/${demandId}/complete`)
+}
+
+export function myOrders(role) {
+  return client.get('/demands/my', { params: { role } })
+}

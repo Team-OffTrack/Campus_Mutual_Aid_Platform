@@ -6,14 +6,16 @@ import cn.seecoder.campushelp.entity.User;
 import java.time.LocalDateTime;
 
 /**
- * Demand response including publisher display info.
- * When isAnonymous is true, the publisher name is replaced with the mask name or "匿名用户".
+ * Demand response including publisher and acceptor display info.
+ * When isAnonymous is true, the publisher name is replaced with "匿名用户".
  */
 public class DemandResponse {
 
     private Long demandId;
     private Long publisherId;
     private String publisherName;
+    private Long acceptorId;
+    private String acceptorName;
     private String type;
     private String title;
     private String description;
@@ -25,10 +27,17 @@ public class DemandResponse {
     private String status;
     private LocalDateTime createTime;
 
+    /** Lightweight constructor used by list queries (only publisher loaded). */
     public static DemandResponse from(Demand demand, User publisher) {
+        return from(demand, publisher, null);
+    }
+
+    /** Full constructor with optional acceptor info for detail views. */
+    public static DemandResponse from(Demand demand, User publisher, User acceptor) {
         DemandResponse rsp = new DemandResponse();
         rsp.demandId = demand.getDemandId();
         rsp.publisherId = demand.getPublisherId();
+        rsp.acceptorId = demand.getAcceptorId();
         rsp.type = demand.getType();
         rsp.title = demand.getTitle();
         rsp.description = demand.getDescription();
@@ -40,7 +49,6 @@ public class DemandResponse {
         rsp.status = demand.getStatus();
         rsp.createTime = demand.getCreateTime();
 
-        // Respect anonymous preference — hide real name
         if (demand.isAnonymous()) {
             rsp.publisherName = "匿名用户";
         } else if (publisher != null) {
@@ -48,12 +56,18 @@ public class DemandResponse {
         } else {
             rsp.publisherName = "未知用户";
         }
+
+        if (acceptor != null) {
+            rsp.acceptorName = acceptor.getName();
+        }
         return rsp;
     }
 
     public Long getDemandId() { return demandId; }
     public Long getPublisherId() { return publisherId; }
     public String getPublisherName() { return publisherName; }
+    public Long getAcceptorId() { return acceptorId; }
+    public String getAcceptorName() { return acceptorName; }
     public String getType() { return type; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }

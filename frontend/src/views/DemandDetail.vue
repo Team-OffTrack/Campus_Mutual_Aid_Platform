@@ -54,15 +54,61 @@
         </div>
       </div>
 
+      <!-- Acceptor info (when accepted) -->
+      <div class="detail-card" v-if="demand.acceptorId">
+        <h3 class="card-subtitle">接单人</h3>
+        <div class="d-publisher">
+          <div class="pub-avatar" :style="{ background: avatarColor(demand.acceptorName || '?') }">
+            {{ (demand.acceptorName || '?').charAt(0).toUpperCase() }}
+          </div>
+          <div class="pub-info">
+            <span class="pub-name">{{ demand.acceptorName }}</span>
+            <span class="pub-time">已接单</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Action area -->
-      <div class="action-section" v-if="demand.status === 'OPEN'">
-        <van-button v-if="isOwner" block round type="danger" class="cancel-btn"
-          :loading="cancelling" @click="handleCancel">
-          取消需求
-        </van-button>
-        <van-button v-else block round type="primary" class="accept-btn">
-          我要接单
-        </van-button>
+      <div class="action-section">
+        <!-- OPEN: publisher can cancel, others can accept -->
+        <template v-if="demand.status === 'OPEN'">
+          <van-button v-if="isOwner" block round type="danger"
+            :loading="acting" @click="handleCancel">
+            取消需求
+          </van-button>
+          <van-button v-else block round type="primary"
+            :loading="acting" @click="handleAccept">
+            我要接单
+          </van-button>
+        </template>
+
+        <!-- IN_PROGRESS: publisher can complete or cancel -->
+        <template v-if="demand.status === 'IN_PROGRESS'">
+          <div v-if="isOwner" class="action-row">
+            <van-button block round type="primary"
+              :loading="acting" @click="handleComplete">
+              确认完成
+            </van-button>
+            <van-button block round type="default" class="cancel-btn-secondary"
+              :loading="acting" @click="handleCancel">
+              取消需求
+            </van-button>
+          </div>
+          <div v-else-if="isAcceptor" class="action-hint">
+            <van-icon name="clock-o" size="18" />
+            <span>等待发布者确认完成…</span>
+          </div>
+        </template>
+
+        <!-- Terminal states -->
+        <div v-if="demand.status === 'COMPLETED'" class="action-hint done">
+          <van-icon name="success" size="18" />
+          <span>该需求已完成</span>
+        </div>
+        <div v-if="demand.status === 'CANCELLED'" class="action-hint cancelled">
+          <van-icon name="close" size="18" />
+          <span>该需求已取消</span>
+        </div>
       </div>
     </div>
 
@@ -83,7 +129,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
-import { getDemand, cancelDemand } from '@/api/demand'
+import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -92,11 +138,11 @@ const authStore = useAuthStore()
 
 const demand = ref(null)
 const error = ref(null)
-const cancelling = ref(false)
+const acting = ref(false)
 
-const isOwner = computed(() =>
-  demand.value && Number(authStore.userId) === demand.value.publisherId
-)
+const userId = computed(() => Number(authStore.userId))
+const isOwner = computed(() => demand.value && userId.value === demand.value.publisherId)
+const isAcceptor = computed(() => demand.value && userId.value === demand.value.acceptorId)
 
 const TYPE_STYLES = {
   errand: { background: '#FFF4ED', color: '#FF7849' },
@@ -150,13 +196,43 @@ async function handleCancel() {
     await showConfirmDialog({ title: '确认取消', message: '取消后不可恢复，确定要取消这个需求吗？' })
   } catch { return }
 
-  cancelling.value = true
+  acting.value = true
   try {
     await cancelDemand(demand.value.demandId)
     demand.value.status = 'CANCELLED'
     showToast('已取消')
   } catch (e) { /* skip */ }
-  finally { cancelling.value = false }
+  finally { acting.value = false }
+}
+
+async function handleAccept() {
+  try {
+    await showConfirmDialog({ title: '确认接单', message: '接单后请按时完成需求，确定要接单吗？' })
+  } catch { return }
+
+  acting.value = true
+  try {
+    const data = await acceptDemand(demand.value.demandId)
+    demand.value.status = data.status
+    demand.value.acceptorId = data.acceptorId
+    demand.value.acceptorName = data.acceptorName
+    showToast('接单成功')
+  } catch (e) { /* skip */ }
+  finally { acting.value = false }
+}
+
+async function handleComplete() {
+  try {
+    await showConfirmDialog({ title: '确认完成', message: '确认需求已完成？完成后将不可撤销。' })
+  } catch { return }
+
+  acting.value = true
+  try {
+    const data = await completeDemand(demand.value.demandId)
+    demand.value.status = data.status
+    showToast('已完成')
+  } catch (e) { /* skip */ }
+  finally { acting.value = false }
 }
 
 onMounted(fetchDetail)
@@ -217,8 +293,20 @@ onMounted(fetchDetail)
 
 /* Actions */
 .action-section { padding: 0; }
-.cancel-btn { height: 48px !important; font-size: 16px !important; }
-.accept-btn { height: 48px !important; font-size: 16px !important; }
+.action-section .van-button { height: 48px !important; font-size: 16px !important; }
+
+.action-row { display: flex; flex-direction: column; gap: 10px; }
+.cancel-btn-secondary { color: var(--c-text-2) !important; border-color: var(--c-border) !important; }
+
+.action-hint {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 18px; background: var(--c-bg); border-radius: var(--r-md);
+  font-size: 14px; color: var(--c-text-3);
+}
+.action-hint.done { background: #EDFAF3; color: #22C55E; }
+.action-hint.cancelled { background: #F1F5F9; color: #94A3C8; }
+
+.card-subtitle { font-size: 14px; font-weight: 700; color: var(--c-text-2); }
 
 /* States */
 .loading-state, .error-state {

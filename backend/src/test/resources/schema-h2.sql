@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS user_account (
 CREATE TABLE IF NOT EXISTS demand (
     demand_id     BIGINT       NOT NULL AUTO_INCREMENT,
     publisher_id  BIGINT       NOT NULL,
+    acceptor_id   BIGINT       DEFAULT NULL,
     type          VARCHAR(32)  NOT NULL,
     title         VARCHAR(128) NOT NULL,
     description   TEXT,
@@ -50,5 +51,6 @@ CREATE TABLE IF NOT EXISTS demand (
     create_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (demand_id),
-    FOREIGN KEY (publisher_id) REFERENCES user(user_id) ON DELETE CASCADE
+    FOREIGN KEY (publisher_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (acceptor_id) REFERENCES user(user_id) ON DELETE SET NULL
 );

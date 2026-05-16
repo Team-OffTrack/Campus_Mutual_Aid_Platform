@@ -300,4 +300,194 @@ class DemandServiceTest {
         var page = demandService.list(1, 10, null, null, "invalid_sort");
         assertEquals(1, page.getTotal());
     }
+
+    // ── Order flow tests ──
+
+    @Test
+    @DisplayName("Accept an OPEN demand transitions to IN_PROGRESS")
+    void accept_shouldSetAcceptorAndStatus() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("代取快递");
+        req.setDescription("从东门取");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        // Create another user as acceptor
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc001"); reg.setPassword("pass"); reg.setName("接单者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc001"));
+
+        DemandResponse rsp = demandService.accept(created.getDemandId(), acceptor.getUserId());
+        assertEquals("IN_PROGRESS", rsp.getStatus());
+        assertEquals(acceptor.getUserId(), rsp.getAcceptorId());
+        assertEquals("接单者", rsp.getAcceptorName());
+    }
+
+    @Test
+    @DisplayName("Accept own demand throws")
+    void accept_ownDemand_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("我的需求");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        assertThrows(BusinessException.class,
+                () -> demandService.accept(created.getDemandId(), publisherId));
+    }
+
+    @Test
+    @DisplayName("Accept already accepted demand throws")
+    void accept_alreadyAccepted_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("已被接");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc002"); reg.setPassword("pass"); reg.setName("接单人");
+        userService.register(reg);
+        User a1 = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc002"));
+        demandService.accept(created.getDemandId(), a1.getUserId());
+
+        // Second accept should fail
+        RegisterRequest reg2 = new RegisterRequest();
+        reg2.setStudentId("acc003"); reg2.setPassword("pass"); reg2.setName("第二个");
+        userService.register(reg2);
+        User a2 = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc003"));
+
+        assertThrows(BusinessException.class,
+                () -> demandService.accept(created.getDemandId(), a2.getUserId()));
+    }
+
+    @Test
+    @DisplayName("Complete IN_PROGRESS demand sets status to COMPLETED")
+    void complete_shouldFinishDemand() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("待完成");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc004"); reg.setPassword("pass"); reg.setName("接单者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc004"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+
+        DemandResponse rsp = demandService.complete(created.getDemandId(), publisherId);
+        assertEquals("COMPLETED", rsp.getStatus());
+    }
+
+    @Test
+    @DisplayName("Complete by non-publisher throws")
+    void complete_byNonPublisher_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("不能由他人完成");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc005"); reg.setPassword("pass"); reg.setName("接单者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc005"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+
+        assertThrows(BusinessException.class,
+                () -> demandService.complete(created.getDemandId(), acceptor.getUserId()));
+    }
+
+    @Test
+    @DisplayName("Complete OPEN demand throws")
+    void complete_notInProgress_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("还未被接");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        assertThrows(BusinessException.class,
+                () -> demandService.complete(created.getDemandId(), publisherId));
+    }
+
+    @Test
+    @DisplayName("Cancel IN_PROGRESS demand is allowed")
+    void cancel_inProgress_shouldSucceed() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("进行中取消");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc006"); reg.setPassword("pass"); reg.setName("接者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc006"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+
+        demandService.cancel(created.getDemandId(), publisherId);
+        DemandResponse detail = demandService.getById(created.getDemandId());
+        assertEquals("CANCELLED", detail.getStatus());
+    }
+
+    @Test
+    @DisplayName("Cancel COMPLETED demand throws")
+    void cancel_completed_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("已完成的需求");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc007"); reg.setPassword("pass"); reg.setName("接者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc007"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+        demandService.complete(created.getDemandId(), publisherId);
+
+        assertThrows(BusinessException.class,
+                () -> demandService.cancel(created.getDemandId(), publisherId));
+    }
+
+    @Test
+    @DisplayName("My orders as publisher returns published demands")
+    void myOrders_publisher_shouldReturnPublished() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand"); req.setTitle("我的发布"); req.setDescription("测试");
+        demandService.publish(publisherId, req);
+
+        var orders = demandService.myOrders(publisherId, "publisher");
+        assertEquals(1, orders.size());
+        assertEquals("我的发布", orders.get(0).getTitle());
+    }
+
+    @Test
+    @DisplayName("My orders as acceptor returns accepted demands")
+    void myOrders_acceptor_shouldReturnAccepted() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand"); req.setTitle("可接需求"); req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc008"); reg.setPassword("pass"); reg.setName("接单人");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc008"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+
+        var orders = demandService.myOrders(acceptor.getUserId(), "acceptor");
+        assertEquals(1, orders.size());
+        assertEquals("可接需求", orders.get(0).getTitle());
+    }
 }

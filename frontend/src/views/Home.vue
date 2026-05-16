@@ -59,6 +59,20 @@
         </div>
       </div>
 
+      <!-- My orders -->
+      <div class="section">
+        <div class="orders-card" @click="router.push('/orders')" role="button">
+          <div class="orders-card-left">
+            <div class="orders-icon-wrap"><van-icon name="orders-o" /></div>
+            <div>
+              <p class="orders-title">我的订单</p>
+              <p class="orders-sub">查看我发布和接取的需求</p>
+            </div>
+          </div>
+          <van-icon name="arrow" class="orders-arrow" />
+        </div>
+      </div>
+
       <!-- Admin entry -->
       <div v-if="authStore.isAdmin" class="section">
         <div class="admin-card" @click="router.push('/admin/users')" role="button">
@@ -209,6 +223,28 @@ function handleLogout() {
 .feat-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }
 .feat-desc { font-size: 12px; color: var(--c-text-3); }
 
+/* ── Orders card ── */
+.orders-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #EDF4FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--r-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: background var(--ease);
+}
+.orders-card:active { background: #DBEAFE; }
+.orders-card-left { display: flex; align-items: center; gap: 14px; }
+.orders-icon-wrap {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: #3B82F6;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #fff;
+}
+.orders-title { font-size: 15px; font-weight: 600; color: var(--c-text-1); margin-bottom: 2px; }
+.orders-sub { font-size: 12px; color: var(--c-text-3); }
+.orders-arrow { color: var(--c-text-3); font-size: 16px; }
+
 /* ── Admin card ── */
 .admin-card {
   display: flex; align-items: center; justify-content: space-between;
@@ -274,6 +310,7 @@ function handleLogout() {
     box-shadow: var(--s-md);
   }
 
+	  .orders-card:hover { background: #DBEAFE; }
   .admin-card:hover { background: #FFF0CC; }
 }
 </style>

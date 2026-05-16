@@ -10,6 +10,7 @@ public class Demand {
     private Long demandId;
 
     private Long publisherId;
+    private Long acceptorId;
     private String type;
     private String title;
     private String description;
@@ -31,6 +32,9 @@ public class Demand {
 
     public Long getPublisherId() { return publisherId; }
     public void setPublisherId(Long publisherId) { this.publisherId = publisherId; }
+
+    public Long getAcceptorId() { return acceptorId; }
+    public void setAcceptorId(Long acceptorId) { this.acceptorId = acceptorId; }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }

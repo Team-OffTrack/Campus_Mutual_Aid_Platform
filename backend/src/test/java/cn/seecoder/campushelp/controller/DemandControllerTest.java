@@ -274,4 +274,122 @@ class DemandControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(404));
     }
+
+    // ── Order flow tests ──
+
+    /** Helper: register + login another user, return their token. */
+    private String registerAndLogin(String studentId, String name) throws Exception {
+        RegisterRequest regReq = new RegisterRequest();
+        regReq.setStudentId(studentId);
+        regReq.setPassword("pass123");
+        regReq.setName(name);
+        mockMvc.perform(post("/api/v1/user/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(regReq)))
+                .andExpect(status().isOk());
+
+        LoginRequest loginReq = new LoginRequest();
+        loginReq.setStudentId(studentId);
+        loginReq.setPassword("pass123");
+        String body = mockMvc.perform(post("/api/v1/user/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).path("data").path("token").asText();
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id}/accept transitions to IN_PROGRESS")
+    void accept_shouldSetAcceptor() throws Exception {
+        // Publish as test001
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("可接需求");
+        req.setDescription("测试接单");
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Another user accepts
+        String otherToken = registerAndLogin("acc001", "接单者");
+        mockMvc.perform(put("/api/v1/demands/" + demandId + "/accept")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.data.acceptorName").value("接单者"));
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id}/accept on own demand returns error")
+    void accept_ownDemand_shouldReturnError() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("自己的需求");
+        req.setDescription("测试");
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId + "/accept")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id}/complete marks demand as COMPLETED")
+    void complete_shouldFinishOrder() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("待完成");
+        req.setDescription("测试");
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Accept first
+        String otherToken = registerAndLogin("acc002", "接单人");
+        mockMvc.perform(put("/api/v1/demands/" + demandId + "/accept")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk());
+
+        // Publisher completes
+        mockMvc.perform(put("/api/v1/demands/" + demandId + "/complete")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"));
+    }
+
+    @Test
+    @DisplayName("GET /demands/my returns user's orders")
+    void myOrders_shouldReturnFiltered() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("我的发布项");
+        req.setDescription("测试");
+        mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/demands/my")
+                        .header("Authorization", "Bearer " + authToken)
+                        .param("role", "publisher"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].title").value("我的发布项"));
+    }
 }
