@@ -51,15 +51,24 @@ cd frontend
 npm install
 ```
 
-### 2. 启动开发服务器
+### 2. 生成 SSL 证书（仅首次）
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout key.pem -out cert.pem -days 3650 \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+### 3. 启动开发服务器
 
 ```bash
 npm run dev
 ```
 
-浏览器打开 `http://localhost:5173`。
+浏览器打开 `https://localhost:5173`（自签名证书需点「继续访问」）。
 
-### 3. 构建生产包
+### 4. 构建生产包
 
 ```bash
 npm run build        # 产物在 dist/

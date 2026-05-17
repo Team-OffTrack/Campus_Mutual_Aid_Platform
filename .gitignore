@@ -60,3 +60,5 @@ uploads/
 
 *.p12
 *.jks
+key.pem
+cert.pem
