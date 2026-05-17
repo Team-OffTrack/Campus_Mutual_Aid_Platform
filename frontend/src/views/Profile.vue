@@ -85,6 +85,13 @@
           保存修改
         </van-button>
       </div>
+
+      <!-- Logout -->
+      <div class="logout-section">
+        <van-button block round class="logout-btn" @click="handleLogout">
+          退出登录
+        </van-button>
+      </div>
     </div>
   </div>
 </template>
@@ -95,8 +102,10 @@ import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getProfile, updateProfile } from '@/api/user'
 import NavActions from '@/components/NavActions.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(false)
 const focusedField = ref(null)
 const profile = ref({})
@@ -124,8 +133,14 @@ async function handleSave() {
     const data = await updateProfile(payload)
     profile.value = data
     showToast('保存成功')
-  } catch (e) { /* skip */ }
+  } catch { /* skip */ }
   finally { loading.value = false }
+}
+
+function handleLogout() {
+  authStore.logout()
+  showToast('已退出')
+  router.push('/login')
 }
 </script>
 
@@ -220,6 +235,14 @@ async function handleSave() {
 .save-btn {
   height: 50px !important; font-size: 16px !important;
   font-weight: 600 !important; letter-spacing: 1px;
+}
+
+/* Logout */
+.logout-section { padding-top: 16px; }
+.logout-btn {
+  color: var(--c-text-2) !important; border-color: var(--c-border) !important;
+  background: var(--c-surface) !important; box-shadow: none !important;
+  height: 44px !important; font-size: 14px !important;
 }
 
 /* ════════════════════════════════════════

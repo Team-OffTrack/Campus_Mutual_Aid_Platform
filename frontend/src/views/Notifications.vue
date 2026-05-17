@@ -4,9 +4,6 @@
       class="notif-nav" @click-left="router.push('/')">
       <template #right>
         <NavActions />
-        <span v-if="notifications.length > 0" class="nav-mark-all" @click="handleMarkAll">
-          全部已读
-        </span>
       </template>
     </van-nav-bar>
 
@@ -47,7 +44,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { listNotifications, markRead, markAllRead } from '@/api/notification'
+import { listNotifications, markRead } from '@/api/notification'
 import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
@@ -70,31 +67,18 @@ async function handleClick(n) {
     try {
       await markRead(n.notificationId)
       n.read = true
-    } catch (e) { /* skip */ }
+    } catch { /* skip */ }
   }
-  // Navigate to related demand if available
   if (n.relatedDemandId) {
     router.push('/demands/' + n.relatedDemandId)
   }
-}
-
-async function handleMarkAll() {
-  try {
-    await markAllRead()
-    notifications.value.forEach(n => n.read = true)
-  } catch (e) { /* skip */ }
 }
 
 async function fetchNotifications() {
   loading.value = true
   try {
     notifications.value = await listNotifications()
-    // Auto-mark all as read when viewing the list
-    if (notifications.value.some(n => !n.read)) {
-      await markAllRead()
-      notifications.value.forEach(n => n.read = true)
-    }
-  } catch (e) { /* skip */ }
+  } catch { /* skip */ }
   finally { loading.value = false }
 }
 
@@ -104,7 +88,6 @@ onMounted(fetchNotifications)
 <style scoped>
 .notif-page { background: var(--c-bg); min-height: 100dvh; }
 .notif-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
-.nav-mark-all { font-size: 13px; color: var(--c-primary); cursor: pointer; }
 
 .content-wrap { padding: 8px 16px; }
 
