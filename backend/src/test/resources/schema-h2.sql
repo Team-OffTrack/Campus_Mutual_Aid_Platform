@@ -84,3 +84,30 @@ CREATE TABLE IF NOT EXISTS evaluation (
     FOREIGN KEY (evaluator_id)  REFERENCES user(user_id) ON DELETE CASCADE,
     FOREIGN KEY (target_user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS conversation (
+    conversation_id  BIGINT       NOT NULL AUTO_INCREMENT,
+    demand_id        BIGINT       NOT NULL,
+    user1_id         BIGINT       NOT NULL,
+    user2_id         BIGINT       NOT NULL,
+    last_message     VARCHAR(500),
+    last_message_at  TIMESTAMP,
+    create_time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (conversation_id),
+    UNIQUE (demand_id, user1_id, user2_id),
+    FOREIGN KEY (demand_id) REFERENCES demand(demand_id) ON DELETE CASCADE,
+    FOREIGN KEY (user1_id)  REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user2_id)  REFERENCES user(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS message (
+    message_id       BIGINT       NOT NULL AUTO_INCREMENT,
+    conversation_id  BIGINT       NOT NULL,
+    sender_id        BIGINT       NOT NULL,
+    content          TEXT         NOT NULL,
+    is_read          INT          NOT NULL DEFAULT 0,
+    create_time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (message_id),
+    FOREIGN KEY (conversation_id) REFERENCES conversation(conversation_id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id)       REFERENCES user(user_id) ON DELETE CASCADE
+);

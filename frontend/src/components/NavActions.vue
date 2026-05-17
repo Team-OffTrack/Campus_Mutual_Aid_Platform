@@ -14,6 +14,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { unreadCount } from '@/api/notification'
+import { unreadChatCount } from '@/api/chat'
 
 defineProps({ light: Boolean })
 
@@ -23,8 +24,11 @@ const unreadNum = ref(0)
 
 async function fetchUnread() {
   try {
-    const { count } = await unreadCount()
-    unreadNum.value = count
+    const [notif, chat] = await Promise.all([
+      unreadCount().catch(() => ({ count: 0 })),
+      unreadChatCount().catch(() => ({ count: 0 }))
+    ])
+    unreadNum.value = (notif.count || 0) + (chat.count || 0)
   } catch (e) { /* skip */ }
 }
 

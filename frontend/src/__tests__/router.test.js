@@ -83,4 +83,14 @@ describe('Router guard logic', () => {
     const result = runGuard({ meta: { admin: true } })
     expect(result).toBe('/login')
   })
+
+  it('redirects to /login for chat page when not logged in', () => {
+    const result = runGuard({ meta: {} })
+    expect(result).toBe('/login')
+  })
+
+  it('allows chat page when logged in', () => {
+    localStorage.setItem('token', 'valid-jwt')
+    expect(runGuard({ meta: {} })).toBeUndefined()
+  })
 })

@@ -113,6 +113,15 @@
         </div>
       </div>
 
+      <!-- ═══ Private chat entry ═══ -->
+      <div v-if="chatTargetId" class="action-section chat-section">
+        <van-button block round plain type="primary"
+          :loading="startingChat" @click="handleStartChat">
+          <van-icon name="chat-o" size="16" style="margin-right:6px" />
+          {{ chatLabel }}
+        </van-button>
+      </div>
+
       <!-- ═══ Evaluation / Comment section (visible when COMPLETED or CANCELLED) ═══ -->
       <div v-if="demand.status === 'COMPLETED' || demand.status === 'CANCELLED'" class="detail-card eval-section">
         <h3 class="card-subtitle">评价</h3>
@@ -209,6 +218,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
+import { createConversation } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -227,6 +237,23 @@ const ratingValue = ref(5)
 const ratingComment = ref('')
 const submittingEval = ref(false)
 const editingMyEval = ref(false)
+
+// Chat state
+const startingChat = ref(false)
+
+/** Who the current user can chat with, or null. Non-owners can always chat the publisher; owner can chat the acceptor. */
+const chatTargetId = computed(() => {
+  if (!demand.value) return null
+  if (!isOwner.value) return demand.value.publisherId
+  if (demand.value.acceptorId) return demand.value.acceptorId
+  return null
+})
+
+const chatLabel = computed(() => {
+  if (!demand.value) return ''
+  if (!isOwner.value) return '私信发布者'
+  return '私信接单人'
+})
 
 const userId = computed(() => Number(authStore.userId))
 const isOwner = computed(() => demand.value && userId.value === demand.value.publisherId)
@@ -362,6 +389,17 @@ async function submitUpdateEvaluation() {
   } finally {
     submittingEval.value = false
   }
+}
+
+async function handleStartChat() {
+  if (startingChat.value || !chatTargetId.value) return
+  startingChat.value = true
+  try {
+    const conv = await createConversation(demand.value.demandId, chatTargetId.value)
+    router.push('/chat/' + conv.conversationId)
+  } catch {
+    // handled by client.js interceptor
+  } finally { startingChat.value = false }
 }
 
 async function handleCancel() {
