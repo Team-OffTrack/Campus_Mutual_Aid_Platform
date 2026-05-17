@@ -9,7 +9,7 @@ import { showToast } from 'vant'
  * On 401 the local authentication state is cleared and the user is redirected to /login.
  */
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE,
+  baseURL: import.meta.env.VITE_API_BASE || '/api/v1',
   timeout: 10000
 })
 
