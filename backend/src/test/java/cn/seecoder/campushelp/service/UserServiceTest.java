@@ -195,4 +195,31 @@ class UserServiceTest {
         User updated = userMapper.selectById(target.getUserId());
         assertEquals(0, updated.getStatus());
     }
+
+    @Test
+    @DisplayName("Change password with correct old password succeeds and new password works for login")
+    void changePassword_correctOldPassword_shouldUpdateAndAllowLogin() {
+        RegisterRequest req = new RegisterRequest();
+        req.setStudentId("2024001"); req.setPassword("pass123"); req.setName("张三");
+        userService.register(req);
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "2024001"));
+        userService.changePassword(user.getUserId(), "pass123", "newpass456");
+
+        LoginRequest loginReq = new LoginRequest();
+        loginReq.setStudentId("2024001"); loginReq.setPassword("newpass456");
+        assertNotNull(userService.login(loginReq).getToken());
+    }
+
+    @Test
+    @DisplayName("Change password with wrong old password throws")
+    void changePassword_wrongOldPassword_shouldThrow() {
+        RegisterRequest req = new RegisterRequest();
+        req.setStudentId("2024001"); req.setPassword("pass123"); req.setName("张三");
+        userService.register(req);
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "2024001"));
+        assertThrows(BusinessException.class,
+                () -> userService.changePassword(user.getUserId(), "wrong", "newpass"));
+    }
 }

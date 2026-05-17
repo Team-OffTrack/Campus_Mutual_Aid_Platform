@@ -48,4 +48,13 @@ public class UserController {
         Long userId = (Long) auth.getPrincipal();
         return ApiResult.success(userService.updateProfile(userId, request));
     }
+
+    /** Change password. Validates the old password before applying the new one. */
+    @PutMapping("/password")
+    public ApiResult<Void> changePassword(Authentication auth,
+                                           @Valid @RequestBody ChangePasswordRequest request) {
+        Long userId = (Long) auth.getPrincipal();
+        userService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+        return ApiResult.success();
+    }
 }

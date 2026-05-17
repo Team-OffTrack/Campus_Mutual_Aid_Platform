@@ -162,6 +162,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = findUserOrFail(userId);
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "旧密码不正确");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userMapper.updateById(user);
+    }
+
+    @Override
     public void updateUserStatus(Long userId, Integer status, Long operatorId) {
         if (userId.equals(operatorId)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "不能封禁自己");

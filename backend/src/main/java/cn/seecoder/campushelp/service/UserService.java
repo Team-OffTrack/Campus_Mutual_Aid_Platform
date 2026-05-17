@@ -29,4 +29,7 @@ public interface UserService {
 
     /** Toggles a user between active (1) and banned (0) — admin-only. Operator cannot target themselves. */
     void updateUserStatus(Long userId, Integer status, Long operatorId);
+
+    /** Change password for the current user. Validates old password before updating. */
+    void changePassword(Long userId, String oldPassword, String newPassword);
 }

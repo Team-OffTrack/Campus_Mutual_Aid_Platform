@@ -147,4 +147,50 @@ class UserControllerTest {
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("PUT /user/password with valid old password returns 200")
+    void changePassword_valid_shouldReturn200() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                java.util.Map.of("oldPassword", "pass123", "newPassword", "newpass456"));
+
+        mockMvc.perform(put("/api/v1/user/password")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+
+        // Verify new password works for login
+        LoginRequest loginReq = new LoginRequest();
+        loginReq.setStudentId("test001"); loginReq.setPassword("newpass456");
+        mockMvc.perform(post("/api/v1/user/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("PUT /user/password with wrong old password returns 400")
+    void changePassword_wrongOld_shouldReturn400() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                java.util.Map.of("oldPassword", "wrongpass", "newPassword", "newpass456"));
+
+        mockMvc.perform(put("/api/v1/user/password")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /user/password without token returns 403")
+    void changePassword_noToken_shouldReturn403() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                java.util.Map.of("oldPassword", "pass123", "newPassword", "newpass456"));
+
+        mockMvc.perform(put("/api/v1/user/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden());
+    }
 }

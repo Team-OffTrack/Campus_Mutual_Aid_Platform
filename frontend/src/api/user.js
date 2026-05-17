@@ -15,3 +15,7 @@ export function getProfile() {
 export function updateProfile(data) {
   return client.put('/user/profile', data)
 }
+
+export function changePassword(data) {
+  return client.put('/user/password', data)
+}

@@ -86,6 +86,33 @@
         </van-button>
       </div>
 
+      <!-- Password -->
+      <div class="section password-section">
+        <h3 class="section-title">修改密码</h3>
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">旧密码</span>
+            <div class="info-field">
+              <van-field v-model="passwordForm.oldPassword" type="password"
+                placeholder="输入旧密码" class="inline-field" />
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-label">新密码</span>
+            <div class="info-field">
+              <van-field v-model="passwordForm.newPassword" type="password"
+                placeholder="6-64位新密码" class="inline-field" />
+            </div>
+          </div>
+        </div>
+        <div class="save-section">
+          <van-button block round :loading="changingPassword" class="save-btn"
+            @click="handleChangePassword">
+            修改密码
+          </van-button>
+        </div>
+      </div>
+
       <!-- Logout -->
       <div class="logout-section">
         <van-button block round class="logout-btn" @click="handleLogout">
@@ -100,7 +127,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { getProfile, updateProfile } from '@/api/user'
+import { getProfile, updateProfile, changePassword } from '@/api/user'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -110,6 +137,9 @@ const loading = ref(false)
 const focusedField = ref(null)
 const profile = ref({})
 const form = reactive({ name: null, avatar: null, isAnonymous: false, maskName: '' })
+
+const changingPassword = ref(false)
+const passwordForm = reactive({ oldPassword: '', newPassword: '' })
 
 const nameInitial = computed(() => ((profile.value.name || form.name || '?').charAt(0)).toUpperCase())
 
@@ -135,6 +165,19 @@ async function handleSave() {
     showToast('保存成功')
   } catch { /* skip */ }
   finally { loading.value = false }
+}
+
+async function handleChangePassword() {
+  if (!passwordForm.oldPassword) { showToast('请输入旧密码'); return }
+  if (!passwordForm.newPassword || passwordForm.newPassword.length < 6) { showToast('新密码至少6位'); return }
+  changingPassword.value = true
+  try {
+    await changePassword({ oldPassword: passwordForm.oldPassword, newPassword: passwordForm.newPassword })
+    showToast('密码已修改')
+    passwordForm.oldPassword = ''
+    passwordForm.newPassword = ''
+  } catch { /* skip */ }
+  finally { changingPassword.value = false }
 }
 
 function handleLogout() {
