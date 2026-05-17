@@ -190,9 +190,10 @@ public class ChatServiceImpl implements ChatService {
         Long otherId = c.otherUserId(userId);
         r.setOtherUserId(otherId);
 
-        // Load other user name
+        // Load other user name and avatar
         User other = userMapper.selectById(otherId);
         r.setOtherUserName(other != null ? other.getName() : "未知用户");
+        r.setOtherUserAvatar(other != null ? other.getAvatar() : null);
 
         // Load demand title
         Demand demand = demandMapper.selectById(c.getDemandId());

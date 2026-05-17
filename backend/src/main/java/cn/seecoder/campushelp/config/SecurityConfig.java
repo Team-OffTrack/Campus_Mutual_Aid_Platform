@@ -29,6 +29,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints: anyone can register or login
                 .requestMatchers("/api/v1/user/register", "/api/v1/user/login").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 // Admin-only: user management
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // Everything else requires a valid JWT

@@ -62,9 +62,10 @@
         <template v-else>
           <div v-for="c in conversations" :key="c.conversationId"
             class="conv-card" :class="{ 'has-unread': c.unreadCount > 0 }"
-            @click="router.push('/chat/' + c.conversationId)">
-            <div class="conv-avatar" :style="{ background: avatarColor(c.otherUserName) }">
-              {{ c.otherUserName.charAt(0).toUpperCase() }}
+            @click="router.push('/chat/' + c.conversationId + '?name=' + encodeURIComponent(c.otherUserName) + '&avatar=' + encodeURIComponent(c.otherUserAvatar || ''))">
+            <div class="conv-avatar" :style="{ background: c.otherUserAvatar ? 'transparent' : avatarColor(c.otherUserName) }">
+              <img v-if="c.otherUserAvatar" :src="c.otherUserAvatar" class="conv-avatar-img" />
+              <span v-else>{{ c.otherUserName.charAt(0).toUpperCase() }}</span>
             </div>
             <div class="conv-body">
               <div class="conv-top">
@@ -232,8 +233,9 @@ onMounted(fetchNotifications)
 .conv-avatar {
   width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700; color: #fff;
+  font-size: 18px; font-weight: 700; color: #fff; overflow: hidden;
 }
+.conv-avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .conv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .conv-top { display: flex; justify-content: space-between; align-items: center; }
 .conv-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }

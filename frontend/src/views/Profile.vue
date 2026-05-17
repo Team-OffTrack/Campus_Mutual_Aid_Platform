@@ -8,9 +8,14 @@
 
     <!-- Hero -->
     <div class="profile-hero">
-      <div class="avatar-wrap">
-        <div class="avatar-circle">{{ nameInitial }}</div>
+      <div class="avatar-wrap" @click="triggerAvatar">
+        <div class="avatar-circle" :class="{ uploading: uploadingAvatar }">
+          <img v-if="profile.avatar" :src="profile.avatar" class="avatar-img" />
+          <span v-else>{{ nameInitial }}</span>
+          <div v-if="uploadingAvatar" class="avatar-overlay"><van-loading color="#fff" size="20" /></div>
+        </div>
         <div class="avatar-badge" title="编辑头像"><van-icon name="photograph" /></div>
+        <input ref="avatarInput" type="file" accept="image/*" hidden @change="handleAvatarChange" />
       </div>
       <h2 class="profile-name">{{ profile.name || '—' }}</h2>
       <p class="profile-id">学号 {{ profile.studentId || '—' }}</p>
@@ -127,7 +132,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { getProfile, updateProfile, changePassword } from '@/api/user'
+import { getProfile, updateProfile, changePassword, uploadAvatar } from '@/api/user'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -140,6 +145,28 @@ const form = reactive({ name: null, avatar: null, isAnonymous: false, maskName: 
 
 const changingPassword = ref(false)
 const passwordForm = reactive({ oldPassword: '', newPassword: '' })
+
+const avatarInput = ref(null)
+const uploadingAvatar = ref(false)
+
+function triggerAvatar() {
+  avatarInput.value?.click()
+}
+
+async function handleAvatarChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  uploadingAvatar.value = true
+  try {
+    const avatarUrl = await uploadAvatar(file)
+    profile.value.avatar = avatarUrl
+    authStore.avatar = avatarUrl
+    localStorage.setItem('avatar', avatarUrl)
+    showToast('头像已更新')
+  } catch { /* skip */ }
+  finally { uploadingAvatar.value = false }
+  e.target.value = ''
+}
 
 const nameInitial = computed(() => ((profile.value.name || form.name || '?').charAt(0)).toUpperCase())
 
@@ -209,6 +236,14 @@ function handleLogout() {
   display: flex; align-items: center; justify-content: center;
   font-size: 34px; font-weight: 800; color: #fff;
   backdrop-filter: blur(8px);
+  overflow: hidden; position: relative; cursor: pointer;
+}
+.avatar-circle.uploading { pointer-events: none; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
 }
 
 .avatar-badge {

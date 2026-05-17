@@ -2,6 +2,7 @@ package cn.seecoder.campushelp.service;
 
 import cn.seecoder.campushelp.dto.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Core user-management facade.
@@ -32,4 +33,7 @@ public interface UserService {
 
     /** Change password for the current user. Validates old password before updating. */
     void changePassword(Long userId, String oldPassword, String newPassword);
+
+    /** Upload avatar image, save to disk, update user record. Returns the avatar URL path. */
+    String updateAvatar(Long userId, MultipartFile file);
 }

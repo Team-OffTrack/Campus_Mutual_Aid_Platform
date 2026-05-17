@@ -13,8 +13,9 @@
           class="msg-row" :class="{ 'msg-mine': m.senderId === userId }">
           <!-- Other user's avatar -->
           <div v-if="m.senderId !== userId" class="msg-avatar"
-            :style="{ background: avatarColor(otherUserName) }">
-            {{ (otherUserName || '?').charAt(0).toUpperCase() }}
+            :style="{ background: otherUserAvatar ? 'transparent' : avatarColor(otherUserName) }">
+            <img v-if="otherUserAvatar" :src="otherUserAvatar" class="avatar-img" />
+            <span v-else>{{ (otherUserName || '?').charAt(0).toUpperCase() }}</span>
           </div>
 
           <div class="msg-bubble" :class="{ 'bubble-mine': m.senderId === userId }">
@@ -24,8 +25,9 @@
 
           <!-- My avatar -->
           <div v-if="m.senderId === userId" class="msg-avatar my-avatar"
-            :style="{ background: avatarColor(myName) }">
-            {{ (myName || '?').charAt(0).toUpperCase() }}
+            :style="{ background: myAvatar ? 'transparent' : avatarColor(myName) }">
+            <img v-if="myAvatar" :src="myAvatar" class="avatar-img" />
+            <span v-else>{{ (myName || '?').charAt(0).toUpperCase() }}</span>
           </div>
         </div>
 
@@ -62,7 +64,9 @@ const authStore = useAuthStore()
 const conversationId = computed(() => Number(route.params.conversationId))
 const userId = computed(() => Number(authStore.userId))
 const myName = ref('')
-const otherUserName = ref('')
+const myAvatar = computed(() => authStore.avatar)
+const otherUserName = ref(route.query.name || '')
+const otherUserAvatar = ref(route.query.avatar || '')
 const messages = ref([])
 const inputText = ref('')
 const loading = ref(false)
@@ -196,8 +200,9 @@ onBeforeUnmount(stopPolling)
 .msg-avatar {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff;
+  font-size: 13px; font-weight: 700; color: #fff; overflow: hidden;
 }
+.msg-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .my-avatar { align-self: flex-end; }
 
 /* Bubbles */

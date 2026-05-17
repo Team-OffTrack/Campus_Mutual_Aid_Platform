@@ -11,6 +11,7 @@ public class ConversationResponse {
     private Long conversationId;
     private Long otherUserId;
     private String otherUserName;
+    private String otherUserAvatar;
     private Long demandId;
     private String demandTitle;
     private String lastMessage;
@@ -25,6 +26,9 @@ public class ConversationResponse {
 
     public String getOtherUserName() { return otherUserName; }
     public void setOtherUserName(String otherUserName) { this.otherUserName = otherUserName; }
+
+    public String getOtherUserAvatar() { return otherUserAvatar; }
+    public void setOtherUserAvatar(String otherUserAvatar) { this.otherUserAvatar = otherUserAvatar; }
 
     public Long getDemandId() { return demandId; }
     public void setDemandId(Long demandId) { this.demandId = demandId; }

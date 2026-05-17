@@ -5,7 +5,8 @@
       <span v-if="unreadNum > 0" class="bell-badge">{{ unreadNum > 99 ? '99+' : unreadNum }}</span>
     </div>
     <div class="nav-avatar" @click="$router.push('/profile')" role="button" aria-label="个人资料">
-      {{ nameInitial }}
+      <img v-if="authStore.avatar" :src="authStore.avatar" class="avatar-img" />
+      <span v-else>{{ nameInitial }}</span>
     </div>
   </div>
 </template>
@@ -59,8 +60,9 @@ onMounted(fetchUnread)
   background: var(--c-primary);
   color: #fff; font-size: 14px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
+  cursor: pointer; overflow: hidden;
 }
+.nav-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .nav-light .nav-avatar {
   background: rgba(255,255,255,0.28);
   border: 2px solid rgba(255,255,255,0.55);

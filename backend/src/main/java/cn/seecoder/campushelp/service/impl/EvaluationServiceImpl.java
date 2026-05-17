@@ -84,7 +84,7 @@ public class EvaluationServiceImpl implements EvaluationService {
         // Recalculate target's reputation
         updateReputationScore(targetId);
 
-        return EvaluationResponse.from(e, evaluator.getName());
+        return EvaluationResponse.from(e, evaluator.getName(), evaluator.getAvatar());
     }
 
     @Override
@@ -114,7 +114,7 @@ public class EvaluationServiceImpl implements EvaluationService {
         // Recalculate target's reputation
         updateReputationScore(e.getTargetUserId());
 
-        return EvaluationResponse.from(e, evaluator.getName());
+        return EvaluationResponse.from(e, evaluator.getName(), evaluator.getAvatar());
     }
 
     @Override
@@ -127,7 +127,8 @@ public class EvaluationServiceImpl implements EvaluationService {
                 .map(e -> {
                     User evaluator = userMapper.selectById(e.getEvaluatorId());
                     return EvaluationResponse.from(e,
-                            evaluator != null ? evaluator.getName() : "未知用户");
+                            evaluator != null ? evaluator.getName() : "未知用户",
+                            evaluator != null ? evaluator.getAvatar() : null);
                 })
                 .toList();
     }
@@ -141,7 +142,8 @@ public class EvaluationServiceImpl implements EvaluationService {
         if (e == null) return null;
         User evaluator = userMapper.selectById(evaluatorId);
         return EvaluationResponse.from(e,
-                evaluator != null ? evaluator.getName() : "未知用户");
+                evaluator != null ? evaluator.getName() : "未知用户",
+                evaluator != null ? evaluator.getAvatar() : null);
     }
 
     @Override
@@ -154,7 +156,8 @@ public class EvaluationServiceImpl implements EvaluationService {
                 .map(e -> {
                     User evaluator = userMapper.selectById(e.getEvaluatorId());
                     return EvaluationResponse.from(e,
-                            evaluator != null ? evaluator.getName() : "未知用户");
+                            evaluator != null ? evaluator.getName() : "未知用户",
+                            evaluator != null ? evaluator.getAvatar() : null);
                 })
                 .toList();
     }

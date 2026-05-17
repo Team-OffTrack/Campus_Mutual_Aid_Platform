@@ -30,8 +30,9 @@
         <tbody>
           <tr v-for="user in users" :key="user.userId" class="table-row">
             <td>
-              <div class="td-avatar" :style="{ background: avatarColor(user.name) }">
-                {{ (user.name || '?').charAt(0).toUpperCase() }}
+              <div class="td-avatar" :style="{ background: user.avatar ? 'transparent' : avatarColor(user.name) }">
+                <img v-if="user.avatar" :src="user.avatar" class="avatar-img" />
+                <span v-else>{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
               </div>
             </td>
             <td class="td-name">{{ user.name }}</td>
@@ -65,8 +66,9 @@
     <van-list v-model:loading="loading" :finished="finished"
       finished-text="已加载全部" class="mobile-list" @load="fetchUsers">
       <div v-for="user in users" :key="user.userId" class="user-card" @click="showActions(user)">
-        <div class="user-avatar" :style="{ background: avatarColor(user.name) }">
-          {{ (user.name || '?').charAt(0).toUpperCase() }}
+        <div class="user-avatar" :style="{ background: user.avatar ? 'transparent' : avatarColor(user.name) }">
+          <img v-if="user.avatar" :src="user.avatar" class="avatar-img" />
+          <span v-else>{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
         </div>
         <div class="user-info">
           <span class="user-name">{{ user.name }}</span>
@@ -197,7 +199,9 @@ async function onActionSelect() {
   width: 44px; height: 44px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+  overflow: hidden;
 }
+.user-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
 .user-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .user-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }
@@ -281,8 +285,9 @@ async function onActionSelect() {
   .td-avatar {
     width: 38px; height: 38px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 700; color: #fff;
+    font-size: 16px; font-weight: 700; color: #fff; overflow: hidden;
   }
+  .td-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
   .td-name { font-weight: 600; color: var(--c-text-1); }
   .td-id { color: var(--c-text-2); font-size: 13px; }

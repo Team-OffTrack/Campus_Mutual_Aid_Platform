@@ -6,6 +6,7 @@ import cn.seecoder.campushelp.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Public and authenticated user endpoints.
@@ -47,6 +48,14 @@ public class UserController {
                                                       @RequestBody UpdateProfileRequest request) {
         Long userId = (Long) auth.getPrincipal();
         return ApiResult.success(userService.updateProfile(userId, request));
+    }
+
+    /** Upload profile avatar image. Accepts multipart file, saves to disk, returns URL. */
+    @PostMapping("/avatar")
+    public ApiResult<String> uploadAvatar(Authentication auth,
+                                           @RequestParam("file") MultipartFile file) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(userService.updateAvatar(userId, file));
     }
 
     /** Change password. Validates the old password before applying the new one. */

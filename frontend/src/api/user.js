@@ -19,3 +19,11 @@ export function updateProfile(data) {
 export function changePassword(data) {
   return client.put('/user/password', data)
 }
+
+export function uploadAvatar(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return client.post('/user/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

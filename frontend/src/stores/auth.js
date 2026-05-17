@@ -18,6 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userId = ref(localStorage.getItem('userId') || '')
   const name = ref(localStorage.getItem('name') || '')
   const role = ref(localStorage.getItem('role') || '')
+  const avatar = ref(localStorage.getItem('avatar') || '')
 
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => role.value === 'ADMIN')
@@ -28,10 +29,12 @@ export const useAuthStore = defineStore('auth', () => {
     userId.value = String(data.userId)
     name.value = data.name
     role.value = data.role
+    avatar.value = data.avatar || ''
     localStorage.setItem('token', data.token)
     localStorage.setItem('userId', String(data.userId))
     localStorage.setItem('name', data.name)
     localStorage.setItem('role', data.role)
+    if (data.avatar) localStorage.setItem('avatar', data.avatar)
   }
 
   /** Clear all auth state from memory and localStorage. */
@@ -40,8 +43,9 @@ export const useAuthStore = defineStore('auth', () => {
     userId.value = ''
     name.value = ''
     role.value = ''
+    avatar.value = ''
     localStorage.clear()
   }
 
-  return { token, userId, name, role, isLoggedIn, isAdmin, setAuth, logout }
+  return { token, userId, name, role, avatar, isLoggedIn, isAdmin, setAuth, logout }
 })

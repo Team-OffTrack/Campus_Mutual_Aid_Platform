@@ -16,8 +16,9 @@
         <h2 class="d-title">{{ demand.title }}</h2>
 
         <div class="d-publisher">
-          <div class="pub-avatar" :style="{ background: avatarColor(demand.publisherName) }">
-            {{ demand.publisherName.charAt(0).toUpperCase() }}
+          <div class="pub-avatar" :style="{ background: demand.publisherAvatar ? 'transparent' : avatarColor(demand.publisherName) }">
+            <img v-if="demand.publisherAvatar" :src="demand.publisherAvatar" class="avatar-img" />
+            <span v-else>{{ demand.publisherName.charAt(0).toUpperCase() }}</span>
           </div>
           <div class="pub-info">
             <span class="pub-name">
@@ -60,8 +61,9 @@
       <div class="detail-card" v-if="demand.acceptorId">
         <h3 class="card-subtitle">接单人</h3>
         <div class="d-publisher">
-          <div class="pub-avatar" :style="{ background: avatarColor(demand.acceptorName || '?') }">
-            {{ (demand.acceptorName || '?').charAt(0).toUpperCase() }}
+          <div class="pub-avatar" :style="{ background: demand.acceptorAvatar ? 'transparent' : avatarColor(demand.acceptorName || '?') }">
+            <img v-if="demand.acceptorAvatar" :src="demand.acceptorAvatar" class="avatar-img" />
+            <span v-else>{{ (demand.acceptorName || '?').charAt(0).toUpperCase() }}</span>
           </div>
           <div class="pub-info">
             <span class="pub-name">{{ demand.acceptorName }}</span>
@@ -129,8 +131,9 @@
         <!-- List of evaluations as comment cards -->
         <div v-if="evaluations.length > 0" class="eval-list">
           <div v-for="e in evaluations" :key="e.evaluationId" class="eval-comment-card">
-            <div class="eval-comment-avatar" :style="{ background: avatarColor(e.evaluatorName) }">
-              {{ e.evaluatorName.charAt(0).toUpperCase() }}
+            <div class="eval-comment-avatar" :style="{ background: e.evaluatorAvatar ? 'transparent' : avatarColor(e.evaluatorName) }">
+              <img v-if="e.evaluatorAvatar" :src="e.evaluatorAvatar" class="avatar-img" />
+              <span v-else>{{ e.evaluatorName.charAt(0).toUpperCase() }}</span>
             </div>
             <div class="eval-comment-body">
               <div class="eval-comment-header">
@@ -396,7 +399,9 @@ async function handleStartChat() {
   startingChat.value = true
   try {
     const conv = await createConversation(demand.value.demandId, chatTargetId.value)
-    router.push('/chat/' + conv.conversationId)
+    const targetName = isOwner.value ? demand.value.acceptorName : demand.value.publisherName
+    const targetAvatar = isOwner.value ? demand.value.acceptorAvatar : demand.value.publisherAvatar
+    router.push('/chat/' + conv.conversationId + '?name=' + encodeURIComponent(targetName || '') + '&avatar=' + encodeURIComponent(targetAvatar || ''))
   } catch {
     // handled by client.js interceptor
   } finally { startingChat.value = false }
@@ -486,7 +491,9 @@ onMounted(fetchDetail)
   width: 40px; height: 40px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
+  overflow: hidden;
 }
+.pub-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .pub-info { display: flex; flex-direction: column; gap: 2px; }
 .pub-name { font-size: 14px; font-weight: 600; color: var(--c-text-1); display: flex; align-items: center; gap: 4px; }
 .pub-time { font-size: 12px; color: var(--c-text-3); }
@@ -545,7 +552,9 @@ onMounted(fetchDetail)
   width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+  overflow: hidden;
 }
+.eval-comment-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .eval-comment-body {
   flex: 1; min-width: 0;
   padding: 10px 14px; background: var(--c-bg); border-radius: var(--r-md);

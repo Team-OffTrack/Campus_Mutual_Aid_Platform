@@ -14,8 +14,10 @@ public class DemandResponse {
     private Long demandId;
     private Long publisherId;
     private String publisherName;
+    private String publisherAvatar;
     private Long acceptorId;
     private String acceptorName;
+    private String acceptorAvatar;
     private String type;
     private String title;
     private String description;
@@ -53,12 +55,14 @@ public class DemandResponse {
             rsp.publisherName = "匿名用户";
         } else if (publisher != null) {
             rsp.publisherName = publisher.getName();
+            rsp.publisherAvatar = publisher.getAvatar();
         } else {
             rsp.publisherName = "未知用户";
         }
 
         if (acceptor != null) {
             rsp.acceptorName = acceptor.getName();
+            rsp.acceptorAvatar = acceptor.getAvatar();
         }
         return rsp;
     }
@@ -66,8 +70,10 @@ public class DemandResponse {
     public Long getDemandId() { return demandId; }
     public Long getPublisherId() { return publisherId; }
     public String getPublisherName() { return publisherName; }
+    public String getPublisherAvatar() { return publisherAvatar; }
     public Long getAcceptorId() { return acceptorId; }
     public String getAcceptorName() { return acceptorName; }
+    public String getAcceptorAvatar() { return acceptorAvatar; }
     public String getType() { return type; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
