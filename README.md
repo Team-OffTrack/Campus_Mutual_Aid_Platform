@@ -76,17 +76,25 @@ sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARA
 
 ### 2. 生成 SSL 证书（仅首次）
 
-项目已启用 HTTPS。每个开发机需要生成自己的自签名证书：
+项目前后端均启用 HTTPS。每个开发机需要生成两份自签名证书：
 
 ```bash
+# 后端 — PKCS12 证书（Java keystore）
 cd backend/src/main/resources
 keytool -genkeypair -alias campus-help -keyalg RSA -keysize 2048 \
   -storetype PKCS12 -keystore keystore.p12 -validity 3650 \
   -storepass changeit -keypass changeit -dname "CN=campus-help" \
   -ext "SAN=DNS:localhost,IP:127.0.0.1"
+
+# 前端 — PEM 证书（Vite dev server）
+cd ../../frontend
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout key.pem -out cert.pem -days 3650 \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
-证书文件（`*.p12`, `*.jks`）已在 `.gitignore` 排除，不会提交到仓库。
+证书文件（`*.p12`, `*.jks`, `key.pem`, `cert.pem`）已在 `.gitignore` 排除，不会提交到仓库。
 
 ### 3. 启动后端
 

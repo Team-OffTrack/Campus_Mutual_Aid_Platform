@@ -3,6 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import { VantResolver } from '@vant/auto-import-resolver'
 import { fileURLToPath, URL } from 'node:url'
+import fs from 'node:fs'
+
+const keyPath = fileURLToPath(new URL('./key.pem', import.meta.url))
+const certPath = fileURLToPath(new URL('./cert.pem', import.meta.url))
 
 export default defineConfig({
   plugins: [
@@ -18,6 +22,7 @@ export default defineConfig({
     }
   },
   server: {
+    https: fs.existsSync(keyPath) ? { key: keyPath, cert: certPath } : false,
     port: 5173,
     proxy: {
       '/api': {
