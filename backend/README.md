@@ -68,14 +68,29 @@ src/main/java/cn/seecoder/campushelp/
 
 ```bash
 sudo systemctl start mariadb redis
-sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARACTER SET utf8mb4;"
+sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-### 2. 启动
+> **Debian / Ubuntu**：MariaDB 默认 unix_socket 认证，需先改密码认证：
+> ```bash
+> sudo mariadb -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;"
+> ```
+
+### 2. 生成 SSL 证书（仅首次）
+
+```bash
+cd src/main/resources
+keytool -genkeypair -alias campus-help -keyalg RSA -keysize 2048 \
+  -storetype PKCS12 -keystore keystore.p12 -validity 3650 \
+  -storepass changeit -keypass changeit -dname "CN=campus-help" \
+  -ext "SAN=DNS:localhost,IP:127.0.0.1"
+```
+
+### 3. 启动
 
 ```bash
 cd backend
-mvn spring-boot:run          # 开发模式
+mvn spring-boot:run          # 开发模式（https://localhost:8080）
 # 或
 mvn package -DskipTests && java -jar target/campus-help-0.1.0.jar
 ```
@@ -99,6 +114,11 @@ mvn test
 ```yaml
 server:
   port: 8080                    # 服务端口
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: campus-help      # HTTPS 自签名证书
 
 jwt:
   secret: <Base64 encoded>      # JWT 签名密钥

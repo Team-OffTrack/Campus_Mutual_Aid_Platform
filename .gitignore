@@ -57,3 +57,6 @@ logs/
 *.log
 
 uploads/
+
+*.p12
+*.jks

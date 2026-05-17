@@ -92,14 +92,20 @@ VITE_API_BASE=/api/v1
 server: {
   proxy: {
     '/api': {
-      target: 'http://localhost:8080',
-      changeOrigin: true
+      target: 'https://localhost:8080',   // 后端已启用 HTTPS
+      changeOrigin: true,
+      secure: false                       // 自签名证书跳过验证
+    },
+    '/uploads': {
+      target: 'https://localhost:8080',
+      changeOrigin: true,
+      secure: false
     }
   }
 }
 ```
 
-如果需要修改后端地址，改 `target` 即可。
+如果需要修改后端地址，改 `target` 即可。自签名证书环境下 `secure: false` 必须保留。
 
 ---
 

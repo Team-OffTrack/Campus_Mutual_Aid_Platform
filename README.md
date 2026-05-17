@@ -55,33 +55,51 @@
 
 - **JDK 17+**
 - **Maven 3.8+**
-- **MariaDB**（Arch Linux: `sudo pacman -S mariadb`）
-- **Redis**（Arch Linux: `sudo pacman -S redis`）
+- **MariaDB**（Arch: `sudo pacman -S mariadb`；Debian: `sudo apt install mariadb-server`）
+- **Redis**（Arch: `sudo pacman -S redis`；Debian: `sudo apt install redis-server`）
 - **Node.js 18+**
 
 ### 1. 初始化数据库
 
 ```bash
-# 初始化 MariaDB 数据目录（仅首次）
-sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
-
 # 启动服务
 sudo systemctl start mariadb redis
 
 # 创建数据库
-sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARACTER SET utf8mb4;"
+sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-### 2. 启动后端
+> **Debian / Ubuntu 注意**：MariaDB 默认使用 unix_socket 认证，不允许密码登录。需要先改为密码认证：
+> ```bash
+> sudo mariadb -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;"
+> ```
+
+### 2. 生成 SSL 证书（仅首次）
+
+项目已启用 HTTPS。每个开发机需要生成自己的自签名证书：
+
+```bash
+cd backend/src/main/resources
+keytool -genkeypair -alias campus-help -keyalg RSA -keysize 2048 \
+  -storetype PKCS12 -keystore keystore.p12 -validity 3650 \
+  -storepass changeit -keypass changeit -dname "CN=campus-help" \
+  -ext "SAN=DNS:localhost,IP:127.0.0.1"
+```
+
+证书文件（`*.p12`, `*.jks`）已在 `.gitignore` 排除，不会提交到仓库。
+
+### 3. 启动后端
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
+后端运行在 `https://localhost:8080`（HTTPS，自签名证书）。
+
 首次启动 Flyway 会自动执行建表迁移，并创建一个默认管理员 `admin / admin123`。
 
-### 3. 启动前端
+### 4. 启动前端
 
 ```bash
 cd frontend
@@ -91,7 +109,7 @@ npm run dev
 
 浏览器打开 `http://localhost:5173`。前端开发服务器会将 `/api` 请求自动代理到后端 `localhost:8080`。
 
-### 4. 运行测试
+### 5. 运行测试
 
 ```bash
 cd backend
