@@ -271,7 +271,7 @@ class DemandControllerTest {
     void getById_nonExistent_shouldReturnError() throws Exception {
         mockMvc.perform(get("/api/v1/demands/99999")
                         .header("Authorization", "Bearer " + authToken))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404));
     }
 

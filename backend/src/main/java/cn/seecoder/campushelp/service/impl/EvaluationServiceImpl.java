@@ -1,0 +1,178 @@
+package cn.seecoder.campushelp.service.impl;
+
+import cn.seecoder.campushelp.common.BusinessException;
+import cn.seecoder.campushelp.common.ResultCode;
+import cn.seecoder.campushelp.dto.CreateEvaluationRequest;
+import cn.seecoder.campushelp.dto.EvaluationResponse;
+import cn.seecoder.campushelp.entity.Demand;
+import cn.seecoder.campushelp.entity.Evaluation;
+import cn.seecoder.campushelp.entity.User;
+import cn.seecoder.campushelp.entity.UserAccount;
+import cn.seecoder.campushelp.mapper.DemandMapper;
+import cn.seecoder.campushelp.mapper.EvaluationMapper;
+import cn.seecoder.campushelp.mapper.UserAccountMapper;
+import cn.seecoder.campushelp.mapper.UserMapper;
+import cn.seecoder.campushelp.service.EvaluationService;
+import cn.seecoder.campushelp.service.NotificationService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class EvaluationServiceImpl implements EvaluationService {
+
+    private final EvaluationMapper evaluationMapper;
+    private final DemandMapper demandMapper;
+    private final UserMapper userMapper;
+    private final UserAccountMapper userAccountMapper;
+    private final NotificationService notificationService;
+
+    public EvaluationServiceImpl(EvaluationMapper evaluationMapper, DemandMapper demandMapper,
+                                  UserMapper userMapper, UserAccountMapper userAccountMapper,
+                                  NotificationService notificationService) {
+        this.evaluationMapper = evaluationMapper;
+        this.demandMapper = demandMapper;
+        this.userMapper = userMapper;
+        this.userAccountMapper = userAccountMapper;
+        this.notificationService = notificationService;
+    }
+
+    @Override
+    @Transactional
+    public EvaluationResponse create(Long evaluatorId, CreateEvaluationRequest request) {
+        Demand demand = demandMapper.selectById(request.getDemandId());
+        if (demand == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "需求不存在");
+        }
+        if (!"COMPLETED".equals(demand.getStatus())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "只能评价已完成的需求");
+        }
+
+        Long publisherId = demand.getPublisherId();
+        Long acceptorId = demand.getAcceptorId();
+        if (!evaluatorId.equals(publisherId) && !evaluatorId.equals(acceptorId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只有需求参与方可以评价");
+        }
+
+        // Check duplicate: one evaluation per evaluator per demand
+        Long count = evaluationMapper.selectCount(new LambdaQueryWrapper<Evaluation>()
+                .eq(Evaluation::getDemandId, request.getDemandId())
+                .eq(Evaluation::getEvaluatorId, evaluatorId));
+        if (count > 0) {
+            throw new BusinessException(ResultCode.CONFLICT, "您已经评价过该需求，请通过修改评价更新评分");
+        }
+
+        // Target is the other participant
+        Long targetId = evaluatorId.equals(publisherId) ? acceptorId : publisherId;
+
+        Evaluation e = new Evaluation();
+        e.setDemandId(request.getDemandId());
+        e.setEvaluatorId(evaluatorId);
+        e.setTargetUserId(targetId);
+        e.setRating(request.getRating());
+        e.setComment(request.getComment());
+        evaluationMapper.insert(e);
+
+        // Notify the other participant
+        User evaluator = userMapper.selectById(evaluatorId);
+        notificationService.notifyEvaluationReceived(
+                targetId, demand.getTitle(), demand.getDemandId(),
+                evaluator.getName(), request.getRating());
+
+        // Recalculate target's reputation
+        updateReputationScore(targetId);
+
+        return EvaluationResponse.from(e, evaluator.getName());
+    }
+
+    @Override
+    @Transactional
+    public EvaluationResponse update(Long evaluationId, Long evaluatorId, CreateEvaluationRequest request) {
+        Evaluation e = evaluationMapper.selectById(evaluationId);
+        if (e == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "评价不存在");
+        }
+        if (!e.getEvaluatorId().equals(evaluatorId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只能修改自己的评价");
+        }
+
+        e.setRating(request.getRating());
+        e.setComment(request.getComment());
+        evaluationMapper.updateById(e);
+
+        // Re-notify the other party
+        Demand demand = demandMapper.selectById(e.getDemandId());
+        User evaluator = userMapper.selectById(evaluatorId);
+        if (demand != null && evaluator != null) {
+            notificationService.notifyEvaluationUpdated(
+                    e.getTargetUserId(), demand.getTitle(), demand.getDemandId(),
+                    evaluator.getName(), request.getRating());
+        }
+
+        // Recalculate target's reputation
+        updateReputationScore(e.getTargetUserId());
+
+        return EvaluationResponse.from(e, evaluator.getName());
+    }
+
+    @Override
+    public List<EvaluationResponse> getByDemand(Long demandId) {
+        List<Evaluation> evals = evaluationMapper.selectList(
+                new LambdaQueryWrapper<Evaluation>()
+                        .eq(Evaluation::getDemandId, demandId)
+                        .orderByAsc(Evaluation::getCreateTime));
+        return evals.stream()
+                .map(e -> {
+                    User evaluator = userMapper.selectById(e.getEvaluatorId());
+                    return EvaluationResponse.from(e,
+                            evaluator != null ? evaluator.getName() : "未知用户");
+                })
+                .toList();
+    }
+
+    @Override
+    public EvaluationResponse getMine(Long demandId, Long evaluatorId) {
+        Evaluation e = evaluationMapper.selectOne(
+                new LambdaQueryWrapper<Evaluation>()
+                        .eq(Evaluation::getDemandId, demandId)
+                        .eq(Evaluation::getEvaluatorId, evaluatorId));
+        if (e == null) return null;
+        User evaluator = userMapper.selectById(evaluatorId);
+        return EvaluationResponse.from(e,
+                evaluator != null ? evaluator.getName() : "未知用户");
+    }
+
+    @Override
+    public List<EvaluationResponse> getByUser(Long userId) {
+        List<Evaluation> evals = evaluationMapper.selectList(
+                new LambdaQueryWrapper<Evaluation>()
+                        .eq(Evaluation::getTargetUserId, userId)
+                        .orderByDesc(Evaluation::getCreateTime));
+        return evals.stream()
+                .map(e -> {
+                    User evaluator = userMapper.selectById(e.getEvaluatorId());
+                    return EvaluationResponse.from(e,
+                            evaluator != null ? evaluator.getName() : "未知用户");
+                })
+                .toList();
+    }
+
+    /** Recalculate the user's reputation score as the rounded average of all received ratings. */
+    private void updateReputationScore(Long userId) {
+        List<Evaluation> evals = evaluationMapper.selectList(
+                new LambdaQueryWrapper<Evaluation>()
+                        .eq(Evaluation::getTargetUserId, userId));
+        double avg = evals.isEmpty() ? 5.0
+                : evals.stream().mapToInt(Evaluation::getRating).average().orElse(5.0);
+        avg = Math.round(avg * 10.0) / 10.0;
+
+        UserAccount account = userAccountMapper.selectOne(
+                new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, userId));
+        if (account != null) {
+            account.setReputationScore(avg);
+            userAccountMapper.updateById(account);
+        }
+    }
+}

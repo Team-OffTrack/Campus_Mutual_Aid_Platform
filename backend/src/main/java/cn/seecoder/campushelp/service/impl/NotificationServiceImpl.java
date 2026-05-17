@@ -59,6 +59,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void notifyTaskCompleted(Long acceptorId, String demandTitle, Long demandId) {
+        create(acceptorId, "COMPLETE",
+                "任务已完成",
+                "您承接的需求「" + demandTitle + "」已被发布者确认完成，去评价一下吧",
+                demandId);
+    }
+
+    @Override
+    public void notifyEvaluationReceived(Long targetUserId, String demandTitle, Long demandId,
+                                          String evaluatorName, int rating) {
+        create(targetUserId, "EVALUATION",
+                "收到新评价",
+                evaluatorName + " 对需求「" + demandTitle + "」给出了 " + rating + " 星评价",
+                demandId);
+    }
+
+    @Override
+    public void notifyEvaluationUpdated(Long targetUserId, String demandTitle, Long demandId,
+                                         String evaluatorName, int rating) {
+        create(targetUserId, "EVALUATION",
+                "评价已更新",
+                evaluatorName + " 修改了对需求「" + demandTitle + "」的评价（" + rating + " 星）",
+                demandId);
+    }
+
+    @Override
     public List<Notification> listByUser(Long userId) {
         return notificationMapper.selectList(
                 new LambdaQueryWrapper<Notification>()

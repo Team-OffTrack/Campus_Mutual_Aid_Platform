@@ -32,6 +32,15 @@ public interface NotificationService {
     /** Mark all notifications as read for a user. */
     void markAllRead(Long userId);
 
+    /** Notify the acceptor that the demand was completed and they can evaluate. */
+    void notifyTaskCompleted(Long acceptorId, String demandTitle, Long demandId);
+
+    /** Notify the other party that they received a new evaluation. */
+    void notifyEvaluationReceived(Long targetUserId, String demandTitle, Long demandId, String evaluatorName, int rating);
+
+    /** Notify the other party that an evaluation was updated. */
+    void notifyEvaluationUpdated(Long targetUserId, String demandTitle, Long demandId, String evaluatorName, int rating);
+
     /** Count unread notifications for a user. */
     long unreadCount(Long userId);
 }

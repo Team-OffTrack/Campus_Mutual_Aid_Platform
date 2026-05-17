@@ -166,6 +166,11 @@ public class DemandServiceImpl implements DemandService {
         // Notify publisher
         notificationService.notifyDemandCompleted(
                 publisher.getUserId(), demand.getTitle(), demand.getDemandId());
+        // Also notify acceptor that the task is complete and they can evaluate
+        if (acceptor != null) {
+            notificationService.notifyTaskCompleted(
+                    acceptor.getUserId(), demand.getTitle(), demand.getDemandId());
+        }
         return DemandResponse.from(demand, publisher, acceptor);
     }
 

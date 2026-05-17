@@ -18,7 +18,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResult<Void>> handleBusiness(BusinessException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        HttpStatus httpStatus = switch (e.getCode()) {
+            case ResultCode.FORBIDDEN   -> HttpStatus.FORBIDDEN;
+            case ResultCode.NOT_FOUND   -> HttpStatus.NOT_FOUND;
+            case ResultCode.CONFLICT    -> HttpStatus.CONFLICT;
+            default                     -> HttpStatus.BAD_REQUEST;
+        };
+        return ResponseEntity.status(httpStatus)
                 .body(ApiResult.error(e.getCode(), e.getMessage()));
     }
 

@@ -112,6 +112,82 @@
           <span>该需求已取消</span>
         </div>
       </div>
+
+      <!-- ═══ Evaluation / Comment section (visible when COMPLETED or CANCELLED) ═══ -->
+      <div v-if="demand.status === 'COMPLETED' || demand.status === 'CANCELLED'" class="detail-card eval-section">
+        <h3 class="card-subtitle">评价</h3>
+
+        <!-- List of evaluations as comment cards -->
+        <div v-if="evaluations.length > 0" class="eval-list">
+          <div v-for="e in evaluations" :key="e.evaluationId" class="eval-comment-card">
+            <div class="eval-comment-avatar" :style="{ background: avatarColor(e.evaluatorName) }">
+              {{ e.evaluatorName.charAt(0).toUpperCase() }}
+            </div>
+            <div class="eval-comment-body">
+              <div class="eval-comment-header">
+                <span class="eval-comment-author">{{ e.evaluatorName }}</span>
+                <span class="eval-comment-stars">{{ '★'.repeat(e.rating) }}{{ '☆'.repeat(5 - e.rating) }}</span>
+              </div>
+              <p v-if="e.comment" class="eval-comment-text">{{ e.comment }}</p>
+              <span class="eval-comment-time">{{ timeAgo(e.createTime) }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-else class="eval-empty">暂无评价</div>
+
+        <!-- My evaluation form area (participants only, only for COMPLETED demands) -->
+        <div v-if="isParticipant && demand.status === 'COMPLETED'" class="eval-form-area">
+          <div class="eval-divider"></div>
+
+          <!-- Not yet evaluated: show submit form -->
+          <template v-if="!myEval">
+            <h4 class="eval-form-title">提交评价</h4>
+            <div class="star-row">
+              <van-icon v-for="i in 5" :key="i"
+                :name="i <= ratingValue ? 'star' : 'star-o'"
+                :color="i <= ratingValue ? '#EAB308' : '#D1D5DB'"
+                size="28" @click="ratingValue = i" />
+            </div>
+            <van-field v-model="ratingComment" type="textarea" rows="2"
+              placeholder="说点什么…（选填）" class="eval-input" />
+            <van-button block round type="primary" size="small"
+              :loading="submittingEval" @click="submitEvaluation">
+              提交评价
+            </van-button>
+          </template>
+
+          <!-- Already evaluated: show edit toggle -->
+          <template v-else>
+            <div class="my-eval-banner">
+              <span class="my-eval-label">我的评价</span>
+              <span class="my-eval-rating">{{ '★'.repeat(myEval.rating) }}{{ '☆'.repeat(5 - myEval.rating) }}</span>
+            </div>
+            <p v-if="myEval.comment" class="my-eval-comment">{{ myEval.comment }}</p>
+
+            <template v-if="editingMyEval">
+              <div class="star-row">
+                <van-icon v-for="i in 5" :key="i"
+                  :name="i <= ratingValue ? 'star' : 'star-o'"
+                  :color="i <= ratingValue ? '#EAB308' : '#D1D5DB'"
+                  size="28" @click="ratingValue = i" />
+              </div>
+              <van-field v-model="ratingComment" type="textarea" rows="2"
+                placeholder="说点什么…（选填）" class="eval-input" />
+              <div class="eval-edit-actions">
+                <van-button round size="small" @click="editingMyEval = false">取消</van-button>
+                <van-button round type="primary" size="small"
+                  :loading="submittingEval" @click="submitUpdateEvaluation">
+                  保存修改
+                </van-button>
+              </div>
+            </template>
+            <van-button v-else block round plain type="primary" size="small"
+              @click="startEditMyEval">
+              修改评价
+            </van-button>
+          </template>
+        </div>
+      </div>
     </div>
 
     <!-- Loading / Error states -->
@@ -132,6 +208,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
+import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -143,9 +220,18 @@ const demand = ref(null)
 const error = ref(null)
 const acting = ref(false)
 
+// Evaluation state
+const evaluations = ref([])
+const myEval = ref(null)        // the current user's existing evaluation (or null)
+const ratingValue = ref(5)
+const ratingComment = ref('')
+const submittingEval = ref(false)
+const editingMyEval = ref(false)
+
 const userId = computed(() => Number(authStore.userId))
 const isOwner = computed(() => demand.value && userId.value === demand.value.publisherId)
 const isAcceptor = computed(() => demand.value && userId.value === demand.value.acceptorId)
+const isParticipant = computed(() => isOwner.value || isAcceptor.value)
 
 const TYPE_STYLES = {
   errand: { background: '#FFF4ED', color: '#FF7849' },
@@ -181,6 +267,19 @@ function formatTime(t) {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
+function timeAgo(t) {
+  if (!t) return ''
+  const diff = Date.now() - new Date(t).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return '刚刚'
+  if (mins < 60) return mins + ' 分钟前'
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return hours + ' 小时前'
+  const days = Math.floor(hours / 24)
+  if (days < 30) return days + ' 天前'
+  return formatTime(t)
+}
+
 const AVATAR_COLORS = ['#5C6BF8', '#06B6D4', '#22C55E', '#EF4444', '#A855F7', '#EC4899', '#EAB308', '#F97316']
 function avatarColor(n) { return AVATAR_COLORS[(n || '?').charCodeAt(0) % AVATAR_COLORS.length] }
 
@@ -189,8 +288,79 @@ async function fetchDetail() {
     const id = route.params.demandId
     demand.value = await getDemand(id)
     error.value = null
-  } catch (e) {
+    await fetchEvaluations()
+  } catch {
     error.value = '加载失败，请重试'
+  }
+}
+
+async function fetchEvaluations() {
+  try {
+    const id = route.params.demandId
+    evaluations.value = await getEvaluationsByDemand(id)
+    // Also load my own evaluation if I haven't already
+    if (isParticipant.value) {
+      myEval.value = await getMyEvaluation(id)
+    }
+  } catch { /* skip — evaluations are non-critical, client.js handles error toasts */ }
+}
+
+function startEditMyEval() {
+  if (myEval.value) {
+    ratingValue.value = myEval.value.rating
+    ratingComment.value = myEval.value.comment || ''
+  }
+  editingMyEval.value = true
+}
+
+async function submitEvaluation() {
+  if (submittingEval.value) return
+  submittingEval.value = true
+  try {
+    const result = await createEvaluation({
+      demandId: demand.value.demandId,
+      rating: ratingValue.value,
+      comment: ratingComment.value || null
+    })
+    showToast('评价成功')
+    // Immediately update local state — no stale form, no stuck button
+    myEval.value = result
+    evaluations.value = [...evaluations.value, result]
+    ratingValue.value = 5
+    ratingComment.value = ''
+    // Background sync
+    fetchEvaluations()
+  } catch {
+    // handled by client.js interceptor
+  } finally {
+    submittingEval.value = false
+  }
+}
+
+async function submitUpdateEvaluation() {
+  if (submittingEval.value || !myEval.value) return
+  submittingEval.value = true
+  try {
+    const result = await updateEvaluation(myEval.value.evaluationId, {
+      demandId: demand.value.demandId,
+      rating: ratingValue.value,
+      comment: ratingComment.value || null
+    })
+    showToast('评价已更新')
+    // Update local state immediately
+    myEval.value = result
+    evaluations.value = evaluations.value.map(e =>
+      e.evaluationId === result.evaluationId ? result : e
+    )
+    editingMyEval.value = false
+    ratingValue.value = 5
+    ratingComment.value = ''
+    // Background sync
+    fetchEvaluations()
+  } catch {
+    // handled by client.js interceptor
+  } finally {
+    submittingEval.value = false
   }
 }
 
@@ -204,8 +374,9 @@ async function handleCancel() {
     await cancelDemand(demand.value.demandId)
     demand.value.status = 'CANCELLED'
     showToast('已取消')
-  } catch (e) { /* skip */ }
-  finally { acting.value = false }
+  } catch {
+    // handled by client.js interceptor
+  } finally { acting.value = false }
 }
 
 async function handleAccept() {
@@ -220,8 +391,9 @@ async function handleAccept() {
     demand.value.acceptorId = data.acceptorId
     demand.value.acceptorName = data.acceptorName
     showToast('接单成功')
-  } catch (e) { /* skip */ }
-  finally { acting.value = false }
+  } catch {
+    // handled by client.js interceptor
+  } finally { acting.value = false }
 }
 
 async function handleComplete() {
@@ -234,8 +406,11 @@ async function handleComplete() {
     const data = await completeDemand(demand.value.demandId)
     demand.value.status = data.status
     showToast('已完成')
-  } catch (e) { /* skip */ }
-  finally { acting.value = false }
+    // Refresh evaluations — demand is now COMPLETED so evaluation form can appear
+    await fetchEvaluations()
+  } catch {
+    // handled by client.js interceptor
+  } finally { acting.value = false }
 }
 
 onMounted(fetchDetail)
@@ -317,6 +492,50 @@ onMounted(fetchDetail)
   gap: 16px; padding: 80px 16px; text-align: center; color: var(--c-text-3);
 }
 .error-state p { font-size: 15px; }
+
+/* ════════════════════════════════════════
+   Evaluation / Comment section
+   ════════════════════════════════════════ */
+.eval-section { gap: 14px; }
+
+/* Comment-style evaluation cards */
+.eval-list { display: flex; flex-direction: column; gap: 14px; }
+.eval-comment-card {
+  display: flex; gap: 12px;
+}
+.eval-comment-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.eval-comment-body {
+  flex: 1; min-width: 0;
+  padding: 10px 14px; background: var(--c-bg); border-radius: var(--r-md);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.eval-comment-header { display: flex; justify-content: space-between; align-items: center; }
+.eval-comment-author { font-size: 13px; font-weight: 600; color: var(--c-text-1); }
+.eval-comment-stars { color: #EAB308; letter-spacing: 1px; font-size: 14px; }
+.eval-comment-text { font-size: 14px; color: var(--c-text-2); line-height: 1.5; margin: 2px 0; }
+.eval-comment-time { font-size: 11px; color: var(--c-text-3); }
+
+.eval-empty { font-size: 13px; color: var(--c-text-3); text-align: center; padding: 8px; }
+
+/* Evaluation form */
+.eval-form-area { display: flex; flex-direction: column; gap: 12px; }
+.eval-divider { height: 1px; background: var(--c-border); margin: 4px 0; }
+.eval-form-title { font-size: 14px; font-weight: 600; color: var(--c-text-1); }
+.star-row { display: flex; gap: 6px; justify-content: center; padding: 4px 0; }
+.star-row .van-icon { cursor: pointer; }
+.eval-input { background: var(--c-bg); border-radius: var(--r-sm); }
+
+/* My evaluation banner */
+.my-eval-banner { display: flex; justify-content: space-between; align-items: center; }
+.my-eval-label { font-size: 13px; font-weight: 600; color: var(--c-text-1); }
+.my-eval-rating { color: #EAB308; letter-spacing: 1px; font-size: 14px; }
+.my-eval-comment { font-size: 13px; color: var(--c-text-2); line-height: 1.5; margin: 0; }
+
+.eval-edit-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
 @media (min-width: 768px) {
   .detail-page { background: var(--c-surface); }
