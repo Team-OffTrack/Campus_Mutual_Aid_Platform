@@ -38,6 +38,20 @@
               @focus="focusedField = 'desc'" @blur="focusedField = null" />
           </div>
 
+          <!-- Image upload -->
+          <div class="form-section">
+            <label class="section-label">添加图片（选填）</label>
+            <van-uploader
+              v-model="imageFiles"
+              :max-count="9"
+              :max-size="5 * 1024 * 1024"
+              accept="image/*"
+              :before-read="beforeReadImage"
+              :after-read="afterReadImage"
+              @oversize="showToast('图片不能超过5MB')"
+            />
+          </div>
+
           <div class="field-row" :class="{ focused: focusedField === 'location' }">
             <van-icon name="location-o" class="field-icon" />
             <van-field v-model="form.location" placeholder="地点（选填）"
@@ -86,12 +100,14 @@
 import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
-import { publishDemand } from '@/api/demand'
+import { publishDemand, uploadDemandImage } from '@/api/demand'
 
 const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const focusedField = ref(null)
+const imageFiles = ref([])
+const uploadedImageUrls = ref([])
 
 // Pre-select type from query param (e.g. /demands/publish?type=errand)
 const initialType = route.query.type
@@ -115,12 +131,34 @@ const demandTypes = [
   { value: 'other', label: '其他', icon: 'ellipsis', color: '#94A3C8' }
 ]
 
+function beforeReadImage(file) {
+  if (!file.type.startsWith('image/')) {
+    showToast('只支持图片文件')
+    return false
+  }
+  return true
+}
+
+async function afterReadImage(item) {
+  try {
+    const url = await uploadDemandImage(item.file)
+    uploadedImageUrls.value.push(url)
+  } catch {
+    // Remove the failed file from the uploader list
+    imageFiles.value = imageFiles.value.filter(f => f !== item)
+    /* toast handled by interceptor */
+  }
+}
+
 async function handlePublish() {
   loading.value = true
   try {
     const payload = { ...form }
     if (!payload.location) payload.location = null
     if (!payload.rewardAmount) payload.rewardAmount = 0
+    if (uploadedImageUrls.value.length > 0) {
+      payload.images = uploadedImageUrls.value.join(',')
+    }
     await publishDemand(payload)
     showToast('发布成功')
     router.push('/demands')
@@ -208,6 +246,14 @@ async function handlePublish() {
 .anon-left { display: flex; align-items: center; gap: 8px; color: var(--c-text-3); }
 .anon-label { font-size: 14px; color: var(--c-text-1); font-weight: 600; }
 .anon-hint { font-size: 12px; color: var(--c-text-3); }
+
+/* Uploader */
+.form-section :deep(.van-uploader__upload) {
+  width: 80px; height: 80px; border-radius: var(--r-md);
+}
+.form-section :deep(.van-uploader__preview-image) {
+  width: 80px; height: 80px; border-radius: var(--r-md);
+}
 
 .submit-btn { height: 48px; font-size: 16px; margin-top: 4px; }
 

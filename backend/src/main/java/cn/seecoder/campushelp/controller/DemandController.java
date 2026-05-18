@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,6 +34,14 @@ public class DemandController {
                                               @Valid @RequestBody CreateDemandRequest request) {
         Long userId = (Long) auth.getPrincipal();
         return ApiResult.success(demandService.publish(userId, request));
+    }
+
+    /** Upload a demand image. Returns the server-relative URL to include in publish. */
+    @PostMapping("/upload-image")
+    public ApiResult<String> uploadImage(Authentication auth,
+                                          @RequestParam("file") MultipartFile file) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(demandService.uploadImage(userId, file));
     }
 
     /** Paginated demand list with optional type, keyword filters and sort order. */

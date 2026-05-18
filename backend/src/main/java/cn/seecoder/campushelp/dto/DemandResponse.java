@@ -26,6 +26,7 @@ public class DemandResponse {
     private String rewardType;
     private Integer rewardAmount;
     private Boolean isAnonymous;
+    private String images;
     private String status;
     private LocalDateTime createTime;
 
@@ -48,6 +49,7 @@ public class DemandResponse {
         rsp.rewardType = demand.getRewardType();
         rsp.rewardAmount = demand.getRewardAmount();
         rsp.isAnonymous = demand.isAnonymous();
+        rsp.images = demand.getImages();
         rsp.status = demand.getStatus();
         rsp.createTime = demand.getCreateTime();
 
@@ -82,6 +84,7 @@ public class DemandResponse {
     public String getRewardType() { return rewardType; }
     public Integer getRewardAmount() { return rewardAmount; }
     public Boolean getIsAnonymous() { return isAnonymous; }
+    public String getImages() { return images; }
     public String getStatus() { return status; }
     public LocalDateTime getCreateTime() { return createTime; }
 }

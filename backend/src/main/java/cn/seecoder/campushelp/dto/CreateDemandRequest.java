@@ -23,6 +23,7 @@ public class CreateDemandRequest {
     private String rewardType;
     private Integer rewardAmount;
     private Boolean isAnonymous;
+    private String images;
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
@@ -47,4 +48,7 @@ public class CreateDemandRequest {
 
     public Boolean getIsAnonymous() { return isAnonymous; }
     public void setIsAnonymous(Boolean isAnonymous) { this.isAnonymous = isAnonymous; }
+
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
 }

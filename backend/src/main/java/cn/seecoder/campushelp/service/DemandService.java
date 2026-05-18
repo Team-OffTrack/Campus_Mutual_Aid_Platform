@@ -3,6 +3,7 @@ package cn.seecoder.campushelp.service;
 import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public interface DemandService {
 
     /** Publish a new demand. */
     DemandResponse publish(Long publisherId, CreateDemandRequest request);
+
+    /** Upload a demand image. Returns the server-relative URL. */
+    String uploadImage(Long userId, MultipartFile file);
 
     /** Paginated list with optional type, keyword filters and sort order. */
     Page<DemandResponse> list(int pageNum, int pageSize, String type, String keyword, String sortBy);

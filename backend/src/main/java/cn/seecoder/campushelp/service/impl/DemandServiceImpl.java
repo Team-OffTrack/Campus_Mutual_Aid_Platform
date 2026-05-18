@@ -14,7 +14,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,6 +51,7 @@ public class DemandServiceImpl implements DemandService {
         demand.setRewardType(request.getRewardType() != null ? request.getRewardType() : "point");
         demand.setRewardAmount(request.getRewardAmount() != null ? request.getRewardAmount() : 0);
         demand.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous() ? 1 : 0);
+        demand.setImages(request.getImages());
         demand.setStatus("OPEN");
 
         if (demand.getRewardAmount() < 0) {
@@ -59,6 +65,28 @@ public class DemandServiceImpl implements DemandService {
 
         User publisher = userMapper.selectById(publisherId);
         return DemandResponse.from(demand, publisher);
+    }
+
+    @Override
+    public String uploadImage(Long userId, MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "只支持图片文件");
+        }
+
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        if (ext == null || ext.isBlank()) ext = "jpg";
+        String filename = userId + "_" + System.currentTimeMillis() + "." + ext.toLowerCase();
+
+        try {
+            Path dir = Path.of("uploads", "demands");
+            Files.createDirectories(dir);
+            file.transferTo(dir.resolve(filename).toAbsolutePath());
+        } catch (IOException e) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "图片上传失败");
+        }
+
+        return "/uploads/demands/" + filename;
     }
 
     @Override

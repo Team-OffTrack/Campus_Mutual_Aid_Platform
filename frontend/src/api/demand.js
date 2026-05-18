@@ -27,3 +27,11 @@ export function completeDemand(demandId) {
 export function myOrders(role) {
   return client.get('/demands/my', { params: { role } })
 }
+
+export function uploadDemandImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return client.post('/demands/upload-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

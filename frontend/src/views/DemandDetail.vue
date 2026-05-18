@@ -31,6 +31,16 @@
 
         <div class="d-desc">{{ demand.description }}</div>
 
+        <!-- Image gallery -->
+        <div v-if="demandImages.length > 0" class="d-images">
+          <img
+            v-for="(url, idx) in demandImages" :key="idx"
+            :src="url"
+            class="d-image-thumb"
+            @click="previewImage(idx)"
+          />
+        </div>
+
         <!-- Meta grid -->
         <div class="d-meta-grid">
           <div class="meta-item" v-if="demand.location">
@@ -212,6 +222,13 @@
       <van-loading size="32" />
       <p>加载中…</p>
     </div>
+
+    <!-- Full-screen image preview -->
+    <ImageViewer
+      v-model:show="showPreview"
+      :images="demandImages"
+      :start-position="previewIndex"
+    />
   </div>
 </template>
 
@@ -219,6 +236,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
+import ImageViewer from '@/components/ImageViewer.vue'
 import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
@@ -241,6 +259,10 @@ const ratingComment = ref('')
 const submittingEval = ref(false)
 const editingMyEval = ref(false)
 
+// Image preview state
+const showPreview = ref(false)
+const previewIndex = ref(0)
+
 // Chat state
 const startingChat = ref(false)
 
@@ -262,6 +284,15 @@ const userId = computed(() => Number(authStore.userId))
 const isOwner = computed(() => demand.value && userId.value === demand.value.publisherId)
 const isAcceptor = computed(() => demand.value && userId.value === demand.value.acceptorId)
 const isParticipant = computed(() => isOwner.value || isAcceptor.value)
+const demandImages = computed(() => {
+  if (!demand.value?.images) return []
+  return demand.value.images.split(',').filter(Boolean)
+})
+
+function previewImage(index) {
+  previewIndex.value = index
+  showPreview.value = true
+}
 
 const TYPE_STYLES = {
   errand: { background: '#FFF4ED', color: '#FF7849' },
@@ -495,6 +526,15 @@ onMounted(fetchDetail)
 .pub-time { font-size: 12px; color: var(--c-text-3); }
 
 .d-desc { font-size: 15px; color: var(--c-text-2); line-height: 1.7; white-space: pre-wrap; }
+
+/* Image gallery */
+.d-images { display: flex; flex-wrap: wrap; gap: 8px; }
+.d-image-thumb {
+  width: 96px; height: 96px;
+  object-fit: cover; border-radius: var(--r-sm);
+  cursor: pointer; transition: opacity var(--ease);
+}
+.d-image-thumb:active { opacity: 0.8; }
 
 /* Meta grid */
 .d-meta-grid {
