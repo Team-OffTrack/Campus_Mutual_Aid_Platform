@@ -174,6 +174,7 @@ onMounted(async () => {
   try {
     const data = await getProfile()
     profile.value = data
+    form.name = data.name || ''
     form.isAnonymous = data.isAnonymous || false
     form.maskName = data.maskName || ''
   } catch (e) { /* skip */ }

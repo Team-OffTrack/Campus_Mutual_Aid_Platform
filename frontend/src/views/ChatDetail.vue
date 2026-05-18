@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getMessages, sendMessage } from '@/api/chat'
 import { getProfile } from '@/api/user'
@@ -92,6 +92,7 @@ function timeAgo(t) {
 }
 
 function formatTime(t) {
+  if (!t) return ''
   const d = new Date(t)
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
@@ -106,17 +107,7 @@ function scrollToBottom() {
 async function fetchMessages() {
   try {
     const msgs = await getMessages(conversationId.value)
-    if (msgs.length > 0) {
-      // Determine the other user from the first message where sender != me
-      for (const m of msgs) {
-        if (m.senderId !== userId.value) {
-          otherUserName.value = ''  // we don't have name on message, load from first fetch
-          break
-        }
-      }
-    }
     messages.value = msgs
-    await loadProfileInfo()
     scrollToBottom()
   } catch { /* client.js handles errors */ }
 }
@@ -135,7 +126,6 @@ async function handleSend() {
   sending.value = true
   try {
     const msg = await sendMessage(conversationId.value, text)
-    // Optimistically push to local state
     messages.value = [...messages.value, msg]
     inputText.value = ''
     scrollToBottom()
@@ -143,7 +133,6 @@ async function handleSend() {
   finally { sending.value = false }
 }
 
-// Poll for new messages every 10 seconds
 function startPolling() {
   stopPolling()
   pollTimer = setInterval(async () => {
@@ -164,15 +153,21 @@ function stopPolling() {
   }
 }
 
+// Restart polling if conversationId changes (e.g. switching chats without remount)
+watch(conversationId, () => {
+  loading.value = true
+  fetchMessages().finally(() => { loading.value = false })
+  startPolling()
+})
+
 onMounted(async () => {
   loading.value = true
+  await loadProfileInfo()
   await fetchMessages()
   loading.value = false
   startPolling()
 })
 
-// Clean up polling on unmount (Vue 3.2+: onBeforeUnmount not strictly needed but clean)
-import { onBeforeUnmount } from 'vue'
 onBeforeUnmount(stopPolling)
 </script>
 

@@ -47,6 +47,14 @@ public class DemandServiceImpl implements DemandService {
         demand.setRewardAmount(request.getRewardAmount() != null ? request.getRewardAmount() : 0);
         demand.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous() ? 1 : 0);
         demand.setStatus("OPEN");
+
+        if (demand.getRewardAmount() < 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "悬赏金额不能为负数");
+        }
+        if (demand.getDeadline() != null && demand.getDeadline().isBefore(java.time.LocalDateTime.now())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "截止时间不能是过去的时间");
+        }
+
         demandMapper.insert(demand);
 
         User publisher = userMapper.selectById(publisherId);
@@ -179,8 +187,10 @@ public class DemandServiceImpl implements DemandService {
         LambdaQueryWrapper<Demand> wrapper = new LambdaQueryWrapper<>();
         if ("publisher".equals(role)) {
             wrapper.eq(Demand::getPublisherId, userId);
-        } else {
+        } else if ("acceptor".equals(role)) {
             wrapper.eq(Demand::getAcceptorId, userId);
+        } else {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "无效的角色参数，需要 publisher 或 acceptor");
         }
         wrapper.orderByDesc(Demand::getCreateTime);
         List<Demand> demands = demandMapper.selectList(wrapper);

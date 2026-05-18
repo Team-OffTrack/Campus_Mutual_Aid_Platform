@@ -75,8 +75,10 @@ public class EvaluationServiceImpl implements EvaluationService {
         e.setComment(request.getComment());
         evaluationMapper.insert(e);
 
-        // Notify the other participant
         User evaluator = userMapper.selectById(evaluatorId);
+        if (evaluator == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
         notificationService.notifyEvaluationReceived(
                 targetId, demand.getTitle(), demand.getDemandId(),
                 evaluator.getName(), request.getRating());

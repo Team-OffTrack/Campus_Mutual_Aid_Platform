@@ -105,8 +105,6 @@ import NavActions from '@/components/NavActions.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const nameInitial = computed(() => (authStore.name || '?').charAt(0).toUpperCase())
-
 const greeting = computed(() => {
   const h = new Date().getHours()
   if (h < 6)  return '夜深了'

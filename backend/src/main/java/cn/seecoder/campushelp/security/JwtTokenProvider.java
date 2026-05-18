@@ -51,7 +51,7 @@ public class JwtTokenProvider {
         try {
             parseClaims(token);
             return true;
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }

@@ -45,7 +45,7 @@ public class UserController {
 
     @PutMapping("/profile")
     public ApiResult<UserInfoResponse> updateProfile(Authentication auth,
-                                                      @RequestBody UpdateProfileRequest request) {
+                                                      @Valid @RequestBody UpdateProfileRequest request) {
         Long userId = (Long) auth.getPrincipal();
         return ApiResult.success(userService.updateProfile(userId, request));
     }

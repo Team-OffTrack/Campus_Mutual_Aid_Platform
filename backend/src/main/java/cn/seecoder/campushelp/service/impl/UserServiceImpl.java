@@ -123,6 +123,11 @@ public class UserServiceImpl implements UserService {
         if (request.getIsAnonymous() != null || request.getMaskName() != null) {
             PrivacyProfile profile = privacyProfileMapper.selectOne(
                     new LambdaQueryWrapper<PrivacyProfile>().eq(PrivacyProfile::getUserId, userId));
+            if (profile == null) {
+                profile = new PrivacyProfile();
+                profile.setUserId(userId);
+                privacyProfileMapper.insert(profile);
+            }
             if (request.getIsAnonymous() != null) {
                 profile.setIsAnonymous(request.getIsAnonymous() ? 1 : 0);
             }
@@ -178,6 +183,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUserStatus(Long userId, Integer status, Long operatorId) {
         if (userId.equals(operatorId)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "不能封禁自己");
@@ -188,6 +194,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public String updateAvatar(Long userId, MultipartFile file) {
         User user = findUserOrFail(userId);
 

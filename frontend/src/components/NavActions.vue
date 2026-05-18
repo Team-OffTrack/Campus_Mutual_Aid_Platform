@@ -24,13 +24,11 @@ const nameInitial = computed(() => (authStore.name || '?').charAt(0).toUpperCase
 const unreadNum = ref(0)
 
 async function fetchUnread() {
-  try {
-    const [notif, chat] = await Promise.all([
-      unreadCount().catch(() => ({ count: 0 })),
-      unreadChatCount().catch(() => ({ count: 0 }))
-    ])
-    unreadNum.value = (notif.count || 0) + (chat.count || 0)
-  } catch (e) { /* skip */ }
+  const [notif, chat] = await Promise.all([
+    unreadCount().catch(() => ({ count: 0 })),
+    unreadChatCount().catch(() => ({ count: 0 }))
+  ])
+  unreadNum.value = (notif.count || 0) + (chat.count || 0)
 }
 
 onMounted(fetchUnread)

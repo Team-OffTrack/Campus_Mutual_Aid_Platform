@@ -1,5 +1,7 @@
 package cn.seecoder.campushelp.security;
 
+import cn.seecoder.campushelp.entity.User;
+import cn.seecoder.campushelp.mapper.UserMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,17 +18,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Extracts JWT from the Authorization header and sets the Spring Security context.
- * Requests without a valid token proceed unauthenticated — access is gated by SecurityConfig.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserMapper userMapper;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserMapper userMapper) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -36,14 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             Claims claims = jwtTokenProvider.parseClaims(token);
+            Long userId = Long.valueOf(claims.getSubject());
+
+            // Reject tokens belonging to banned or deleted users
+            User user = userMapper.selectById(userId);
+            if (user == null || user.getStatus() == 0) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String role = claims.get("role", String.class);
             List<GrantedAuthority> authorities = List.of(
                     new SimpleGrantedAuthority("ROLE_" + role));
 
-            // Principal = userId, credentials = token string
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            Long.valueOf(claims.getSubject()), token, authorities);
+                    new UsernamePasswordAuthenticationToken(userId, token, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

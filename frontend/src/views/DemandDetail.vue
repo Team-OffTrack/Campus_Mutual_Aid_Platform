@@ -429,10 +429,7 @@ async function handleAccept() {
 
   acting.value = true
   try {
-    const data = await acceptDemand(demand.value.demandId)
-    demand.value.status = data.status
-    demand.value.acceptorId = data.acceptorId
-    demand.value.acceptorName = data.acceptorName
+    demand.value = await acceptDemand(demand.value.demandId)
     showToast('接单成功')
   } catch {
     // handled by client.js interceptor
@@ -446,8 +443,7 @@ async function handleComplete() {
 
   acting.value = true
   try {
-    const data = await completeDemand(demand.value.demandId)
-    demand.value.status = data.status
+    demand.value = await completeDemand(demand.value.demandId)
     showToast('已完成')
     // Refresh evaluations — demand is now COMPLETED so evaluation form can appear
     await fetchEvaluations()

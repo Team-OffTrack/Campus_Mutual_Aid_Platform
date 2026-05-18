@@ -1,14 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-/**
- * Route definitions with lazy-loaded page components.
- *
- * Route meta:
- * - guest: true  → only accessible when NOT logged in
- * - admin: true  → requires localStorage role === 'ADMIN'
- *
- * The beforeEach guard enforces these rules and redirects to /login or / as needed.
- */
 const routes = [
   {
     path: '/login',
@@ -75,26 +67,15 @@ const router = createRouter({
   routes
 })
 
-/**
- * Global navigation guard:
- * - Missing token + not a guest page → redirect /login
- * - Has token + guest page → redirect /
- * - Admin route + role !== 'ADMIN' → redirect /
- */
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const auth = useAuthStore()
 
-  if (!token && !to.meta.guest) {
+  if (!auth.isLoggedIn && !to.meta.guest) {
     next('/login')
-  } else if (token && to.meta.guest) {
+  } else if (auth.isLoggedIn && to.meta.guest) {
     next('/')
-  } else if (to.meta.admin) {
-    const role = localStorage.getItem('role')
-    if (role !== 'ADMIN') {
-      next('/')
-      return
-    }
-    next()
+  } else if (to.meta.admin && !auth.isAdmin) {
+    next('/')
   } else {
     next()
   }

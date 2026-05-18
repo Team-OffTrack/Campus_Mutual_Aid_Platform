@@ -7,6 +7,7 @@ import cn.seecoder.campushelp.entity.*;
 import cn.seecoder.campushelp.mapper.*;
 import cn.seecoder.campushelp.service.ChatService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,7 +81,16 @@ public class ChatServiceImpl implements ChatService {
         conv.setDemandId(demandId);
         conv.setUser1Id(u1);
         conv.setUser2Id(u2);
-        conversationMapper.insert(conv);
+        try {
+            conversationMapper.insert(conv);
+        } catch (DuplicateKeyException e) {
+            Conversation reQueried = conversationMapper.selectOne(
+                    new LambdaQueryWrapper<Conversation>()
+                            .eq(Conversation::getDemandId, demandId)
+                            .eq(Conversation::getUser1Id, u1)
+                            .eq(Conversation::getUser2Id, u2));
+            return buildResponse(reQueried, userId);
+        }
 
         return buildResponse(conv, userId);
     }
@@ -131,6 +141,11 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public Message sendMessage(Long conversationId, Long userId, String content) {
+        String trimmed = content != null ? content.trim() : "";
+        if (trimmed.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "消息不能为空");
+        }
+
         Conversation conv = conversationMapper.selectById(conversationId);
         if (conv == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "对话不存在");
@@ -142,13 +157,11 @@ public class ChatServiceImpl implements ChatService {
         Message msg = new Message();
         msg.setConversationId(conversationId);
         msg.setSenderId(userId);
-        msg.setContent(content.trim());
+        msg.setContent(trimmed);
         msg.setIsRead(0);
         messageMapper.insert(msg);
 
-        // Update conversation snapshot for the list preview.
-        // Use now() because createTime has FieldStrategy.NEVER and is not read back after insert.
-        conv.setLastMessage(content.trim());
+        conv.setLastMessage(trimmed);
         conv.setLastMessageAt(LocalDateTime.now());
         conversationMapper.updateById(conv);
 
@@ -157,25 +170,19 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public long unreadCount(Long userId) {
-        // Count messages in user's conversations where sender is not the user and is_read = 0
-        // We need to find all conversation IDs where the user participates, then count unread messages
-
         List<Conversation> convs = conversationMapper.selectList(
                 new LambdaQueryWrapper<Conversation>()
+                        .select(Conversation::getConversationId)
                         .and(w -> w.eq(Conversation::getUser1Id, userId)
                                 .or().eq(Conversation::getUser2Id, userId)));
         if (convs.isEmpty()) return 0;
 
-        long total = 0;
-        for (Conversation c : convs) {
-            long count = messageMapper.selectCount(
-                    new LambdaQueryWrapper<Message>()
-                            .eq(Message::getConversationId, c.getConversationId())
-                            .ne(Message::getSenderId, userId)
-                            .eq(Message::getIsRead, 0));
-            total += count;
-        }
-        return total;
+        List<Long> convIds = convs.stream().map(Conversation::getConversationId).toList();
+        return messageMapper.selectCount(
+                new LambdaQueryWrapper<Message>()
+                        .in(Message::getConversationId, convIds)
+                        .ne(Message::getSenderId, userId)
+                        .eq(Message::getIsRead, 0));
     }
 
     // ── private helpers ──

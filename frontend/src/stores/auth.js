@@ -23,18 +23,21 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => role.value === 'ADMIN')
 
+  const AUTH_KEYS = ['token', 'userId', 'name', 'role', 'avatar']
+
   /** Persist the login response into the store and localStorage. */
   function setAuth(data) {
-    token.value = data.token
-    userId.value = String(data.userId)
-    name.value = data.name
-    role.value = data.role
+    if (!data) return
+    token.value = data.token || ''
+    userId.value = data.userId != null ? String(data.userId) : ''
+    name.value = data.name || ''
+    role.value = data.role || ''
     avatar.value = data.avatar || ''
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('userId', String(data.userId))
-    localStorage.setItem('name', data.name)
-    localStorage.setItem('role', data.role)
-    if (data.avatar) localStorage.setItem('avatar', data.avatar)
+    localStorage.setItem('token', token.value)
+    localStorage.setItem('userId', userId.value)
+    localStorage.setItem('name', name.value)
+    localStorage.setItem('role', role.value)
+    localStorage.setItem('avatar', avatar.value)
   }
 
   /** Clear all auth state from memory and localStorage. */
@@ -44,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     name.value = ''
     role.value = ''
     avatar.value = ''
-    localStorage.clear()
+    AUTH_KEYS.forEach(k => localStorage.removeItem(k))
   }
 
   return { token, userId, name, role, avatar, isLoggedIn, isAdmin, setAuth, logout }

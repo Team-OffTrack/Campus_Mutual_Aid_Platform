@@ -175,6 +175,16 @@ class ChatServiceTest {
     }
 
     @Test
+    @DisplayName("Send message with blank content throws BAD_REQUEST")
+    void sendMessage_blankContent_shouldThrow() {
+        ConversationResponse conv = chatService.getOrCreateConversation(outsiderId, openDemandId, publisherId);
+        assertThrows(BusinessException.class,
+                () -> chatService.sendMessage(conv.getConversationId(), outsiderId, "   "));
+        assertThrows(BusinessException.class,
+                () -> chatService.sendMessage(conv.getConversationId(), outsiderId, ""));
+    }
+
+    @Test
     @DisplayName("Get messages returns in chronological order and marks read")
     void getMessages_shouldReturnOrderedAndMarkRead() {
         ConversationResponse conv = chatService.getOrCreateConversation(outsiderId, openDemandId, publisherId);
