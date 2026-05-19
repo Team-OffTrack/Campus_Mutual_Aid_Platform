@@ -55,6 +55,11 @@
         <van-loading v-else size="18" />
       </button>
 
+      <!-- Emoji picker button -->
+      <button class="img-btn" title="选择表情" @click="emojiShow = !emojiShow">
+        <span style="font-size:20px">😊</span>
+      </button>
+
       <van-field v-model="inputText" type="textarea" rows="1" autosize
         placeholder="输入消息…" class="chat-input"
         @keydown.enter.exact.prevent="handleSend" />
@@ -67,6 +72,9 @@
 
   <!-- Image viewer -->
   <ImageViewer v-model:show="viewerShow" :images="viewerImages" :startPosition="0" />
+
+  <!-- Emoji picker -->
+  <EmojiPicker v-model:show="emojiShow" @select="insertEmoji" />
 </template>
 
 <script setup>
@@ -76,6 +84,7 @@ import { getMessages, sendMessage, uploadChatImage } from '@/api/chat'
 import { getProfile } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
 import ImageViewer from '@/components/ImageViewer.vue'
+import EmojiPicker from '@/components/EmojiPicker.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -94,6 +103,7 @@ const sending = ref(false)
 const uploading = ref(false)
 const msgListRef = ref(null)
 const fileInputRef = ref(null)
+const emojiShow = ref(false)
 
 // Image viewer
 const viewerShow = ref(false)
@@ -171,6 +181,19 @@ async function onFilePicked(e) {
 function previewImage(url) {
   viewerImages.value = [url]
   viewerShow.value = true
+}
+
+function insertEmoji(emoji) {
+  const el = document.querySelector('.chat-input textarea')
+  const pos = el ? (el.selectionStart ?? inputText.value.length) : inputText.value.length
+  inputText.value = inputText.value.slice(0, pos) + emoji + inputText.value.slice(pos)
+  nextTick(() => {
+    if (el) {
+      el.focus()
+      const newPos = pos + emoji.length
+      el.setSelectionRange(newPos, newPos)
+    }
+  })
 }
 
 async function handleSend() {
