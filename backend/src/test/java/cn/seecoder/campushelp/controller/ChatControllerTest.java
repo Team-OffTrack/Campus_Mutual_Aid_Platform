@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -283,6 +284,42 @@ class ChatControllerTest {
                                 Map.of("demandId", openDemandId, "targetUserId", pubUserId))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    @DisplayName("POST /chat/conversations/{id}/messages sends an image message")
+    void sendImageMessage_shouldReturnMessage() throws Exception {
+        String rsp = mockMvc.perform(post("/api/v1/chat/conversations")
+                        .header("Authorization", "Bearer " + outToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("demandId", openDemandId, "targetUserId", getPublisherId()))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int convId = objectMapper.readTree(rsp).path("data").path("conversationId").asInt();
+
+        mockMvc.perform(post("/api/v1/chat/conversations/" + convId + "/messages")
+                        .header("Authorization", "Bearer " + outToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("type", "image", "imageUrl", "/uploads/chat/test.jpg"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.messageType").value("image"))
+                .andExpect(jsonPath("$.data.imageUrl").value("/uploads/chat/test.jpg"))
+                .andExpect(jsonPath("$.data.messageId").isNumber());
+    }
+
+    @Test
+    @DisplayName("POST /chat/upload-image returns 200 with URL")
+    void uploadImage_shouldReturnUrl() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.jpg", MediaType.IMAGE_JPEG_VALUE, "fake-image".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/chat/upload-image")
+                        .file(file)
+                        .header("Authorization", "Bearer " + outToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isString());
     }
 
     // ── helpers to get real user IDs from tokens ──

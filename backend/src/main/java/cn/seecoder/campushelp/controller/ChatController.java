@@ -9,6 +9,7 @@ import cn.seecoder.campushelp.service.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -52,13 +53,22 @@ public class ChatController {
         return ApiResult.success(chatService.getMessages(conversationId, userId));
     }
 
-    /** Send a text message in a conversation. */
+    /** Send a message (text or image) in a conversation. */
     @PostMapping("/conversations/{conversationId}/messages")
     public ApiResult<Message> sendMessage(Authentication auth,
                                            @PathVariable Long conversationId,
                                            @Valid @RequestBody SendMessageRequest req) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResult.success(chatService.sendMessage(conversationId, userId, req.getContent()));
+        return ApiResult.success(chatService.sendMessage(
+                conversationId, userId, req.getType(), req.getContent(), req.getImageUrl()));
+    }
+
+    /** Upload a chat image. Returns the server-relative URL to reference in sendMessage. */
+    @PostMapping("/upload-image")
+    public ApiResult<String> uploadImage(Authentication auth,
+                                         @RequestParam("file") MultipartFile file) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(chatService.uploadImage(userId, file));
     }
 
     /** Total unread chat messages for the current user (for badge display). */

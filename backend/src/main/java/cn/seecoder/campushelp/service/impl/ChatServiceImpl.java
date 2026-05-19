@@ -10,7 +10,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -140,10 +145,18 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public Message sendMessage(Long conversationId, Long userId, String content) {
-        String trimmed = content != null ? content.trim() : "";
-        if (trimmed.isEmpty()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "消息不能为空");
+    public Message sendMessage(Long conversationId, Long userId, String type, String content, String imageUrl) {
+        String msgType = type != null && !type.isBlank() ? type.trim() : "text";
+
+        if ("image".equals(msgType)) {
+            if (imageUrl == null || imageUrl.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "图片消息需要上传图片");
+            }
+        } else {
+            String trimmed = content != null ? content.trim() : "";
+            if (trimmed.isEmpty()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "消息不能为空");
+            }
         }
 
         Conversation conv = conversationMapper.selectById(conversationId);
@@ -157,15 +170,41 @@ public class ChatServiceImpl implements ChatService {
         Message msg = new Message();
         msg.setConversationId(conversationId);
         msg.setSenderId(userId);
-        msg.setContent(trimmed);
+        msg.setMessageType(msgType);
+        msg.setContent(content != null ? content.trim() : "");
+        msg.setImageUrl("image".equals(msgType) ? imageUrl : null);
         msg.setIsRead(0);
         messageMapper.insert(msg);
 
-        conv.setLastMessage(trimmed);
+        // Update conversation snapshot
+        String snapshot = "image".equals(msgType) ? "[图片]" : msg.getContent();
+        conv.setLastMessage(snapshot.length() > 500 ? snapshot.substring(0, 500) : snapshot);
         conv.setLastMessageAt(LocalDateTime.now());
         conversationMapper.updateById(conv);
 
         return msg;
+    }
+
+    @Override
+    public String uploadImage(Long userId, MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "只支持图片文件");
+        }
+
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        if (ext == null || ext.isBlank()) ext = "jpg";
+        String filename = userId + "_" + System.currentTimeMillis() + "." + ext.toLowerCase();
+
+        try {
+            Path dir = Path.of("uploads", "chat");
+            Files.createDirectories(dir);
+            file.transferTo(dir.resolve(filename).toAbsolutePath());
+        } catch (IOException e) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR, "图片上传失败");
+        }
+
+        return "/uploads/chat/" + filename;
     }
 
     @Override

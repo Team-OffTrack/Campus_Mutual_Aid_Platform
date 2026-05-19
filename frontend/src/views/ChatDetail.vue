@@ -4,6 +4,10 @@
     <van-nav-bar :title="otherUserName || '聊天'" left-arrow fixed placeholder
       class="chat-nav" @click-left="router.back()" />
 
+    <!-- Hidden file input for image picker -->
+    <input ref="fileInputRef" type="file" accept="image/*" style="display:none"
+      @change="onFilePicked" />
+
     <!-- Message list -->
     <div ref="msgListRef" class="msg-list">
       <div v-if="loading" class="loading-hint">加载中…</div>
@@ -19,7 +23,12 @@
           </div>
 
           <div class="msg-bubble" :class="{ 'bubble-mine': m.senderId === userId }">
-            <p class="msg-text">{{ m.content }}</p>
+            <!-- Image message -->
+            <img v-if="m.messageType === 'image' && m.imageUrl"
+              :src="m.imageUrl" class="msg-image"
+              @click="previewImage(m.imageUrl)" />
+            <!-- Text message -->
+            <p v-else class="msg-text">{{ m.content }}</p>
             <span class="msg-time">{{ timeAgo(m.createTime) }}</span>
           </div>
 
@@ -39,6 +48,13 @@
 
     <!-- Input bar -->
     <div class="input-bar">
+      <!-- Image picker button -->
+      <button class="img-btn" :disabled="uploading" title="发送图片"
+        @click="openFilePicker">
+        <van-icon v-if="!uploading" name="photo-o" size="22" />
+        <van-loading v-else size="18" />
+      </button>
+
       <van-field v-model="inputText" type="textarea" rows="1" autosize
         placeholder="输入消息…" class="chat-input"
         @keydown.enter.exact.prevent="handleSend" />
@@ -48,14 +64,18 @@
       </van-button>
     </div>
   </div>
+
+  <!-- Image viewer -->
+  <ImageViewer v-model:show="viewerShow" :images="viewerImages" :startPosition="0" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getMessages, sendMessage } from '@/api/chat'
+import { getMessages, sendMessage, uploadChatImage } from '@/api/chat'
 import { getProfile } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
+import ImageViewer from '@/components/ImageViewer.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -71,7 +91,13 @@ const messages = ref([])
 const inputText = ref('')
 const loading = ref(false)
 const sending = ref(false)
+const uploading = ref(false)
 const msgListRef = ref(null)
+const fileInputRef = ref(null)
+
+// Image viewer
+const viewerShow = ref(false)
+const viewerImages = ref([])
 
 let pollTimer = null
 
@@ -119,13 +145,41 @@ async function loadProfileInfo() {
   } catch { /* skip */ }
 }
 
+function openFilePicker() {
+  if (uploading.value) return
+  fileInputRef.value?.click()
+}
+
+async function onFilePicked(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  uploading.value = true
+  try {
+    const url = await uploadChatImage(file)
+    const msg = await sendMessage(conversationId.value, { type: 'image', imageUrl: url })
+    messages.value = [...messages.value, msg]
+    scrollToBottom()
+  } catch { /* client.js handles errors */ }
+  finally {
+    uploading.value = false
+    // Clear file input so the same file can be re-selected
+    if (fileInputRef.value) fileInputRef.value.value = ''
+  }
+}
+
+function previewImage(url) {
+  viewerImages.value = [url]
+  viewerShow.value = true
+}
+
 async function handleSend() {
   const text = inputText.value.trim()
   if (!text || sending.value) return
 
   sending.value = true
   try {
-    const msg = await sendMessage(conversationId.value, text)
+    const msg = await sendMessage(conversationId.value, { content: text })
     messages.value = [...messages.value, msg]
     inputText.value = ''
     scrollToBottom()
@@ -217,6 +271,14 @@ onBeforeUnmount(stopPolling)
 .msg-text { font-size: 15px; line-height: 1.5; word-break: break-word; margin: 0; }
 .bubble-mine .msg-text { color: #fff; }
 
+/* Image in bubble */
+.msg-image {
+  max-width: 240px; max-height: 240px; border-radius: 8px;
+  object-fit: cover; cursor: pointer;
+}
+.bubble-mine .msg-image { border-bottom-right-radius: 4px; }
+.msg-bubble:not(.bubble-mine) .msg-image { border-bottom-left-radius: 4px; }
+
 .msg-time { font-size: 10px; color: var(--c-text-3); align-self: flex-end; }
 .bubble-mine .msg-time { color: rgba(255,255,255,0.65); }
 
@@ -227,6 +289,16 @@ onBeforeUnmount(stopPolling)
   background: #fff; border-top: 1px solid var(--c-border);
   position: sticky; bottom: 0;
 }
+
+.img-btn {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: var(--c-bg); border-radius: 50%;
+  color: var(--c-text-2); cursor: pointer;
+}
+.img-btn:active { background: var(--c-border); }
+.img-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .chat-input {
   flex: 1; background: var(--c-bg); border-radius: 22px;
   padding: 6px 14px !important; min-height: 40px;
@@ -244,5 +316,6 @@ onBeforeUnmount(stopPolling)
   }
   .chat-input { background: var(--c-bg); }
   .msg-bubble { max-width: 60%; }
+  .msg-image { max-width: 280px; max-height: 280px; }
 }
 </style>

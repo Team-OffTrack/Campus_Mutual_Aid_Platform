@@ -2,6 +2,8 @@ package cn.seecoder.campushelp.service;
 
 import cn.seecoder.campushelp.dto.ConversationResponse;
 import cn.seecoder.campushelp.entity.Message;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -30,8 +32,15 @@ public interface ChatService {
      */
     List<Message> getMessages(Long conversationId, Long userId);
 
-    /** Send a text message in an existing conversation. Updates the conversation's last-message snapshot. */
-    Message sendMessage(Long conversationId, Long userId, String content);
+    /**
+     * Send a message in an existing conversation. Supports text ("text") and image ("image") types.
+     * For text messages, content must be non-blank. For image messages, imageUrl must be non-blank.
+     * Updates the conversation's last-message snapshot.
+     */
+    Message sendMessage(Long conversationId, Long userId, String type, String content, String imageUrl);
+
+    /** Upload a chat image. Returns the server-relative URL. */
+    String uploadImage(Long userId, MultipartFile file);
 
     /** Count total unread chat messages for a user across all conversations. */
     long unreadCount(Long userId);

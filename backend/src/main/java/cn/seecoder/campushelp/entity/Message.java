@@ -12,6 +12,8 @@ public class Message {
     private Long conversationId;
     private Long senderId;
     private String content;
+    private String messageType;
+    private String imageUrl;
     private Integer isRead;
 
     @TableField(insertStrategy = FieldStrategy.NEVER, updateStrategy = FieldStrategy.NEVER)
@@ -28,6 +30,14 @@ public class Message {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getMessageType() { return messageType; }
+    public void setMessageType(String messageType) { this.messageType = messageType; }
+
+    public boolean isImage() { return "image".equals(messageType); }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public Integer getIsRead() { return isRead; }
     public void setIsRead(Integer isRead) { this.isRead = isRead; }

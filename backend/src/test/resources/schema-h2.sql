@@ -106,6 +106,8 @@ CREATE TABLE IF NOT EXISTS message (
     conversation_id  BIGINT       NOT NULL,
     sender_id        BIGINT       NOT NULL,
     content          TEXT         NOT NULL,
+    message_type     VARCHAR(32)  NOT NULL DEFAULT 'text',
+    image_url        VARCHAR(500),
     is_read          INT          NOT NULL DEFAULT 0,
     create_time      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (message_id),

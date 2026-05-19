@@ -8,8 +8,20 @@ export function getMessages(conversationId) {
   return client.get(`/chat/conversations/${conversationId}/messages`)
 }
 
-export function sendMessage(conversationId, content) {
-  return client.post(`/chat/conversations/${conversationId}/messages`, { content })
+export function sendMessage(conversationId, { type, content, imageUrl } = {}) {
+  return client.post(`/chat/conversations/${conversationId}/messages`, {
+    type: type || 'text',
+    content: content || '',
+    imageUrl: imageUrl || null
+  })
+}
+
+export function uploadChatImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return client.post('/chat/upload-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
 }
 
 export function createConversation(demandId, targetUserId) {
