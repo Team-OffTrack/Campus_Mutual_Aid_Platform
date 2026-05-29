@@ -1,11 +1,65 @@
-# 配置仅供参考！
 stages:
+  - install
+  - lint
+  - test
   - build
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}-frontend"
+  paths:
+    - frontend/node_modules/
+
+frontend-install:
+  stage: install
+  image: node:20
+  before_script:
+    - cd frontend
+  script:
+    - npm install
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-frontend"
+    paths:
+      - frontend/node_modules/
+    policy: pull-push
+
+frontend-lint:
+  stage: lint
+  image: node:20
+  before_script:
+    - cd frontend
+  script:
+    - npm run lint
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-frontend"
+    paths:
+      - frontend/node_modules/
+    policy: pull-push
+
+frontend-test:
+  stage: test
+  image: node:20
+  before_script:
+    - cd frontend
+  script:
+    - npm test
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-frontend"
+    paths:
+      - frontend/node_modules/
+    policy: pull-push
 
 frontend-build:
   stage: build
   image: node:20
-  script:
+  before_script:
     - cd frontend
-    - npm install
+  script:
     - npm run build
+  artifacts:
+    paths:
+      - frontend/dist/
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-frontend"
+    paths:
+      - frontend/node_modules/
+    policy: pull

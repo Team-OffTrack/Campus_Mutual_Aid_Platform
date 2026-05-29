@@ -1,7 +1,6 @@
 stages:
   - trigger
 
-# 触发后端 pipeline
 backend:
   stage: trigger
   trigger:
@@ -10,8 +9,9 @@ backend:
   rules:
     - changes:
         - backend/**/*
+        - .gitlab/backend.yml
+        - .gitlab-ci.yml
 
-# 触发前端 pipeline
 frontend:
   stage: trigger
   trigger:
@@ -20,3 +20,5 @@ frontend:
   rules:
     - changes:
         - frontend/**/*
+        - .gitlab/frontend.yml
+        - .gitlab-ci.yml
