@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-const props = defineProps({ show: Boolean })
+defineProps({ show: Boolean })
 const emit = defineEmits(['update:show', 'select'])
 
 const EMOJIS = [

@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import axios from 'axios'
-import { showToast } from 'vant'
 
 // We test the interceptor logic directly rather than importing the module,
 // because the module sets up interceptors at import time which is hard to reset.

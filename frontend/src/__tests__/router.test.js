@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createRouter, createWebHistory } from 'vue-router'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 /**
  * Test the global navigation guard logic in isolation.
