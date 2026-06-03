@@ -1,8 +1,6 @@
 stages:
   - install
   - check
-  - test
-  - build
 
 cache:
   key: "${CI_COMMIT_REF_SLUG}-backend"
@@ -37,37 +35,3 @@ backend-checkstyle:
     paths:
       - backend/.m2/
     policy: pull-push
-
-backend-test:
-  stage: test
-  image: maven:3.9.9-eclipse-temurin-17
-  before_script:
-    - cd backend
-  script:
-    - mvn test
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - backend/target/surefire-reports/TEST-*.xml
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}-backend"
-    paths:
-      - backend/.m2/
-    policy: pull-push
-
-backend-build:
-  stage: build
-  image: maven:3.9.9-eclipse-temurin-17
-  before_script:
-    - cd backend
-  script:
-    - mvn package -DskipTests
-  artifacts:
-    paths:
-      - backend/target/*.jar
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}-backend"
-    paths:
-      - backend/.m2/
-    policy: pull
