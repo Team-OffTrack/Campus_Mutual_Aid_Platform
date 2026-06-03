@@ -171,7 +171,8 @@ class EvaluationServiceTest {
 
         UserAccount account = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, acceptorId));
-        assertEquals(3.0, account.getReputationScore(), 0.1);
+        // Formula: 0.6*3.0 + 0.4*(1.0*5) = 1.8 + 2.0 = 3.8
+        assertEquals(3.8, account.getReputationScore(), 0.1);
     }
 
     @Test
@@ -282,7 +283,8 @@ class EvaluationServiceTest {
 
         UserAccount acc = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, acceptorId));
-        assertEquals(3.0, acc.getReputationScore(), 0.1);
+        // 0.6*3.0 + 0.4*(1.0*5) = 1.8 + 2.0 = 3.8
+        assertEquals(3.8, acc.getReputationScore(), 0.1);
 
         // Complete another demand and rate again
         CreateDemandRequest d2 = new CreateDemandRequest();
@@ -297,6 +299,58 @@ class EvaluationServiceTest {
 
         acc = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, acceptorId));
-        assertEquals(4.0, acc.getReputationScore(), 0.1);
+        // 0.6*4.0 + 0.4*(1.0*5) = 2.4 + 2.0 = 4.4
+        assertEquals(4.4, acc.getReputationScore(), 0.1);
+    }
+
+    @Test
+    @DisplayName("Low completion rate reduces credit score")
+    void lowCompletionRate_reducesScore() {
+        // Register a new acceptor with mixed track record
+        RegisterRequest r = new RegisterRequest();
+        r.setStudentId("spotty001"); r.setPassword("pass123"); r.setName("Spotty");
+        userService.register(r);
+        User spotty = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "spotty001"));
+
+        // Demand 1: accepted and completed
+        CreateDemandRequest d1 = new CreateDemandRequest();
+        d1.setType("errand"); d1.setTitle("Task A"); d1.setDescription("test");
+        DemandResponse rsp1 = demandService.publish(publisherId, d1);
+        demandService.accept(rsp1.getDemandId(), spotty.getUserId());
+        demandService.complete(rsp1.getDemandId(), publisherId);
+
+        // Demand 2: accepted then cancelled by publisher
+        CreateDemandRequest d2 = new CreateDemandRequest();
+        d2.setType("errand"); d2.setTitle("Task B"); d2.setDescription("test");
+        DemandResponse rsp2 = demandService.publish(publisherId, d2);
+        demandService.accept(rsp2.getDemandId(), spotty.getUserId());
+        demandService.cancel(rsp2.getDemandId(), publisherId);
+
+        // Rate spotty 5 stars
+        CreateEvaluationRequest req = new CreateEvaluationRequest();
+        req.setDemandId(rsp1.getDemandId()); req.setRating(5);
+        evaluationService.create(publisherId, req);
+
+        // completionRate = 1/(1+1) = 0.5
+        // score = 0.6*5.0 + 0.4*(0.5*5) = 3.0 + 1.0 = 4.0
+        UserAccount account = userAccountMapper.selectOne(
+                new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, spotty.getUserId()));
+        assertEquals(4.0, account.getReputationScore(), 0.1);
+    }
+
+    @Test
+    @DisplayName("User with zero concluded demands defaults to completion rate 1.0")
+    void zeroConcludedDemands_defaultsToPerfectCompletion() {
+        // Fresh user with no accepted demands — rate them
+        CreateEvaluationRequest req = new CreateEvaluationRequest();
+        req.setDemandId(completedDemandId); req.setRating(4);
+        evaluationService.create(publisherId, req);
+
+        // acceptor has 1 completed, 0 cancelled → rate = 1.0
+        // score = 0.6*4.0 + 0.4*5.0 = 2.4 + 2.0 = 4.4
+        UserAccount account = userAccountMapper.selectOne(
+                new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, acceptorId));
+        assertEquals(4.4, account.getReputationScore(), 0.1);
     }
 }

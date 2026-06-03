@@ -164,19 +164,42 @@ public class EvaluationServiceImpl implements EvaluationService {
                 .toList();
     }
 
-    /** Recalculate the user's reputation score as the rounded average of all received ratings. */
+    /**
+     * Recalculate the user's credit score.
+     *
+     * Formula: score = 0.6 × avgRating + 0.4 × (completionRate × 5)
+     * - avgRating: average of all received evaluation ratings (1–5), defaults to 5.0
+     * - completionRate: COMPLETED / (COMPLETED + CANCELLED) as an acceptor, defaults to 1.0
+     * - Result rounded to 1 decimal place.
+     */
     private void updateReputationScore(Long userId) {
+        // 1) Average rating from evaluations
         List<Evaluation> evals = evaluationMapper.selectList(
                 new LambdaQueryWrapper<Evaluation>()
                         .eq(Evaluation::getTargetUserId, userId));
-        double avg = evals.isEmpty() ? 5.0
+        double avgRating = evals.isEmpty() ? 5.0
                 : evals.stream().mapToInt(Evaluation::getRating).average().orElse(5.0);
-        avg = Math.round(avg * 10.0) / 10.0;
+
+        // 2) Completion rate as acceptor
+        long completed = demandMapper.selectCount(
+                new LambdaQueryWrapper<Demand>()
+                        .eq(Demand::getAcceptorId, userId)
+                        .eq(Demand::getStatus, "COMPLETED"));
+        long cancelled = demandMapper.selectCount(
+                new LambdaQueryWrapper<Demand>()
+                        .eq(Demand::getAcceptorId, userId)
+                        .eq(Demand::getStatus, "CANCELLED"));
+        long concluded = completed + cancelled;
+        double completionRate = concluded > 0 ? (double) completed / concluded : 1.0;
+
+        // 3) Weighted credit score
+        double score = 0.6 * avgRating + 0.4 * (completionRate * 5.0);
+        score = Math.round(score * 10.0) / 10.0;
 
         UserAccount account = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, userId));
         if (account != null) {
-            account.setReputationScore(avg);
+            account.setReputationScore(score);
             userAccountMapper.updateById(account);
         }
     }
