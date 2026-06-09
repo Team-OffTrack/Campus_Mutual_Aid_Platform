@@ -84,7 +84,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
 import { myOrders } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
 
