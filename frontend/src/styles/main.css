@@ -222,6 +222,15 @@
   --van-field-background:             transparent;
   --van-field-input-min-height:       46px;
   --van-switch-on-background:         #6750A4;
+
+  /* Toast — explicit visibility, prevent white-on-white */
+  --van-toast-background-color:       rgba(30, 28, 32, 0.92);
+  --van-toast-text-color:             #FFFFFF;
+  --van-toast-font-size:              15px;
+  --van-toast-border-radius:          12px;
+  --van-toast-default-width:          88px;
+  --van-toast-max-width:              70vw;
+  --van-toast-min-width:              96px;
 }
 
 /* ═══════════════════════════════════════
@@ -363,8 +372,17 @@ a:focus-visible {
 }
 
 .van-toast {
-  border-radius: var(--r-medium) !important;
+  background: rgba(30, 28, 32, 0.92) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
   font-weight: 600 !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  padding: 12px 20px !important;
+}
+
+.van-toast__text {
+  color: #fff !important;
 }
 
 /* ═══════════════════════════════════════

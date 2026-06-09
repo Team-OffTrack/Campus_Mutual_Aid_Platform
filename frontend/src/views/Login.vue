@@ -91,7 +91,7 @@ async function handleLogin() {
     authStore.setAuth(data)
     showToast('登录成功')
     router.push('/')
-  } catch (e) { /* toast handled by interceptor */ }
+  } catch (e) { showToast('登录失败，请检查学号和密码') }
   finally { loading.value = false }
 }
 </script>

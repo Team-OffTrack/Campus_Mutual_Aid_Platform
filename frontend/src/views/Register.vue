@@ -101,7 +101,7 @@ async function handleRegister() {
     await register({ studentId: form.studentId, name: form.name, password: form.password })
     showToast('注册成功，请登录')
     router.push('/login')
-  } catch (e) { /* toast by interceptor */ }
+  } catch (e) { showToast('注册失败，请重试') }
   finally { loading.value = false }
 }
 </script>
