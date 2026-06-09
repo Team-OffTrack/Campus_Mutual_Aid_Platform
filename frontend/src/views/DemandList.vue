@@ -1,7 +1,9 @@
 <template>
   <div class="page list-page">
-    <van-nav-bar title="需求广场" left-arrow fixed placeholder
-      class="list-nav" @click-left="router.push('/')">
+    <van-nav-bar left-arrow fixed placeholder class="list-nav" @click-left="router.push('/')">
+      <template #title>
+        <span class="nav-title">需求广场</span>
+      </template>
       <template #right>
         <div class="nav-right">
           <van-icon name="plus" size="22" class="nav-plus" @click="router.push('/demands/publish')" />
@@ -10,12 +12,12 @@
       </template>
     </van-nav-bar>
 
-    <!-- Sticky header: search + sort -->
+    <!-- ═══ Sticky toolbar: search + sort ═══ -->
     <div class="list-toolbar">
       <van-search v-model="keyword" placeholder="搜索需求…" shape="round"
         background="transparent" @search="onSearch" @clear="onSearch">
         <template #left-icon>
-          <van-icon name="search" size="16" color="#94A3C8" />
+          <van-icon name="search" size="16" color="#787680" />
         </template>
       </van-search>
 
@@ -29,7 +31,7 @@
       </div>
     </div>
 
-    <!-- ── Desktop table ── -->
+    <!-- ═══ Desktop table ═══ -->
     <div class="table-wrap">
       <table class="demand-table">
         <thead>
@@ -62,10 +64,10 @@
       <div v-if="!loading && demands.length === 0" class="table-empty">暂无需求</div>
     </div>
 
-    <!-- ── Mobile card feed ── -->
+    <!-- ═══ Mobile card feed ═══ -->
     <van-list v-model:loading="loading" :finished="finished"
       finished-text="— 已加载全部 —" class="mobile-list" @load="fetchDemands">
-      <div v-for="d in demands" :key="d.demandId" class="demand-card"
+      <div v-for="d in demands" :key="d.demandId" class="demand-card card"
         @click="router.push('/demands/' + d.demandId)">
         <div class="card-top">
           <span class="card-type" :style="typeStyle(d.type)">{{ typeLabel(d.type) }}</span>
@@ -91,7 +93,7 @@
       </div>
     </van-list>
 
-    <!-- Floating publish button -->
+    <!-- ═══ Floating action button (mobile only) ═══ -->
     <div class="fab" @click="router.push('/demands/publish')">
       <van-icon name="add-o" size="24" />
     </div>
@@ -120,12 +122,12 @@ const sortOptions = [
 ]
 
 const TYPE_STYLES = {
-  errand:     { background: '#FFF4ED', color: '#FF7849' },
-  trade:      { background: '#EDFAF3', color: '#22C55E' },
-  team:       { background: '#EDF4FF', color: '#3B82F6' },
-  lost_found: { background: '#F5EDFF', color: '#A855F7' },
-  study:      { background: '#FFF0F7', color: '#EC4899' },
-  other:      { background: '#F1F5F9', color: '#64748B' }
+  errand:     { background: '#FFF0E5', color: '#E65100' },
+  trade:      { background: '#E8F5E9', color: '#2E7D32' },
+  team:       { background: '#E3F2FD', color: '#1565C0' },
+  lost_found: { background: '#F3E5F5', color: '#7B1FA2' },
+  study:      { background: '#FCE4EC', color: '#C62828' },
+  other:      { background: '#F5F5F5', color: '#616161' }
 }
 
 const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
@@ -172,8 +174,7 @@ async function fetchDemands() {
   loading.value = true
   try {
     const page = await listDemands({
-      pageNum,
-      pageSize: 20,
+      pageNum, pageSize: 20,
       keyword: keyword.value || undefined,
       sortBy: activeSort.value || undefined
     })
@@ -189,91 +190,115 @@ onMounted(() => fetchDemands())
 
 <style scoped>
 .list-page { background: var(--c-bg); padding-bottom: 80px; }
-.list-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
+.list-nav :deep(.van-nav-bar__content) {
+  background: #fff !important;
+  box-shadow: var(--s-xs);
+}
+.nav-title { font-weight: 600; }
 .nav-right { display: flex; align-items: center; gap: 8px; }
-.nav-plus { color: var(--c-primary); cursor: pointer; padding: 4px; }
+.nav-plus { color: var(--c-primary); cursor: pointer; padding: 4px; border-radius: 50%; transition: background var(--ease); }
+.nav-plus:active { background: var(--c-primary-container); }
 
-/* Toolbar: search + sort */
+/* ═══════════════════════════════════════
+   Toolbar
+   ═══════════════════════════════════════ */
 .list-toolbar {
   position: sticky; top: 52px; z-index: 10;
-  background: #fff; padding-bottom: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-border);
 }
 .list-toolbar :deep(.van-search) { padding: 8px 16px 0; }
-.list-toolbar :deep(.van-search__content) { background: var(--c-bg); border-radius: 18px; }
+.list-toolbar :deep(.van-search__content) {
+  background: var(--c-surface-variant);
+  border-radius: 20px;
+}
 .list-toolbar :deep(.van-cell) { padding: 0 !important; }
 .list-toolbar :deep(.van-field__control) { line-height: 36px; }
 
 .sort-bar { display: flex; gap: 8px; padding: 0 16px; }
 .sort-chip {
   font-size: 12px; font-weight: 600; color: var(--c-text-3);
-  padding: 4px 12px; border-radius: 14px;
+  padding: 5px 14px; border-radius: 16px;
   cursor: pointer; transition: all var(--ease);
   display: flex; align-items: center; gap: 3px;
+  background: var(--c-surface-variant);
 }
 .sort-chip:active { transform: scale(0.95); }
-.sort-on { background: var(--c-primary-soft); color: var(--c-primary); }
+.sort-on {
+  background: var(--c-primary-container);
+  color: var(--c-primary);
+  font-weight: 700;
+}
 
-/* ── Desktop table (hidden on mobile) ── */
-.table-wrap { display: none; }
-
-/* ── Mobile cards ── */
+/* ═══════════════════════════════════════
+   Mobile cards
+   ═══════════════════════════════════════ */
 .mobile-list { padding: 8px 16px 0; }
 
 .demand-card {
-  background: var(--c-surface);
-  border-radius: var(--r-md);
-  padding: 14px;
-  margin-bottom: 8px;
-  box-shadow: var(--s-xs);
+  padding: 16px;
+  margin-bottom: 10px;
   cursor: pointer;
-  transition: background var(--ease);
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .demand-card:active { background: var(--c-bg); }
 
 .card-top { display: flex; justify-content: space-between; align-items: center; }
-.card-type { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 4px; }
-.card-reward { font-size: 13px; font-weight: 700; color: var(--c-warning); }
+.card-type {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+.card-reward { font-size: 14px; font-weight: 700; color: var(--c-warning); }
 
-.card-title { font-size: 16px; font-weight: 600; color: var(--c-text-1); }
+.card-title { font-size: 16px; font-weight: 700; color: var(--c-text-1); line-height: 1.3; }
 .card-desc {
   font-size: 13px; color: var(--c-text-3);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow: hidden; line-height: 1.5;
 }
 
 .card-meta { display: flex; gap: 12px; flex-wrap: wrap; }
-.meta-item { font-size: 12px; color: var(--c-text-3); display: flex; align-items: center; gap: 3px; }
+.meta-item { font-size: 12px; color: var(--c-text-3); display: flex; align-items: center; gap: 4px; }
 
-.card-footer { display: flex; justify-content: space-between; align-items: center; }
-.footer-pub { font-size: 12px; color: var(--c-text-2); display: flex; align-items: center; gap: 4px; }
-.footer-time { font-size: 11px; color: var(--c-text-3); }
+.card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 6px; border-top: 1px solid var(--c-border);
+}
+.footer-pub { font-size: 12px; color: var(--c-text-2); display: flex; align-items: center; gap: 4px; font-weight: 500; }
+.footer-time { font-size: 11px; color: var(--c-text-4); }
 
-/* Floating action button */
+/* ═══════════════════════════════════════
+   FAB
+   ═══════════════════════════════════════ */
 .fab {
   position: fixed; bottom: 28px; right: 24px;
-  width: 52px; height: 52px; border-radius: 50%;
+  width: 56px; height: 56px; border-radius: 50%;
   background: var(--g-btn);
-  box-shadow: 0 4px 20px rgba(92, 107, 248, 0.4);
+  box-shadow: 0 6px 24px rgba(103, 80, 164, 0.44);
   display: flex; align-items: center; justify-content: center;
   color: #fff; cursor: pointer; z-index: 20;
   transition: transform var(--ease), box-shadow var(--ease);
 }
-.fab:active { transform: scale(0.92); }
+.fab:active { transform: scale(0.9); }
+
+/* ═══════════════════════════════════════
+   Desktop table (hidden on mobile)
+   ═══════════════════════════════════════ */
+.table-wrap { display: none; }
 
 @media (min-width: 768px) {
   .list-page { background: var(--c-surface); }
-  .list-toolbar { position: static; box-shadow: none; }
+  .list-toolbar { position: static; backdrop-filter: none; background: transparent; border-bottom: none; }
   .list-toolbar :deep(.van-search) { max-width: 480px; padding: 12px 0 0 16px; }
   .sort-bar { padding: 4px 16px 8px; }
-  .sort-chip:hover { background: var(--c-primary-soft); }
+  .sort-chip:hover { background: var(--c-primary-container); }
 
-  /* Hide mobile cards and FAB */
   .mobile-list { display: none; }
   .fab { display: none; }
 
-  /* Show table */
   .table-wrap {
     display: block;
     max-width: var(--content-max);
@@ -281,32 +306,23 @@ onMounted(() => fetchDemands())
     padding: 0 16px 32px;
   }
 
-  .demand-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
+  .demand-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .demand-table thead { border-bottom: 2px solid var(--c-border); }
   .demand-table th {
     text-align: left; padding: 12px 10px;
     font-size: 12px; font-weight: 700; color: var(--c-text-3);
     text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
   }
-
   .table-row { border-bottom: 1px solid var(--c-border); transition: background var(--ease); cursor: pointer; }
   .table-row:hover { background: var(--c-bg); }
-  .table-row td { padding: 12px 10px; vertical-align: middle; }
-
+  .table-row td { padding: 14px 10px; vertical-align: middle; }
   .type-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
   .td-title { font-weight: 600; color: var(--c-text-1); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .td-pub { font-size: 13px; color: var(--c-text-2); }
   .td-reward { font-size: 13px; font-weight: 600; color: var(--c-warning); }
   .td-loc { font-size: 13px; color: var(--c-text-3); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .td-time { font-size: 12px; color: var(--c-text-3); white-space: nowrap; }
-
-  .table-loading, .table-finished, .table-empty {
-    text-align: center; padding: 24px; font-size: 13px; color: var(--c-text-3);
-  }
+  .table-loading, .table-finished, .table-empty { text-align: center; padding: 24px; font-size: 13px; color: var(--c-text-3); }
 }
 
 @media (min-width: 1024px) {

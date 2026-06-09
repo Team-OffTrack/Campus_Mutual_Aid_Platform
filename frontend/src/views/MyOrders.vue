@@ -1,7 +1,7 @@
 <template>
   <div class="page orders-page">
-    <van-nav-bar title="我的订单" left-arrow fixed placeholder
-      class="orders-nav" @click-left="router.push('/')">
+    <van-nav-bar left-arrow fixed placeholder class="orders-nav" @click-left="router.push('/')">
+      <template #title><span class="nav-title">我的订单</span></template>
       <template #right><NavActions /></template>
     </van-nav-bar>
 
@@ -17,12 +17,12 @@
       <div v-if="loading" class="loading-hint">加载中…</div>
 
       <div v-else-if="orders.length === 0" class="empty-hint">
-        <van-icon name="notes-o" size="48" color="#94A3C8" />
+        <van-icon name="notes-o" size="48" color="#C4C0CA" />
         <p>{{ activeTab === 'publisher' ? '还没有发布过需求' : '还没有接过单' }}</p>
       </div>
 
       <template v-else>
-        <!-- ── Desktop table ── -->
+        <!-- Desktop table -->
         <div class="table-wrap">
           <table class="orders-table">
             <thead>
@@ -49,9 +49,9 @@
           </table>
         </div>
 
-        <!-- ── Mobile cards ── -->
+        <!-- Mobile cards -->
         <div class="mobile-list">
-          <div v-for="o in orders" :key="o.demandId" class="order-card"
+          <div v-for="o in orders" :key="o.demandId" class="order-card card"
             @click="router.push('/demands/' + o.demandId)">
             <div class="card-top">
               <span class="card-type" :style="typeStyle(o.type)">{{ typeLabel(o.type) }}</span>
@@ -86,12 +86,12 @@ const loading = ref(false)
 const activeTab = ref('publisher')
 
 const TYPE_STYLES = {
-  errand: { background: '#FFF4ED', color: '#FF7849' },
-  trade: { background: '#EDFAF3', color: '#22C55E' },
-  team: { background: '#EDF4FF', color: '#3B82F6' },
-  lost_found: { background: '#F5EDFF', color: '#A855F7' },
-  study: { background: '#FFF0F7', color: '#EC4899' },
-  other: { background: '#F1F5F9', color: '#64748B' }
+  errand: { background: '#FFF0E5', color: '#E65100' },
+  trade: { background: '#E8F5E9', color: '#2E7D32' },
+  team: { background: '#E3F2FD', color: '#1565C0' },
+  lost_found: { background: '#F3E5F5', color: '#7B1FA2' },
+  study: { background: '#FCE4EC', color: '#C62828' },
+  other: { background: '#F5F5F5', color: '#616161' }
 }
 
 const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
@@ -119,16 +119,12 @@ function timeAgo(t) {
   return Math.floor(h / 24) + ' 天前'
 }
 
-async function switchTab(tab) {
-  activeTab.value = tab
-  await fetchOrders()
-}
+async function switchTab(tab) { activeTab.value = tab; await fetchOrders() }
 
 async function fetchOrders() {
   loading.value = true
-  try {
-    orders.value = await myOrders(activeTab.value)
-  } catch (e) { /* skip */ }
+  try { orders.value = await myOrders(activeTab.value) }
+  catch (e) { /* skip */ }
   finally { loading.value = false }
 }
 
@@ -138,69 +134,56 @@ fetchOrders()
 <style scoped>
 .orders-page { background: var(--c-bg); padding-bottom: 32px; }
 .orders-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
+.nav-title { font-weight: 600; }
 
 .tab-bar {
   display: flex; gap: 8px; padding: 14px 16px;
-  background: #fff; position: sticky; top: 52px; z-index: 10;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 52px; z-index: 10;
 }
 .tab-chip {
   flex: 1; text-align: center;
-  padding: 10px 0; border-radius: var(--r-md);
+  padding: 11px 0; border-radius: var(--r-md);
   font-size: 14px; font-weight: 600; color: var(--c-text-2);
-  background: var(--c-bg); cursor: pointer;
+  background: var(--c-surface-variant); cursor: pointer;
   transition: all var(--ease);
 }
-.tab-on { background: var(--c-primary); color: #fff; }
+.tab-on { background: var(--c-primary); color: #fff; box-shadow: 0 2px 8px rgba(103,80,164,0.3); }
 
 .content-wrap { padding: 16px; }
-
 .loading-hint, .empty-hint { text-align: center; padding: 60px 16px; color: var(--c-text-3); font-size: 14px; }
 .empty-hint p { margin-top: 12px; }
 
-/* Table (desktop) */
-.table-wrap { display: none; }
-
-/* Cards (mobile) */
-.mobile-list { display: flex; flex-direction: column; gap: 8px; }
-
-.order-card {
-  background: var(--c-surface);
-  border-radius: var(--r-md);
-  padding: 14px;
-  box-shadow: var(--s-xs);
-  cursor: pointer;
-  transition: background var(--ease);
-  display: flex; flex-direction: column; gap: 8px;
-}
+/* Cards */
+.mobile-list { display: flex; flex-direction: column; gap: 10px; }
+.order-card { padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; }
 .order-card:active { background: var(--c-bg); }
-
 .card-top { display: flex; justify-content: space-between; align-items: center; }
-.card-type { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 4px; }
-.card-status { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 4px; }
-.s-open { background: #EDFAF3; color: #22C55E; }
-.s-in_progress { background: #EDF4FF; color: #3B82F6; }
-.s-completed { background: #F1F5F9; color: #64748B; }
-.s-cancelled { background: #FEF2F2; color: #EF4444; }
-
-.card-title { font-size: 16px; font-weight: 600; color: var(--c-text-1); }
+.card-type { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
+.card-status { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
+.s-open { background: #E8F5E9; color: #2E7D32; }
+.s-in_progress { background: #E3F2FD; color: #1565C0; }
+.s-completed { background: #F5F5F5; color: #9E9E9E; }
+.s-cancelled { background: #FFEBEE; color: #D32F2F; }
+.card-title { font-size: 16px; font-weight: 700; color: var(--c-text-1); }
 .card-meta { font-size: 13px; color: var(--c-text-3); display: flex; align-items: center; gap: 4px; }
 .meta-name { font-weight: 600; color: var(--c-text-2); }
 .meta-divider { color: var(--c-border); }
 .meta-reward { font-weight: 600; color: var(--c-warning); }
 .card-footer { display: flex; justify-content: flex-end; }
-.footer-time { font-size: 11px; color: var(--c-text-3); }
+.footer-time { font-size: 11px; color: var(--c-text-4); }
 
+/* Desktop table */
+.table-wrap { display: none; }
 @media (min-width: 768px) {
   .orders-page { background: var(--c-surface); }
-  .tab-bar { max-width: var(--content-max); margin: 0 auto; padding: 14px 16px; background: transparent; position: static; }
+  .tab-bar { max-width: var(--content-max); margin: 0 auto; padding: 14px 16px; background: transparent; position: static; backdrop-filter: none; }
   .tab-chip { flex: 0 0 auto; padding: 8px 24px; }
   .tab-chip:hover { opacity: 0.85; }
-
   .content-wrap { max-width: var(--content-max); margin: 0 auto; padding: 0 16px 32px; }
-
   .mobile-list { display: none; }
   .table-wrap { display: block; }
-
   .orders-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .orders-table thead { border-bottom: 2px solid var(--c-border); }
   .orders-table th {
@@ -210,17 +193,14 @@ fetchOrders()
   }
   .table-row { border-bottom: 1px solid var(--c-border); transition: background var(--ease); cursor: pointer; }
   .table-row:hover { background: var(--c-bg); }
-  .table-row td { padding: 12px 10px; vertical-align: middle; }
-
+  .table-row td { padding: 14px 10px; vertical-align: middle; }
   .type-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
   .td-title { font-weight: 600; color: var(--c-text-1); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .td-other { font-size: 13px; color: var(--c-text-2); }
   .td-reward { font-size: 13px; font-weight: 600; color: var(--c-warning); }
   .td-time { font-size: 12px; color: var(--c-text-3); white-space: nowrap; }
-
   .status-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
 }
-
 @media (min-width: 1024px) {
   .content-wrap { padding: 0 48px 32px; }
   .tab-bar { padding: 14px 48px; }

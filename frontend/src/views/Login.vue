@@ -1,25 +1,37 @@
 <template>
   <div class="auth-page">
-    <!-- Left hero panel (visible on desktop) -->
+    <!-- ═══ Left hero panel ═══ -->
     <div class="auth-hero">
+      <div class="hero-deco" aria-hidden="true">
+        <div class="blob blob-1 float-slow"></div>
+        <div class="blob blob-2 float-fast"></div>
+        <div class="blob blob-3 float-slow"></div>
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+      </div>
+
       <div class="hero-brand">
-        <div class="brand-mark">互</div>
+        <div class="brand-mark">
+          <span>互</span>
+        </div>
         <h1 class="brand-name">校园互助</h1>
         <p class="brand-tagline">让每一次互助都有温度</p>
       </div>
-      <div class="blob blob-1" aria-hidden="true"></div>
-      <div class="blob blob-2" aria-hidden="true"></div>
     </div>
 
-    <!-- Right form panel -->
+    <!-- ═══ Right form panel ═══ -->
     <div class="auth-body">
       <div class="auth-card">
-        <h2 class="form-title">欢迎回来</h2>
-        <p class="form-sub">请登录你的账号</p>
+        <div class="form-header">
+          <h2 class="form-title">欢迎回来</h2>
+          <p class="form-sub">请登录你的账号</p>
+        </div>
 
         <van-form @submit="handleLogin" class="auth-form">
-          <div class="field-row" :class="{ focused: focusedField === 'id' }">
-            <van-icon name="manager-o" class="field-icon" />
+          <div class="field-wrap" :class="{ focused: focusedField === 'id' }">
+            <div class="field-icon-wrap">
+              <van-icon name="manager-o" />
+            </div>
             <van-field
               v-model="form.studentId"
               placeholder="学号"
@@ -30,8 +42,10 @@
             />
           </div>
 
-          <div class="field-row" :class="{ focused: focusedField === 'pw' }">
-            <van-icon name="lock" class="field-icon" />
+          <div class="field-wrap" :class="{ focused: focusedField === 'pw' }">
+            <div class="field-icon-wrap">
+              <van-icon name="lock" />
+            </div>
             <van-field
               v-model="form.password"
               type="password"
@@ -83,13 +97,18 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-/* ── Mobile: stacked layout ── */
+/* ═══════════════════════════════════════
+   Layout
+   ═══════════════════════════════════════ */
 .auth-page {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
 }
 
+/* ═══════════════════════════════════════
+   Hero panel
+   ═══════════════════════════════════════ */
 .auth-hero {
   position: relative;
   flex: 0 0 auto;
@@ -97,9 +116,31 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 48px 16px 32px;
+  padding: 52px 16px 36px;
   background: var(--g-hero);
+  isolation: isolate;
 }
+
+.hero-deco { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.16;
+  background: #fff;
+}
+
+.blob-1 { width: 220px; height: 220px; top: -70px; right: -60px; }
+.blob-2 { width: 120px; height: 120px; top: 80px; right: 90px; opacity: 0.25; }
+.blob-3 { width: 160px; height: 160px; bottom: -60px; left: -40px; }
+
+.ring {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+.ring-1 { width: 300px; height: 300px; top: -120px; right: -120px; }
+.ring-2 { width: 180px; height: 180px; top: 4px; right: 60px; }
 
 .hero-brand {
   position: relative;
@@ -109,33 +150,37 @@ async function handleLogin() {
 }
 
 .brand-mark {
-  width: 64px; height: 64px;
-  margin: 0 auto 12px;
-  background: rgba(255,255,255,0.22);
-  border: 2.5px solid rgba(255,255,255,0.55);
-  border-radius: 20px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 800; color: #fff;
-  backdrop-filter: blur(8px);
+  width: 72px; height: 72px;
+  margin: 0 auto 16px;
+  background: rgba(255,255,255,0.18);
+  border: 2.5px solid rgba(255,255,255,0.5);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 }
 
 .brand-name {
-  font-size: 24px; font-weight: 700;
-  letter-spacing: 2px; margin-bottom: 4px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 6px;
 }
 
 .brand-tagline {
-  font-size: 13px;
-  color: rgba(255,255,255,0.72);
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
 }
 
-.blob {
-  position: absolute; border-radius: 50%; opacity: 0.18; pointer-events: none;
-}
-.blob-1 { width: 200px; height: 200px; background: rgba(255,255,255,0.6); top: -60px; right: -60px; }
-.blob-2 { width: 140px; height: 140px; background: rgba(255,255,255,0.4); bottom: -80px; left: -40px; }
-
-/* Form area */
+/* ═══════════════════════════════════════
+   Form panel
+   ═══════════════════════════════════════ */
 .auth-body {
   flex: 1;
   display: flex;
@@ -143,72 +188,119 @@ async function handleLogin() {
   justify-content: center;
   background: var(--c-bg);
   padding: 0 16px 32px;
-  margin-top: -14px;
-  position: relative; z-index: 2;
+  margin-top: -16px;
+  position: relative;
+  z-index: 2;
 }
 
 .auth-card {
   width: 100%;
   max-width: 420px;
   background: var(--c-surface);
-  border-radius: 22px;
-  padding: 28px 20px 24px;
+  border-radius: 24px;
+  padding: 32px 22px 24px;
   box-shadow: var(--s-md);
 }
 
+.form-header {
+  margin-bottom: 28px;
+}
+
 .form-title {
-  font-size: 22px; font-weight: 700; color: var(--c-text-1); margin-bottom: 4px;
+  font: var(--t-title);
+  color: var(--c-text-1);
+  margin-bottom: 4px;
 }
+
 .form-sub {
-  font-size: 13px; color: var(--c-text-3); margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--c-text-3);
 }
 
-.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-/* Field rows */
-.field-row {
-  display: flex; align-items: center;
-  background: var(--c-bg);
-  border: 1.5px solid var(--c-border);
+/* ═══════════════════════════════════════
+   Field wraps
+   ═══════════════════════════════════════ */
+.field-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--c-surface-variant);
+  border: 2px solid transparent;
   border-radius: var(--r-md);
   padding: 0 14px;
-  min-height: 52px;
-  transition: border-color var(--ease), box-shadow var(--ease);
+  min-height: 54px;
+  transition: all var(--ease);
 }
-.field-row.focused {
+
+.field-wrap.focused {
   border-color: var(--c-primary);
-  box-shadow: 0 0 0 3px rgba(92,107,248,0.12);
   background: #fff;
+  box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.10);
 }
-.field-icon {
-  color: var(--c-text-3); font-size: 18px; margin-right: 10px; flex-shrink: 0;
+
+.field-icon-wrap {
+  color: var(--c-text-3);
+  font-size: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
   transition: color var(--ease);
 }
-.field-row.focused .field-icon { color: var(--c-primary); }
+
+.field-wrap.focused .field-icon-wrap { color: var(--c-primary); }
 
 .bare-field { flex: 1; }
 .bare-field :deep(.van-cell) {
-  padding: 0 !important; background: transparent !important;
-  min-height: 46px; display: flex; align-items: center;
+  padding: 0 !important;
+  background: transparent !important;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
 }
 .bare-field :deep(.van-field__body) { padding: 0; }
 .bare-field :deep(.van-field__control) {
-  font-size: 15px; color: var(--c-text-1);
+  font-size: 16px;
+  color: var(--c-text-1);
 }
 
-.submit-btn { height: 48px; font-size: 16px; margin-top: 4px; }
+/* ═══════════════════════════════════════
+   Submit
+   ═══════════════════════════════════════ */
+.submit-btn {
+  height: 50px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin-top: 6px;
+  border-radius: var(--r-full) !important;
+}
 
+/* ═══════════════════════════════════════
+   Switch link
+   ═══════════════════════════════════════ */
 .auth-switch {
-  text-align: center; margin-top: 20px;
-  font-size: 13px; color: var(--c-text-3);
+  text-align: center;
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--c-text-3);
 }
-.switch-link { color: var(--c-primary); text-decoration: none; font-weight: 600; }
 
-/* ── Desktop ≥ 768px: split-screen ── */
+.switch-link {
+  color: var(--c-primary);
+  text-decoration: none;
+  font-weight: 700;
+  transition: opacity var(--ease);
+}
+.switch-link:hover { opacity: 0.8; }
+
+/* ═══════════════════════════════════════
+   Desktop (≥ 768px) — split-screen
+   ═══════════════════════════════════════ */
 @media (min-width: 768px) {
-  .auth-page {
-    flex-direction: row;
-  }
+  .auth-page { flex-direction: row; }
 
   .auth-hero {
     flex: 0 0 44%;
@@ -218,15 +310,19 @@ async function handleLogin() {
   }
 
   .brand-mark {
-    width: 80px; height: 80px;
-    font-size: 36px; border-radius: 24px;
-    margin-bottom: 16px;
+    width: 88px; height: 88px;
+    font-size: 38px;
+    border-radius: 26px;
+    margin-bottom: 20px;
   }
 
-  .brand-name { font-size: 30px; }
+  .brand-name { font-size: 32px; }
 
-  .blob-1 { width: 320px; height: 320px; top: -120px; right: -100px; }
-  .blob-2 { width: 220px; height: 220px; bottom: -60px; left: -80px; }
+  .blob-1 { width: 360px; height: 360px; top: -140px; right: -100px; }
+  .blob-2 { width: 180px; height: 180px; top: 140px; right: 140px; }
+  .blob-3 { width: 240px; height: 240px; bottom: -80px; left: -80px; }
+  .ring-1 { width: 460px; height: 460px; top: -200px; right: -200px; }
+  .ring-2 { width: 280px; height: 280px; top: 40px; right: 100px; }
 
   .auth-body {
     flex: 1;
@@ -241,6 +337,7 @@ async function handleLogin() {
     box-shadow: none;
     border-radius: 0;
     max-width: 380px;
+    padding: 0;
   }
 }
 

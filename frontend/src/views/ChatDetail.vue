@@ -4,18 +4,18 @@
     <van-nav-bar :title="otherUserName || '聊天'" left-arrow fixed placeholder
       class="chat-nav" @click-left="router.back()" />
 
-    <!-- Hidden file input for image picker -->
+    <!-- Hidden file input -->
     <input ref="fileInputRef" type="file" accept="image/*" style="display:none"
       @change="onFilePicked" />
 
-    <!-- Message list -->
+    <!-- ═══ Message list ═══ -->
     <div ref="msgListRef" class="msg-list">
       <div v-if="loading" class="loading-hint">加载中…</div>
 
       <template v-else>
         <div v-for="m in messages" :key="m.messageId"
           class="msg-row" :class="{ 'msg-mine': m.senderId === userId }">
-          <!-- Other user's avatar -->
+          <!-- Other's avatar -->
           <div v-if="m.senderId !== userId" class="msg-avatar"
             :style="{ background: otherUserAvatar ? 'transparent' : avatarColor(otherUserName) }">
             <img v-if="otherUserAvatar" :src="otherUserAvatar" class="avatar-img" />
@@ -23,11 +23,9 @@
           </div>
 
           <div class="msg-bubble" :class="{ 'bubble-mine': m.senderId === userId }">
-            <!-- Image message -->
             <img v-if="m.messageType === 'image' && m.imageUrl"
               :src="m.imageUrl" class="msg-image"
               @click="previewImage(m.imageUrl)" />
-            <!-- Text message -->
             <p v-else class="msg-text">{{ m.content }}</p>
             <span class="msg-time">{{ timeAgo(m.createTime) }}</span>
           </div>
@@ -46,18 +44,16 @@
       </template>
     </div>
 
-    <!-- Input bar -->
-    <div class="input-bar">
-      <!-- Image picker button -->
+    <!-- ═══ Input bar ═══ -->
+    <div class="input-bar glass-strong">
       <button class="img-btn" :disabled="uploading" title="发送图片"
         @click="openFilePicker">
-        <van-icon v-if="!uploading" name="photo-o" size="22" />
-        <van-loading v-else size="18" />
+        <van-icon v-if="!uploading" name="photo-o" size="21" />
+        <van-loading v-else size="18" color="var(--c-primary)" />
       </button>
 
-      <!-- Emoji picker button -->
       <button class="img-btn" title="选择表情" @click="emojiShow = !emojiShow">
-        <span style="font-size:20px">😊</span>
+        <span class="emoji-trigger">😊</span>
       </button>
 
       <van-field v-model="inputText" type="textarea" rows="1" autosize
@@ -68,13 +64,13 @@
         发送
       </van-button>
     </div>
+
+    <!-- Image viewer -->
+    <ImageViewer v-model:show="viewerShow" :images="viewerImages" :startPosition="0" />
+
+    <!-- Emoji picker -->
+    <EmojiPicker v-model:show="emojiShow" @select="insertEmoji" />
   </div>
-
-  <!-- Image viewer -->
-  <ImageViewer v-model:show="viewerShow" :images="viewerImages" :startPosition="0" />
-
-  <!-- Emoji picker -->
-  <EmojiPicker v-model:show="emojiShow" @select="insertEmoji" />
 </template>
 
 <script setup>
@@ -104,14 +100,12 @@ const uploading = ref(false)
 const msgListRef = ref(null)
 const fileInputRef = ref(null)
 const emojiShow = ref(false)
-
-// Image viewer
 const viewerShow = ref(false)
 const viewerImages = ref([])
 
 let pollTimer = null
 
-const AVATAR_COLORS = ['#5C6BF8', '#06B6D4', '#22C55E', '#EF4444', '#A855F7', '#EC4899', '#EAB308', '#F97316']
+const AVATAR_COLORS = ['#6750A4','#0097A7','#2E7D32','#D32F2F','#7B1FA2','#C62828','#ED6C02','#E65100']
 function avatarColor(n) { return AVATAR_COLORS[(n || '?').charCodeAt(0) % AVATAR_COLORS.length] }
 
 function timeAgo(t) {
@@ -145,7 +139,7 @@ async function fetchMessages() {
     const msgs = await getMessages(conversationId.value)
     messages.value = msgs
     scrollToBottom()
-  } catch { /* client.js handles errors */ }
+  } catch { /* handled */ }
 }
 
 async function loadProfileInfo() {
@@ -155,58 +149,45 @@ async function loadProfileInfo() {
   } catch { /* skip */ }
 }
 
-function openFilePicker() {
-  if (uploading.value) return
-  fileInputRef.value?.click()
-}
+function openFilePicker() { if (!uploading.value) fileInputRef.value?.click() }
 
 async function onFilePicked(e) {
   const file = e.target.files?.[0]
   if (!file) return
-
   uploading.value = true
   try {
     const url = await uploadChatImage(file)
     const msg = await sendMessage(conversationId.value, { type: 'image', imageUrl: url })
     messages.value = [...messages.value, msg]
     scrollToBottom()
-  } catch { /* client.js handles errors */ }
+  } catch { /* handled */ }
   finally {
     uploading.value = false
-    // Clear file input so the same file can be re-selected
     if (fileInputRef.value) fileInputRef.value.value = ''
   }
 }
 
-function previewImage(url) {
-  viewerImages.value = [url]
-  viewerShow.value = true
-}
+function previewImage(url) { viewerImages.value = [url]; viewerShow.value = true }
 
 function insertEmoji(emoji) {
   const el = document.querySelector('.chat-input textarea')
   const pos = el ? (el.selectionStart ?? inputText.value.length) : inputText.value.length
   inputText.value = inputText.value.slice(0, pos) + emoji + inputText.value.slice(pos)
   nextTick(() => {
-    if (el) {
-      el.focus()
-      const newPos = pos + emoji.length
-      el.setSelectionRange(newPos, newPos)
-    }
+    if (el) { el.focus(); const newPos = pos + emoji.length; el.setSelectionRange(newPos, newPos) }
   })
 }
 
 async function handleSend() {
   const text = inputText.value.trim()
   if (!text || sending.value) return
-
   sending.value = true
   try {
     const msg = await sendMessage(conversationId.value, { content: text })
     messages.value = [...messages.value, msg]
     inputText.value = ''
     scrollToBottom()
-  } catch { /* client.js handles errors */ }
+  } catch { /* handled */ }
   finally { sending.value = false }
 }
 
@@ -223,14 +204,8 @@ function startPolling() {
   }, 10000)
 }
 
-function stopPolling() {
-  if (pollTimer) {
-    clearInterval(pollTimer)
-    pollTimer = null
-  }
-}
+function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null } }
 
-// Restart polling if conversationId changes (e.g. switching chats without remount)
 watch(conversationId, () => {
   loading.value = true
   fetchMessages().finally(() => { loading.value = false })
@@ -255,89 +230,104 @@ onBeforeUnmount(stopPolling)
 }
 .chat-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
 
-/* Message list */
+/* ═══════════════════════════════════════
+   Message list
+   ═══════════════════════════════════════ */
 .msg-list {
-  flex: 1; overflow-y: auto; padding: 12px 16px;
-  display: flex; flex-direction: column; gap: 14px;
+  flex: 1; overflow-y: auto; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 16px;
 }
 
 .loading-hint, .empty-hint {
   text-align: center; padding: 80px 16px; color: var(--c-text-3); font-size: 14px;
 }
 
-/* Message row */
+/* Row */
 .msg-row { display: flex; align-items: flex-end; gap: 8px; }
 .msg-row.msg-mine { justify-content: flex-end; }
 
+/* Avatar */
 .msg-avatar {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff; overflow: hidden;
+  font-size: 14px; font-weight: 700; color: #fff; overflow: hidden;
+  box-shadow: var(--s-xs);
 }
 .msg-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .my-avatar { align-self: flex-end; }
 
 /* Bubbles */
 .msg-bubble {
-  max-width: 72%; padding: 10px 14px; border-radius: 16px;
+  max-width: 72%; padding: 10px 14px; border-radius: 18px;
   background: var(--c-surface); box-shadow: var(--s-xs);
   display: flex; flex-direction: column; gap: 3px;
 }
 .bubble-mine {
-  background: var(--c-primary); color: #fff;
+  background: linear-gradient(135deg, var(--c-primary) 0%, #7C5CE7 100%);
+  color: #fff;
   border-bottom-right-radius: 6px;
 }
-.msg-bubble:not(.bubble-mine) {
-  border-bottom-left-radius: 6px;
-}
+.msg-bubble:not(.bubble-mine) { border-bottom-left-radius: 6px; }
 
-.msg-text { font-size: 15px; line-height: 1.5; word-break: break-word; margin: 0; }
+.msg-text { font-size: 15px; line-height: 1.55; word-break: break-word; margin: 0; }
 .bubble-mine .msg-text { color: #fff; }
 
-/* Image in bubble */
+/* Image */
 .msg-image {
-  max-width: 240px; max-height: 240px; border-radius: 8px;
-  object-fit: cover; cursor: pointer;
+  max-width: 240px; max-height: 240px; border-radius: 10px;
+  object-fit: cover; cursor: pointer; transition: opacity var(--ease);
 }
-.bubble-mine .msg-image { border-bottom-right-radius: 4px; }
-.msg-bubble:not(.bubble-mine) .msg-image { border-bottom-left-radius: 4px; }
+.msg-image:active { opacity: 0.85; }
+.bubble-mine .msg-image { border-bottom-right-radius: 3px; }
+.msg-bubble:not(.bubble-mine) .msg-image { border-bottom-left-radius: 3px; }
 
-.msg-time { font-size: 10px; color: var(--c-text-3); align-self: flex-end; }
-.bubble-mine .msg-time { color: rgba(255,255,255,0.65); }
+.msg-time { font-size: 10px; color: var(--c-text-4); align-self: flex-end; }
+.bubble-mine .msg-time { color: rgba(255,255,255,0.6); }
 
-/* Input bar */
+/* ═══════════════════════════════════════
+   Input bar
+   ═══════════════════════════════════════ */
 .input-bar {
   display: flex; align-items: flex-end; gap: 10px;
-  padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom));
-  background: #fff; border-top: 1px solid var(--c-border);
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--c-border);
   position: sticky; bottom: 0;
 }
 
 .img-btn {
   width: 40px; height: 40px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  border: none; background: var(--c-bg); border-radius: 50%;
+  border: none; background: var(--c-surface-variant); border-radius: 50%;
   color: var(--c-text-2); cursor: pointer;
+  transition: background var(--ease), transform var(--ease);
 }
-.img-btn:active { background: var(--c-border); }
+.img-btn:active { background: var(--c-border); transform: scale(0.9); }
 .img-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.emoji-trigger { font-size: 20px; line-height: 1; }
 
 .chat-input {
-  flex: 1; background: var(--c-bg); border-radius: 22px;
+  flex: 1; background: var(--c-surface-variant); border-radius: 22px;
   padding: 6px 14px !important; min-height: 40px;
+  transition: background var(--ease);
 }
+.chat-input:focus-within { background: #fff; box-shadow: 0 0 0 2px rgba(103,80,164,0.15); }
 .chat-input :deep(.van-field__control) { font-size: 15px; }
 .input-bar .van-button { flex-shrink: 0; height: 40px !important; padding: 0 20px !important; }
 
-/* Desktop */
+/* ═══════════════════════════════════════
+   Desktop
+   ═══════════════════════════════════════ */
 @media (min-width: 768px) {
   .chat-page { background: var(--c-surface); }
   .msg-list { max-width: 720px; margin: 0 auto; width: 100%; padding: 20px 32px; }
   .input-bar {
     max-width: 720px; margin: 0 auto; width: 100%;
-    background: transparent; border-top: none; padding: 12px 32px;
+    border-top: none; padding: 12px 32px;
+    background: transparent; backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-  .chat-input { background: var(--c-bg); }
+  .chat-input { background: var(--c-surface-variant); }
   .msg-bubble { max-width: 60%; }
   .msg-image { max-width: 280px; max-height: 280px; }
 }

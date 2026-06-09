@@ -1,7 +1,8 @@
 <template>
   <div class="page admin-page">
-    <van-nav-bar title="用户管理" left-arrow fixed placeholder
-      class="admin-nav" @click-left="router.push('/')" />
+    <van-nav-bar left-arrow fixed placeholder class="admin-nav" @click-left="router.push('/')">
+      <template #title><span class="nav-title">用户管理</span></template>
+    </van-nav-bar>
 
     <!-- Search -->
     <div class="search-wrap">
@@ -14,7 +15,7 @@
       <span class="summary-text">共 {{ totalCount }} 条结果</span>
     </div>
 
-    <!-- ── Desktop table ── -->
+    <!-- Desktop table -->
     <div class="table-wrap">
       <table class="user-table">
         <thead>
@@ -62,10 +63,10 @@
       <div v-if="!loading && users.length === 0" class="table-empty">暂无用户</div>
     </div>
 
-    <!-- ── Mobile card list ── -->
+    <!-- Mobile card list -->
     <van-list v-model:loading="loading" :finished="finished"
       finished-text="已加载全部" class="mobile-list" @load="fetchUsers">
-      <div v-for="user in users" :key="user.userId" class="user-card" @click="showActions(user)">
+      <div v-for="user in users" :key="user.userId" class="user-card card" @click="showActions(user)">
         <div class="user-avatar" :style="{ background: user.avatar ? 'transparent' : avatarColor(user.name) }">
           <img v-if="user.avatar" :src="user.avatar" class="avatar-img" />
           <span v-else>{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
@@ -85,7 +86,6 @@
       </div>
     </van-list>
 
-    <!-- Action sheet -->
     <van-action-sheet v-model:show="sheetVisible" :actions="sheetActions"
       cancel-text="取消" @select="onActionSelect" />
   </div>
@@ -112,12 +112,10 @@ const sheetVisible = ref(false)
 const sheetActions = ref([])
 let currentUser = null
 
-const AVATAR_COLORS = ['#5C6BF8','#06B6D4','#22C55E','#EF4444','#A855F7','#EC4899','#EAB308','#F97316']
+const AVATAR_COLORS = ['#6750A4','#0097A7','#2E7D32','#D32F2F','#7B1FA2','#C62828','#ED6C02','#E65100']
 function avatarColor(n) { return AVATAR_COLORS[(n || '?').charCodeAt(0) % AVATAR_COLORS.length] }
 
-function onSearch() {
-  pageNum = 1; users.value = []; finished.value = false; fetchUsers()
-}
+function onSearch() { pageNum = 1; users.value = []; finished.value = false; fetchUsers() }
 
 async function fetchUsers() {
   loading.value = true
@@ -134,10 +132,7 @@ async function fetchUsers() {
 onMounted(() => fetchUsers())
 
 function showActions(user) {
-  if (user.userId === currentUserId.value) {
-    showToast('不能操作自己')
-    return
-  }
+  if (user.userId === currentUserId.value) { showToast('不能操作自己'); return }
   currentUser = user
   const label = user.status === 1 ? '封禁该用户' : '解封该用户'
   const color = user.status === 1 ? '#ee0a24' : '#07c160'
@@ -164,162 +159,80 @@ async function onActionSelect() {
 <style scoped>
 .admin-page { background: var(--c-bg); }
 .admin-nav :deep(.van-nav-bar__content) { background: #fff !important; box-shadow: var(--s-xs); }
-.admin-nav :deep(.van-nav-bar__title) { color: var(--c-text-1); }
-.admin-nav :deep(.van-nav-bar__arrow) { color: var(--c-text-1) !important; }
+.nav-title { font-weight: 600; }
 
-/* Search */
 .search-wrap { padding: 8px 0; background: #fff; }
-.search-wrap :deep(.van-search__content) { background: var(--c-bg); border-radius: 18px; }
+.search-wrap :deep(.van-search__content) { background: var(--c-surface-variant); border-radius: 20px; }
 .search-wrap :deep(.van-cell) { padding: 0 !important; }
 .search-wrap :deep(.van-field__control) { line-height: 36px; }
 
-/* Summary */
 .summary-row { padding: 12px 16px 4px; }
-.summary-text { font-size: 13px; color: var(--c-text-3); }
+.summary-text { font-size: 13px; color: var(--c-text-3); font-weight: 500; }
 
-/* ── Desktop table (hidden on mobile) ── */
+/* Mobile cards */
 .table-wrap { display: none; }
-
-/* ── Mobile cards (hidden on desktop) ── */
 .mobile-list { padding: 0 16px; }
 
 .user-card {
   display: flex; align-items: center; gap: 12px;
-  background: var(--c-surface);
-  border-radius: var(--r-md);
-  padding: 14px;
-  margin-bottom: 8px;
-  box-shadow: var(--s-xs);
+  padding: 14px; margin-bottom: 8px;
   cursor: pointer;
-  transition: background var(--ease);
 }
 .user-card:active { background: var(--c-bg); }
 
 .user-avatar {
-  width: 44px; height: 44px; border-radius: 14px;
+  width: 46px; height: 46px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
   overflow: hidden;
 }
 .user-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
 .user-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .user-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }
 .user-id { font-size: 12px; color: var(--c-text-3); }
-
-.user-role-tag {
-  font-size: 10px; padding: 1px 6px; border-radius: 4px; align-self: flex-start; margin-top: 2px;
-}
+.user-role-tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; align-self: flex-start; margin-top: 2px; }
 .r-admin { background: #EDE9FE; color: #7C3AED; }
-.r-user { background: var(--c-bg); color: var(--c-text-3); }
-
-.status-badge {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
-}
+.r-user { background: var(--c-surface-variant); color: var(--c-text-3); }
+.status-badge { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
 .badge-ok { color: var(--c-success); }
 .badge-ban { color: var(--c-danger); }
 .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
 .badge-ok .badge-dot { background: var(--c-success); }
 .badge-ban .badge-dot { background: var(--c-danger); }
+.list-arrow { flex-shrink: 0; color: var(--c-text-4); font-size: 14px; }
 
-.list-arrow { flex-shrink: 0; color: var(--c-text-3); font-size: 14px; }
-
-/* ════════════════════════════════════════
-   Tablet (≥ 768px) → table visible
-   ════════════════════════════════════════ */
+/* Desktop table */
 @media (min-width: 768px) {
   .admin-page { background: var(--c-surface); }
-
-  .search-wrap {
-    max-width: var(--content-max); margin: 0 auto;
-    padding: 16px 0 0; background: transparent;
-  }
+  .search-wrap { max-width: var(--content-max); margin: 0 auto; padding: 16px 0 0; background: transparent; }
   .search-wrap :deep(.van-search) { max-width: 480px; padding: 0 0 0 16px; }
-
   .summary-row { max-width: var(--content-max); margin: 0 auto; padding: 12px 16px 4px; }
-
-  /* Hide mobile cards */
   .mobile-list { display: none; }
-
-  /* Show table */
-  .table-wrap {
-    display: block;
-    max-width: var(--content-max);
-    margin: 0 auto;
-    padding: 0 16px 32px;
-  }
-
-  .user-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-
-  .user-table thead {
-    border-bottom: 2px solid var(--c-border);
-  }
-
-  .user-table th {
-    text-align: left;
-    padding: 12px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--c-text-3);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-  }
-
-  .table-row {
-    border-bottom: 1px solid var(--c-border);
-    transition: background var(--ease);
-  }
+  .table-wrap { display: block; max-width: var(--content-max); margin: 0 auto; padding: 0 16px 32px; }
+  .user-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .user-table thead { border-bottom: 2px solid var(--c-border); }
+  .user-table th { text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 700; color: var(--c-text-3); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .table-row { border-bottom: 1px solid var(--c-border); transition: background var(--ease); }
   .table-row:hover { background: var(--c-bg); }
-
-  .table-row td {
-    padding: 10px;
-    vertical-align: middle;
-  }
-
-  .td-avatar {
-    width: 38px; height: 38px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 700; color: #fff; overflow: hidden;
-  }
+  .table-row td { padding: 12px 10px; vertical-align: middle; }
+  .td-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; overflow: hidden; }
   .td-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
   .td-name { font-weight: 600; color: var(--c-text-1); }
   .td-id { color: var(--c-text-2); font-size: 13px; }
-
-  .role-tag {
-    font-size: 11px; padding: 2px 10px; border-radius: 6px; font-weight: 600;
-  }
+  .role-tag { font-size: 11px; padding: 2px 10px; border-radius: 6px; font-weight: 600; }
   .role-admin { background: #EDE9FE; color: #7C3AED; }
-  .role-user { background: var(--c-bg); color: var(--c-text-3); }
-
-  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .role-user { background: var(--c-surface-variant); color: var(--c-text-3); }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
   .dot-ok { background: var(--c-success); }
   .dot-ban { background: var(--c-danger); }
-
-  .action-btn {
-    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
-    border: 1.5px solid; cursor: pointer;
-    transition: all var(--ease);
-    background: #fff;
-  }
+  .action-btn { padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid; cursor: pointer; transition: all var(--ease); background: #fff; }
   .btn-ban { color: var(--c-danger); border-color: #FECACA; }
-  .btn-ban:hover { background: #FEF2F2; }
+  .btn-ban:hover { background: #FFEBEE; }
   .btn-ok { color: var(--c-success); border-color: #BBF7D0; }
-  .btn-ok:hover { background: #F0FDF4; }
-	  .self-tag { font-size: 12px; color: var(--c-text-3); }
-
-  .table-loading, .table-finished, .table-empty {
-    text-align: center; padding: 24px;
-    font-size: 13px; color: var(--c-text-3);
-  }
+  .btn-ok:hover { background: #E8F5E9; }
+  .self-tag { font-size: 12px; color: var(--c-text-3); }
+  .table-loading, .table-finished, .table-empty { text-align: center; padding: 24px; font-size: 13px; color: var(--c-text-3); }
 }
-
 @media (min-width: 1024px) {
   .table-wrap { padding: 0 48px 32px; }
   .search-wrap :deep(.van-search) { padding: 0 0 0 32px; }

@@ -1,29 +1,41 @@
 <template>
   <div class="page profile-page">
     <!-- Nav -->
-    <van-nav-bar title="个人资料" left-arrow fixed placeholder
-      class="profile-nav" @click-left="router.back()">
+    <van-nav-bar left-arrow fixed placeholder class="profile-nav" @click-left="router.back()">
+      <template #title>
+        <span class="nav-title-text">个人资料</span>
+      </template>
       <template #right><NavActions /></template>
     </van-nav-bar>
 
-    <!-- Hero -->
+    <!-- ═══ Hero header ═══ -->
     <div class="profile-hero">
+      <div class="hero-deco" aria-hidden="true">
+        <div class="deco-circle deco-1 float-slow"></div>
+        <div class="deco-circle deco-2 float-fast"></div>
+      </div>
+
       <div class="avatar-wrap" @click="triggerAvatar">
         <div class="avatar-circle" :class="{ uploading: uploadingAvatar }">
           <img v-if="profile.avatar" :src="profile.avatar" class="avatar-img" />
-          <span v-else>{{ nameInitial }}</span>
-          <div v-if="uploadingAvatar" class="avatar-overlay"><van-loading color="#fff" size="20" /></div>
+          <span v-else class="avatar-letter">{{ nameInitial }}</span>
+          <div v-if="uploadingAvatar" class="avatar-overlay">
+            <van-loading color="#fff" size="22" />
+          </div>
         </div>
-        <div class="avatar-badge" title="编辑头像"><van-icon name="photograph" /></div>
+        <div class="avatar-badge" title="编辑头像">
+          <van-icon name="photograph" />
+        </div>
         <input ref="avatarInput" type="file" accept="image/*" hidden @change="handleAvatarChange" />
       </div>
+
       <h2 class="profile-name">{{ profile.name || '—' }}</h2>
       <p class="profile-id">学号 {{ profile.studentId || '—' }}</p>
     </div>
 
     <div class="content-wrap">
-      <!-- Stats bar -->
-      <div class="stats-bar">
+      <!-- ═══ Stats bar ═══ -->
+      <div class="stats-bar glass">
         <div class="stat-item">
           <span class="stat-num" style="color:var(--c-primary)">{{ profile.availablePoints ?? '—' }}</span>
           <span class="stat-lbl">可用积分</span>
@@ -40,13 +52,13 @@
         </div>
       </div>
 
-      <!-- Desktop: two-column layout -->
+      <!-- ═══ Two-column layout ═══ -->
       <div class="profile-columns">
         <!-- Basic info -->
         <div class="column">
           <div class="section">
             <h3 class="section-title">基本信息</h3>
-            <div class="info-card">
+            <div class="info-card card">
               <div class="info-row">
                 <span class="info-label">姓名</span>
                 <div class="info-field" :class="{ focused: focusedField === 'name' }">
@@ -63,7 +75,7 @@
         <div class="column">
           <div class="section">
             <h3 class="section-title">隐私设置</h3>
-            <div class="info-card">
+            <div class="info-card card">
               <div class="info-row border-bottom">
                 <div class="info-row-left">
                   <span class="info-label">匿名模式</span>
@@ -94,7 +106,7 @@
       <!-- Password -->
       <div class="section password-section">
         <h3 class="section-title">修改密码</h3>
-        <div class="info-card">
+        <div class="info-card card">
           <div class="info-row">
             <span class="info-label">旧密码</span>
             <div class="info-field">
@@ -149,9 +161,7 @@ const passwordForm = reactive({ oldPassword: '', newPassword: '' })
 const avatarInput = ref(null)
 const uploadingAvatar = ref(false)
 
-function triggerAvatar() {
-  avatarInput.value?.click()
-}
+function triggerAvatar() { avatarInput.value?.click() }
 
 async function handleAvatarChange(e) {
   const file = e.target.files?.[0]
@@ -218,29 +228,58 @@ function handleLogout() {
 <style scoped>
 .profile-page { background: var(--c-bg); }
 
-/* Nav */
+/* ═══════════════════════════════════════
+   Nav
+   ═══════════════════════════════════════ */
 .profile-nav :deep(.van-nav-bar) { background: var(--g-hero) !important; }
+.profile-nav :deep(.van-nav-bar__title),
+.profile-nav :deep(.van-nav-bar__arrow) { color: #fff !important; }
+.nav-title-text { color: #fff; font-weight: 600; }
 
-/* Hero */
+/* ═══════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════ */
 .profile-hero {
+  position: relative;
   background: var(--g-hero);
-  padding: 28px 24px 60px;
-  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 20px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.avatar-wrap { position: relative; margin-bottom: 14px; }
+.hero-deco { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  background: #fff;
+}
+.deco-1 { width: 140px; height: 140px; top: -40px; right: -30px; }
+.deco-2 { width: 90px; height: 90px; bottom: 20px; left: -20px; opacity: 0.18; }
+
+/* Avatar */
+.avatar-wrap { position: relative; margin-bottom: 16px; z-index: 1; }
 
 .avatar-circle {
-  width: 84px; height: 84px; border-radius: 50%;
-  background: rgba(255,255,255,0.26);
-  border: 3px solid rgba(255,255,255,0.6);
+  width: 92px; height: 92px; border-radius: 50%;
+  background: rgba(255,255,255,0.24);
+  border: 3px solid rgba(255,255,255,0.55);
   display: flex; align-items: center; justify-content: center;
-  font-size: 34px; font-weight: 800; color: #fff;
-  backdrop-filter: blur(8px);
+  font-size: 38px; font-weight: 800; color: #fff;
+  backdrop-filter: blur(10px);
   overflow: hidden; position: relative; cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
+.avatar-circle:active { transform: scale(0.95); }
 .avatar-circle.uploading { pointer-events: none; }
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-letter { line-height: 1; }
+
 .avatar-overlay {
   position: absolute; inset: 0;
   background: rgba(0,0,0,0.35);
@@ -249,32 +288,41 @@ function handleLogout() {
 
 .avatar-badge {
   position: absolute; bottom: 2px; right: 2px;
-  width: 26px; height: 26px;
+  width: 28px; height: 28px;
   background: #fff; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; color: var(--c-primary);
+  font-size: 14px; color: var(--c-primary);
   box-shadow: var(--s-sm); cursor: pointer;
+  transition: transform var(--ease);
+}
+.avatar-badge:active { transform: scale(0.9); }
+
+.profile-name {
+  font-size: 22px; font-weight: 700; color: #fff;
+  margin-bottom: 4px; position: relative; z-index: 1;
+}
+.profile-id {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  position: relative; z-index: 1;
 }
 
-.profile-name { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.profile-id { font-size: 13px; color: rgba(255,255,255,0.65); }
-
-/* Stats */
+/* ═══════════════════════════════════════
+   Stats
+   ═══════════════════════════════════════ */
 .stats-bar {
   display: flex; align-items: center;
-  background: var(--c-surface);
-  border-radius: var(--r-lg);
-  margin: -28px 0 0;
-  padding: 16px 0;
+  margin: -36px 0 0;
+  padding: 18px 0;
   position: relative; z-index: 10;
-  box-shadow: var(--s-md);
 }
 .stat-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.stat-num { font-size: 20px; font-weight: 700; }
-.stat-lbl { font-size: 11px; color: var(--c-text-3); }
-.stat-sep { width: 1px; height: 30px; background: var(--c-border); }
+.stat-num { font-size: 22px; font-weight: 700; }
+.stat-lbl { font-size: 11px; color: var(--c-text-3); font-weight: 500; }
+.stat-sep { width: 1px; height: 32px; background: var(--c-border); }
 
-/* Sections */
+/* ═══════════════════════════════════════
+   Sections
+   ═══════════════════════════════════════ */
 .section { padding-top: 24px; }
 .section-title {
   font-size: 14px; font-weight: 700; color: var(--c-text-2);
@@ -282,18 +330,13 @@ function handleLogout() {
 }
 
 /* Info card */
-.info-card {
-  background: var(--c-surface);
-  border-radius: var(--r-md);
-  box-shadow: var(--s-xs);
-  overflow: hidden;
-}
+.info-card { overflow: hidden; }
 .info-row {
   display: flex; align-items: center;
   padding: 4px 16px; min-height: 56px; gap: 12px;
 }
 .info-row.border-bottom { border-bottom: 1px solid var(--c-border); }
-.info-row.row-disabled { opacity: 0.45; }
+.info-row.row-disabled { opacity: 0.4; }
 .info-row-left { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .info-label { font-size: 14px; font-weight: 600; color: var(--c-text-1); min-width: 60px; }
 .info-hint { font-size: 12px; color: var(--c-text-3); }
@@ -302,7 +345,7 @@ function handleLogout() {
   flex: 1; border-radius: var(--r-sm);
   transition: background var(--ease);
 }
-.info-field.focused { background: var(--c-primary-soft); }
+.info-field.focused { background: var(--c-primary-container); }
 
 .inline-field :deep(.van-cell) { padding: 8px 0 !important; background: transparent !important; }
 .inline-field :deep(.van-field__control) {
@@ -317,26 +360,24 @@ function handleLogout() {
 }
 
 /* Logout */
-.logout-section { padding-top: 16px; }
+.logout-section { padding-top: 16px; padding-bottom: calc(24px + var(--safe-bottom)); }
 .logout-btn {
   color: var(--c-text-2) !important; border-color: var(--c-border) !important;
-  background: var(--c-surface) !important; box-shadow: none !important;
+  background: var(--c-surface) !important; box-shadow: var(--s-xs) !important;
   height: 44px !important; font-size: 14px !important;
 }
 
-/* ════════════════════════════════════════
-   Tablet+ (≥ 768px) — two-column form layout
-   ════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Tablet+ (≥ 768px)
+   ═══════════════════════════════════════ */
 @media (min-width: 768px) {
-  .profile-hero {
-    padding: 36px 32px 72px;
-  }
-  .avatar-circle { width: 96px; height: 96px; font-size: 40px; }
+  .profile-hero { padding: 32px 32px 76px; }
+  .avatar-circle { width: 104px; height: 104px; font-size: 42px; }
 
   .stats-bar {
     max-width: 640px;
     margin-left: auto; margin-right: auto;
-    margin-top: -36px;
+    margin-top: -44px;
   }
 
   .profile-columns {

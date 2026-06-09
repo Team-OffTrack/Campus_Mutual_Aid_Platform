@@ -1,96 +1,131 @@
 <template>
   <div class="page home-page">
-    <!-- Top nav bar -->
+    <!-- Top nav bar — transparent over hero -->
     <van-nav-bar title="" fixed placeholder class="home-nav">
       <template #right>
         <NavActions light />
       </template>
     </van-nav-bar>
 
-    <!-- Hero banner -->
+    <!-- ═══ Hero banner ═══ -->
     <div class="hero-banner">
+      <!-- Decorative shapes -->
+      <div class="hero-deco" aria-hidden="true">
+        <div class="deco-circle deco-1 float-slow"></div>
+        <div class="deco-circle deco-2 float-fast"></div>
+        <div class="deco-circle deco-3 float-slow"></div>
+        <div class="deco-ring deco-r1"></div>
+        <div class="deco-ring deco-r2"></div>
+      </div>
+
       <div class="hero-content">
         <p class="hero-greeting">{{ greeting }}</p>
         <h2 class="hero-name">{{ authStore.name || '同学' }}</h2>
         <p class="hero-tip">有什么需要帮忙的吗？</p>
       </div>
-      <div class="hero-deco" aria-hidden="true">
-        <div class="deco-ring deco-ring-1"></div>
-        <div class="deco-ring deco-ring-2"></div>
-      </div>
     </div>
 
     <div class="content-wrap">
-      <!-- Stats bar -->
-      <div class="stats-row">
-        <div class="stat-chip">
-          <span class="stat-val">0</span>
-          <span class="stat-label">可用积分</span>
+      <!-- ═══ Stats bar (glass morphism) ═══ -->
+      <div class="stats-row glass">
+        <div class="stat-chip" role="button" tabindex="0">
+          <div class="stat-icon-wrap" style="background:var(--c-primary-container)">
+            <van-icon name="gold-coin-o" color="#6750A4" size="16" />
+          </div>
+          <div class="stat-text">
+            <span class="stat-val">0</span>
+            <span class="stat-label">可用积分</span>
+          </div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-chip">
-          <span class="stat-val">5.0</span>
-          <span class="stat-label">信誉评分</span>
+          <div class="stat-icon-wrap" style="background:#E8F5E9">
+            <van-icon name="star-o" color="#2E7D32" size="16" />
+          </div>
+          <div class="stat-text">
+            <span class="stat-val">5.0</span>
+            <span class="stat-label">信誉评分</span>
+          </div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-chip">
-          <span class="stat-val">0</span>
-          <span class="stat-label">互助次数</span>
+          <div class="stat-icon-wrap" style="background:#FFF3E0">
+            <van-icon name="friends-o" color="#E65100" size="16" />
+          </div>
+          <div class="stat-text">
+            <span class="stat-val">0</span>
+            <span class="stat-label">互助次数</span>
+          </div>
         </div>
       </div>
 
-      <!-- Feature section -->
+      <!-- ═══ Feature section ═══ -->
       <div class="section">
-        <h3 class="section-title">功能入口</h3>
+        <div class="section-header">
+          <h3 class="section-title">功能入口</h3>
+          <span class="section-sub">选择你需要帮助的类型</span>
+        </div>
         <div class="feature-grid">
           <div v-for="feat in features" :key="feat.name"
-               class="feat-card"
+               class="feat-card card"
                :style="{ '--fc-bg': feat.bg, '--fc-ic': feat.ic }"
                role="button" :aria-label="feat.name"
                @click="feat.type === 'browse' ? goBrowse() : goPublish(feat.type)">
             <div class="feat-icon-wrap">
               <van-icon :name="feat.icon" class="feat-icon" />
             </div>
-            <span class="feat-name">{{ feat.name }}</span>
-            <span class="feat-desc">{{ feat.desc }}</span>
+            <div class="feat-text">
+              <span class="feat-name">{{ feat.name }}</span>
+              <span class="feat-desc">{{ feat.desc }}</span>
+            </div>
+            <van-icon name="arrow" class="feat-arrow" />
           </div>
         </div>
       </div>
 
-      <!-- My orders -->
+      <!-- ═══ Quick actions ═══ -->
       <div class="section">
-        <div class="orders-card" @click="router.push('/orders')" role="button">
-          <div class="orders-card-left">
-            <div class="orders-icon-wrap"><van-icon name="orders-o" /></div>
-            <div>
-              <p class="orders-title">我的订单</p>
-              <p class="orders-sub">查看我发布和接取的需求</p>
+        <div class="section-header">
+          <h3 class="section-title">快捷入口</h3>
+        </div>
+        <div class="quick-actions">
+          <div class="action-card card" @click="router.push('/orders')" role="button">
+            <div class="action-left">
+              <div class="action-icon-wrap" style="background:#E3F2FD">
+                <van-icon name="orders-o" color="#1565C0" size="20" />
+              </div>
+              <div>
+                <p class="action-title">我的订单</p>
+                <p class="action-sub">查看我发布和接取的需求</p>
+              </div>
             </div>
+            <van-icon name="arrow" class="action-arrow" />
           </div>
-          <van-icon name="arrow" class="orders-arrow" />
+
+          <div v-if="authStore.isAdmin" class="action-card card admin-entry" @click="router.push('/admin/users')" role="button">
+            <div class="action-left">
+              <div class="action-icon-wrap" style="background:#FFF8E1">
+                <van-icon name="setting-o" color="#F9A825" size="20" />
+              </div>
+              <div>
+                <p class="action-title">管理后台</p>
+                <p class="action-sub">用户管理 · 数据监控</p>
+              </div>
+            </div>
+            <van-icon name="arrow" class="action-arrow" />
+          </div>
         </div>
       </div>
 
-      <!-- Admin entry -->
-      <div v-if="authStore.isAdmin" class="section">
-        <div class="admin-card" @click="router.push('/admin/users')" role="button">
-          <div class="admin-card-left">
-            <div class="admin-icon-wrap"><van-icon name="setting-o" /></div>
-            <div>
-              <p class="admin-title">管理后台</p>
-              <p class="admin-sub">用户管理 · 数据监控</p>
-            </div>
-          </div>
-          <van-icon name="arrow" class="admin-arrow" />
-        </div>
-      </div>
-
-      <!-- Logout -->
+      <!-- ═══ Logout ═══ -->
       <div class="logout-section">
         <van-button type="default" block round class="logout-btn" @click="handleLogout">
           退出登录
         </van-button>
       </div>
+
+      <!-- Bottom safe area spacer -->
+      <div class="bottom-spacer"></div>
     </div>
   </div>
 </template>
@@ -107,11 +142,11 @@ const authStore = useAuthStore()
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  if (h < 6)  return '夜深了'
+  if (h < 6)  return '夜深了 🌙'
   if (h < 12) return '早上好 ☀️'
-  if (h < 14) return '中午好 🌤'
+  if (h < 14) return '中午好 🌤️'
   if (h < 18) return '下午好 🌈'
-  return '晚上好 🌙'
+  return '晚上好 ✨'
 })
 
 const features = [
@@ -120,16 +155,11 @@ const features = [
   { name: '组队匹配', desc: '发布组队需求', icon: 'friends',      bg: 'var(--feat-3-bg)', ic: 'var(--feat-3-ic)', type: 'team' },
   { name: '失物招领', desc: '发布招领信息', icon: 'search',      bg: 'var(--feat-4-bg)', ic: 'var(--feat-4-ic)', type: 'lost_found' },
   { name: '学习互助', desc: '发布学习需求', icon: 'chat-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)', type: 'study' },
-  { name: '需求广场', desc: '浏览所有需求', icon: 'gem-o',       bg: 'var(--feat-5-bg)', ic: 'var(--feat-5-ic)', type: 'browse' },
+  { name: '需求广场', desc: '浏览所有需求', icon: 'gem-o',       bg: 'var(--feat-6-bg)', ic: 'var(--feat-6-ic)', type: 'browse' },
 ]
 
-function goPublish(type) {
-  router.push({ path: '/demands/publish', query: { type } })
-}
-
-function goBrowse() {
-  router.push('/demands')
-}
+function goPublish(type) { router.push({ path: '/demands/publish', query: { type } }) }
+function goBrowse() { router.push('/demands') }
 
 function handleLogout() {
   authStore.logout()
@@ -141,49 +171,185 @@ function handleLogout() {
 <style scoped>
 .home-page { background: var(--c-bg); }
 
-/* ── Nav ── */
+/* ═══════════════════════════════════════
+   Nav — transparent over hero
+   ═══════════════════════════════════════ */
 .home-nav :deep(.van-nav-bar),
-.home-nav :deep(.van-nav-bar__content) { background: var(--g-hero) !important; }
+.home-nav :deep(.van-nav-bar__content) {
+  background: transparent !important;
+  transition: background var(--ease);
+}
 
-/* ── Hero ── */
+/* ═══════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════ */
 .hero-banner {
   position: relative;
   background: var(--g-hero);
-  padding: 20px 24px 52px;
+  padding: 24px 24px 64px;
   overflow: hidden;
+  isolation: isolate;
 }
 
-.hero-content { position: relative; z-index: 2; color: #fff; }
+.hero-content {
+  position: relative;
+  z-index: 3;
+  color: #fff;
+}
 
-.hero-greeting { font-size: 13px; color: rgba(255,255,255,0.75); margin-bottom: 4px; }
-.hero-name { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.hero-tip { font-size: 13px; color: rgba(255,255,255,0.65); }
+.hero-greeting {
+  font-size: 14px;
+  color: rgba(255,255,255,0.78);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
 
-.hero-deco { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-.deco-ring { position: absolute; border: 2px solid rgba(255,255,255,0.10); border-radius: 50%; }
-.deco-ring-1 { width: 220px; height: 220px; top: -80px; right: -60px; }
-.deco-ring-2 { width: 140px; height: 140px; top: -20px; right: 30px; }
+.hero-name {
+  font: var(--t-headline);
+  color: #fff;
+  margin-bottom: 6px;
+  font-size: 28px;
+}
 
-/* ── Stats ── */
+.hero-tip {
+  font-size: 14px;
+  color: rgba(255,255,255,0.62);
+  font-weight: 400;
+}
+
+/* Decorative animated shapes */
+.hero-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.12;
+  background: #fff;
+}
+
+.deco-1 {
+  width: 180px; height: 180px;
+  top: -70px; right: -50px;
+}
+
+.deco-2 {
+  width: 80px; height: 80px;
+  top: 40px; right: 100px;
+  opacity: 0.22;
+}
+
+.deco-3 {
+  width: 120px; height: 120px;
+  bottom: -30px; left: -30px;
+  opacity: 0.15;
+}
+
+.deco-ring {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,0.10);
+  border-radius: 50%;
+}
+
+.deco-r1 {
+  width: 260px; height: 260px;
+  top: -100px; right: -100px;
+}
+
+.deco-r2 {
+  width: 160px; height: 160px;
+  top: 10px; right: 60px;
+}
+
+/* ═══════════════════════════════════════
+   Stats — glass morphism card
+   ═══════════════════════════════════════ */
 .stats-row {
-  display: flex; align-items: center;
-  background: var(--c-surface);
-  border-radius: var(--r-lg);
-  margin: -28px 0 0;
-  padding: 16px 0;
-  position: relative; z-index: 10;
-  box-shadow: var(--s-md);
+  display: flex;
+  align-items: center;
+  margin: -36px 0 0;
+  padding: 18px 12px;
+  position: relative;
+  z-index: 10;
 }
-.stat-chip { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.stat-val { font-size: 18px; font-weight: 700; color: var(--c-primary); }
-.stat-label { font-size: 11px; color: var(--c-text-3); }
-.stat-divider { width: 1px; height: 28px; background: var(--c-border); }
 
-/* ── Sections ── */
-.section { padding-top: 28px; }
-.section-title { font-size: 15px; font-weight: 700; color: var(--c-text-1); margin-bottom: 14px; }
+.stat-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  cursor: default;
+  border-radius: var(--r-md);
+  transition: background var(--ease);
+}
 
-/* ── Feature grid ── */
+.stat-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-text-1);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--c-text-3);
+  font-weight: 500;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--c-border);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   Sections
+   ═══════════════════════════════════════ */
+.section { padding-top: 24px; }
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-text-1);
+}
+
+.section-sub {
+  font-size: 12px;
+  color: var(--c-text-3);
+}
+
+/* ═══════════════════════════════════════
+   Feature grid
+   ═══════════════════════════════════════ */
 .feature-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -192,112 +358,183 @@ function handleLogout() {
 
 .feat-card {
   background: var(--fc-bg);
-  border-radius: var(--r-md);
-  padding: 18px 16px;
-  display: flex; flex-direction: column; gap: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease);
+  position: relative;
+}
+.feat-card:active { transform: scale(0.97); }
+
+.feat-icon-wrap {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  background: var(--fc-ic);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.feat-icon { font-size: 22px; color: #fff !important; }
+
+.feat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feat-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-1);
+}
+
+.feat-desc {
+  font-size: 12px;
+  color: var(--c-text-3);
+}
+
+.feat-arrow {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  font-size: 14px;
+  color: var(--c-text-4);
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════
+   Quick action cards
+   ═══════════════════════════════════════ */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
   cursor: pointer;
   transition: transform var(--ease), box-shadow var(--ease);
 }
-.feat-card:active { transform: scale(0.97); box-shadow: var(--s-sm); }
+.action-card:active { transform: scale(0.985); }
 
-.feat-icon-wrap {
-  width: 44px; height: 44px; border-radius: 14px;
-  background: var(--fc-ic);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 6px;
+.action-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-.feat-icon { font-size: 22px; color: #fff !important; }
-.feat-name { font-size: 15px; font-weight: 600; color: var(--c-text-1); }
-.feat-desc { font-size: 12px; color: var(--c-text-3); }
 
-/* ── Orders card ── */
-.orders-card {
-  display: flex; align-items: center; justify-content: space-between;
-  background: #EDF4FF;
-  border: 1.5px solid #BFDBFE;
-  border-radius: var(--r-md);
-  padding: 16px;
-  cursor: pointer;
-  transition: background var(--ease);
+.action-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.orders-card:active { background: #DBEAFE; }
-.orders-card-left { display: flex; align-items: center; gap: 14px; }
-.orders-icon-wrap {
-  width: 44px; height: 44px; border-radius: 14px;
-  background: #3B82F6;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: #fff;
-}
-.orders-title { font-size: 15px; font-weight: 600; color: var(--c-text-1); margin-bottom: 2px; }
-.orders-sub { font-size: 12px; color: var(--c-text-3); }
-.orders-arrow { color: var(--c-text-3); font-size: 16px; }
 
-/* ── Admin card ── */
-.admin-card {
-  display: flex; align-items: center; justify-content: space-between;
-  background: #FFF8EC;
-  border: 1.5px solid #FFE5A3;
-  border-radius: var(--r-md);
-  padding: 16px;
-  cursor: pointer;
-  transition: background var(--ease);
+.action-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text-1);
+  margin-bottom: 2px;
 }
-.admin-card:active { background: #FFF0CC; }
-.admin-card-left { display: flex; align-items: center; gap: 14px; }
-.admin-icon-wrap {
-  width: 44px; height: 44px; border-radius: 14px;
-  background: #EAB308;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: #fff;
-}
-.admin-title { font-size: 15px; font-weight: 600; color: var(--c-text-1); margin-bottom: 2px; }
-.admin-sub { font-size: 12px; color: var(--c-text-3); }
-.admin-arrow { color: var(--c-text-3); font-size: 16px; }
 
-/* ── Logout ── */
+.action-sub {
+  font-size: 12px;
+  color: var(--c-text-3);
+}
+
+.action-arrow {
+  color: var(--c-text-4);
+  font-size: 16px;
+}
+
+.admin-entry {
+  border: 1.5px solid #FFE082;
+}
+
+/* ═══════════════════════════════════════
+   Logout
+   ═══════════════════════════════════════ */
 .logout-section { padding-top: 28px; }
-.logout-btn {
-  color: var(--c-text-2) !important; border-color: var(--c-border) !important;
-  background: var(--c-surface) !important; box-shadow: none !important;
-  height: 48px !important; font-size: 14px !important;
-}
 
-/* ════════════════════════════════════════
-   Tablet (≥ 768px) — 3-col grid, wider stats
-   ════════════════════════════════════════ */
+.logout-btn {
+  color: var(--c-text-2) !important;
+  border-color: var(--c-border) !important;
+  background: var(--c-surface) !important;
+  box-shadow: var(--s-xs) !important;
+  height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all var(--ease) !important;
+}
+.logout-btn:active { background: var(--c-bg) !important; }
+
+.bottom-spacer { height: calc(24px + var(--safe-bottom)); }
+
+/* ═══════════════════════════════════════
+   Tablet (≥ 768px)
+   ═══════════════════════════════════════ */
 @media (min-width: 768px) {
   .hero-banner {
-    padding: 32px var(--content-pad, 32px) 60px;
+    padding: 40px 32px 80px;
   }
-  .hero-name { font-size: 28px; }
+  .hero-name { font-size: 34px; }
+  .hero-greeting { font-size: 16px; }
 
   .feature-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
-  .stats-row { margin: -28px 0 0; padding: 20px 0; }
+  .stats-row {
+    margin: -44px 0 0;
+    padding: 20px 16px;
+  }
   .stat-val { font-size: 22px; }
 
+  .quick-actions {
+    flex-direction: row;
+  }
+  .action-card { flex: 1; }
+
   .logout-section { max-width: 400px; margin: 0 auto; }
+
+  .deco-1 { width: 300px; height: 300px; top: -120px; right: -80px; }
+  .deco-r1 { width: 400px; height: 400px; top: -160px; right: -160px; }
 }
 
-/* ════════════════════════════════════════
-   Desktop (≥ 1024px) — 4-col grid, hover effects
-   ════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Desktop (≥ 1024px) — hover effects + 4-col
+   ═══════════════════════════════════════ */
 @media (min-width: 1024px) {
   .hero-banner {
-    padding: 40px 48px 80px;
+    padding: 48px 48px 92px;
   }
-  .hero-name { font-size: 32px; }
-  .deco-ring-1 { width: 360px; height: 360px; top: -140px; right: -100px; }
-  .deco-ring-2 { width: 220px; height: 220px; top: -30px; right: 80px; }
+  .hero-name { font-size: 40px; }
 
-  .feature-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .feature-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
   .feat-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--s-md);
   }
+  .feat-card:active { transform: scale(0.98); }
 
-	  .orders-card:hover { background: #DBEAFE; }
-  .admin-card:hover { background: #FFF0CC; }
+  .action-card:hover {
+    box-shadow: var(--s-md);
+    border-color: transparent;
+  }
+
+  .deco-1 { width: 400px; height: 400px; top: -160px; right: -120px; }
+  .deco-2 { width: 120px; height: 120px; top: 80px; right: 200px; }
+  .deco-r1 { width: 500px; height: 500px; top: -200px; right: -200px; }
+  .deco-r2 { width: 260px; height: 260px; top: 20px; right: 140px; }
 }
 </style>
