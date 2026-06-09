@@ -76,6 +76,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { showToast } from 'vant'
 import { getMessages, sendMessage, uploadChatImage } from '@/api/chat'
 import { getProfile } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
@@ -139,7 +140,7 @@ async function fetchMessages() {
     const msgs = await getMessages(conversationId.value)
     messages.value = msgs
     scrollToBottom()
-  } catch { /* handled */ }
+  } catch { showToast('消息加载失败') }
 }
 
 async function loadProfileInfo() {
@@ -160,7 +161,7 @@ async function onFilePicked(e) {
     const msg = await sendMessage(conversationId.value, { type: 'image', imageUrl: url })
     messages.value = [...messages.value, msg]
     scrollToBottom()
-  } catch { /* handled */ }
+  } catch { showToast('图片发送失败，请重试') }
   finally {
     uploading.value = false
     if (fileInputRef.value) fileInputRef.value.value = ''
@@ -187,7 +188,7 @@ async function handleSend() {
     messages.value = [...messages.value, msg]
     inputText.value = ''
     scrollToBottom()
-  } catch { /* handled */ }
+  } catch { showToast('发送失败，请重试') }
   finally { sending.value = false }
 }
 

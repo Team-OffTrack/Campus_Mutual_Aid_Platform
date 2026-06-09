@@ -143,7 +143,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { showToast, showConfirmDialog } from 'vant'
 import { getProfile, updateProfile, changePassword, uploadAvatar } from '@/api/user'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -173,7 +173,7 @@ async function handleAvatarChange(e) {
     authStore.avatar = avatarUrl
     localStorage.setItem('avatar', avatarUrl)
     showToast('头像已更新')
-  } catch { /* skip */ }
+  } catch { showToast('头像上传失败') }
   finally { uploadingAvatar.value = false }
   e.target.value = ''
 }
@@ -187,7 +187,7 @@ onMounted(async () => {
     form.name = data.name || ''
     form.isAnonymous = data.isAnonymous || false
     form.maskName = data.maskName || ''
-  } catch (e) { /* skip */ }
+  } catch { showToast('个人资料加载失败') }
 })
 
 async function handleSave() {
@@ -201,7 +201,7 @@ async function handleSave() {
     const data = await updateProfile(payload)
     profile.value = data
     showToast('保存成功')
-  } catch { /* skip */ }
+  } catch { showToast('保存失败，请重试') }
   finally { loading.value = false }
 }
 
@@ -214,11 +214,13 @@ async function handleChangePassword() {
     showToast('密码已修改')
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
-  } catch { /* skip */ }
+  } catch { showToast('密码修改失败，请检查旧密码是否正确') }
   finally { changingPassword.value = false }
 }
 
-function handleLogout() {
+async function handleLogout() {
+  try { await showConfirmDialog({ title: '退出登录', message: '确定要退出当前账号吗？' }) }
+  catch { return }
   authStore.logout()
   showToast('已退出')
   router.push('/login')

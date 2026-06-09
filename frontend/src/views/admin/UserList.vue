@@ -125,7 +125,10 @@ async function fetchUsers() {
     totalCount.value = page.total
     finished.value = page.current >= page.pages
     pageNum++
-  } catch (e) { /* skip */ }
+  } catch {
+    if (users.value.length === 0) showToast('用户列表加载失败')
+    else showToast('加载失败，请重试')
+  }
   finally { loading.value = false }
 }
 
@@ -146,7 +149,7 @@ async function toggleUser(user) {
     await updateUserStatus(user.userId, newStatus)
     user.status = newStatus
     showToast(newStatus === 1 ? '已解封' : '已封禁')
-  } catch (e) { /* skip */ }
+  } catch { showToast('操作失败，请重试') }
 }
 
 async function onActionSelect() {

@@ -243,11 +243,87 @@ body {
 
 /* ═══════════════════════════════════════
    Focus visible (accessibility)
+   Keyboard navigation support — 启发式规则 #7, 黄金规则 #2
    ═══════════════════════════════════════ */
 :focus-visible {
   outline: 2.5px solid var(--c-primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Cards and clickable surfaces — lift on focus */
+.card:focus-visible,
+.glass:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary), var(--s-md);
+  transform: translateY(-2px);
+}
+
+/* Interactive chips and badges */
+.sort-chip:focus-visible,
+.tab-chip:focus-visible,
+.type-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2.5px var(--c-primary);
+}
+
+/* Nav items */
+.nav-bell:focus-visible,
+.nav-avatar:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary);
+}
+
+/* FAB button */
+.fab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary), var(--s-primary-lg);
+  transform: scale(1.08);
+}
+
+/* Action cards */
+.feat-card:focus-visible,
+.action-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary), var(--s-md);
+  transform: translateY(-3px);
+}
+
+/* Table rows */
+.table-row:focus-visible {
+  outline: none;
+  background: var(--c-primary-container);
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+
+/* Form fields */
+.field-wrap:focus-within {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.10);
+}
+
+/* Notification / conversation cards */
+.notif-card:focus-visible,
+.conv-card:focus-visible,
+.order-card:focus-visible,
+.user-card:focus-visible,
+.demand-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2.5px var(--c-primary), var(--s-sm);
+  transform: translateX(4px);
+}
+
+/* Buttons */
+.van-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary) !important;
+}
+
+/* Links */
+a:focus-visible {
+  outline: 2.5px solid var(--c-primary);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 /* ═══════════════════════════════════════

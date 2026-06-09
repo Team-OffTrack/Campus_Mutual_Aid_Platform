@@ -134,6 +134,7 @@ async function afterReadImage(item) {
     uploadedImageUrls.value.push(url)
   } catch {
     imageFiles.value = imageFiles.value.filter(f => f !== item)
+    showToast('图片上传失败，请重试')
   }
 }
 
@@ -149,7 +150,7 @@ async function handlePublish() {
     await publishDemand(payload)
     showToast('发布成功')
     router.push('/demands')
-  } catch (e) { /* handled by interceptor */ }
+  } catch { showToast('发布失败，请重试') }
   finally { loading.value = false }
 }
 </script>

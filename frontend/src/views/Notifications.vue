@@ -88,6 +88,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import { listNotifications, markRead } from '@/api/notification'
 import { getConversations } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
@@ -116,7 +117,7 @@ function avatarColor(n) { return AVATAR_COLORS[(n || '?').charCodeAt(0) % AVATAR
 async function handleClick(n) {
   if (!n.read) {
     try { await markRead(n.notificationId); n.read = true }
-    catch { /* skip */ }
+    catch { /* ignore mark-read failure, still navigate */ }
   }
   if (n.relatedDemandId) { router.push('/demands/' + n.relatedDemandId) }
 }
@@ -124,14 +125,14 @@ async function handleClick(n) {
 async function fetchNotifications() {
   loadingNotif.value = true
   try { notifications.value = await listNotifications() }
-  catch { /* skip */ }
+  catch { showToast('消息加载失败') }
   finally { loadingNotif.value = false }
 }
 
 async function fetchConversations() {
   loadingConvs.value = true
   try { conversations.value = await getConversations() }
-  catch { /* skip */ }
+  catch { showToast('私信列表加载失败') }
   finally { loadingConvs.value = false }
 }
 

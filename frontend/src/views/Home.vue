@@ -133,7 +133,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { showToast, showConfirmDialog } from 'vant'
 import { useAuthStore } from '@/stores/auth'
 import NavActions from '@/components/NavActions.vue'
 
@@ -161,7 +161,9 @@ const features = [
 function goPublish(type) { router.push({ path: '/demands/publish', query: { type } }) }
 function goBrowse() { router.push('/demands') }
 
-function handleLogout() {
+async function handleLogout() {
+  try { await showConfirmDialog({ title: '退出登录', message: '确定要退出当前账号吗？' }) }
+  catch { return }
   authStore.logout()
   showToast('已退出')
   router.push('/login')

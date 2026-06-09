@@ -17,8 +17,15 @@
       <div v-if="loading" class="loading-hint">加载中…</div>
 
       <div v-else-if="orders.length === 0" class="empty-hint">
-        <van-icon name="notes-o" size="48" color="#C4C0CA" />
-        <p>{{ activeTab === 'publisher' ? '还没有发布过需求' : '还没有接过单' }}</p>
+        <template v-if="fetchError">
+          <van-icon name="failure" size="48" color="#EF4444" />
+          <p>加载失败</p>
+          <van-button round size="small" type="primary" style="margin-top:12px" @click="fetchOrders">重试</van-button>
+        </template>
+        <template v-else>
+          <van-icon name="notes-o" size="48" color="#C4C0CA" />
+          <p>{{ activeTab === 'publisher' ? '还没有发布过需求' : '还没有接过单' }}</p>
+        </template>
       </div>
 
       <template v-else>
@@ -77,12 +84,14 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import { myOrders } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const orders = ref([])
 const loading = ref(false)
+const fetchError = ref(false)
 const activeTab = ref('publisher')
 
 const TYPE_STYLES = {
@@ -123,8 +132,12 @@ async function switchTab(tab) { activeTab.value = tab; await fetchOrders() }
 
 async function fetchOrders() {
   loading.value = true
+  fetchError.value = false
   try { orders.value = await myOrders(activeTab.value) }
-  catch (e) { /* skip */ }
+  catch (e) {
+    orders.value = []
+    fetchError.value = true
+  }
   finally { loading.value = false }
 }
 

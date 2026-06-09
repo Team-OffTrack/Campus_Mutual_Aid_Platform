@@ -61,7 +61,14 @@
       </table>
       <div v-if="loading && pageNum === 1" class="table-loading">加载中…</div>
       <div v-if="finished && demands.length > 0" class="table-finished">已加载全部</div>
-      <div v-if="!loading && demands.length === 0" class="table-empty">暂无需求</div>
+      <div v-if="!loading && demands.length === 0" class="table-empty">
+        <template v-if="fetchError">
+          <van-icon name="failure" size="32" color="#EF4444" />
+          <p style="margin-top:8px">加载失败</p>
+          <van-button round size="small" type="primary" style="margin-top:12px" @click="fetchDemands">重试</van-button>
+        </template>
+        <template v-else>暂无需求</template>
+      </div>
     </div>
 
     <!-- ═══ Mobile card feed ═══ -->
@@ -170,8 +177,11 @@ function onSearch() {
   fetchDemands()
 }
 
+const fetchError = ref(false)
+
 async function fetchDemands() {
   loading.value = true
+  fetchError.value = false
   try {
     const page = await listDemands({
       pageNum, pageSize: 20,
@@ -181,7 +191,11 @@ async function fetchDemands() {
     demands.value = [...demands.value, ...(page.records || [])]
     finished.value = page.current >= page.pages
     pageNum++
-  } catch (e) { /* skip */ }
+  } catch (e) {
+    if (demands.value.length === 0) {
+      fetchError.value = true
+    }
+  }
   finally { loading.value = false }
 }
 
