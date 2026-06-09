@@ -207,9 +207,9 @@ async function handleRegister() {
   width: 100%;
   max-width: 420px;
   background: var(--c-surface);
-  border-radius: 24px;
+  border-radius: var(--r-extra-large) var(--r-extra-large) var(--r-large) var(--r-large);
   padding: 32px 22px 24px;
-  box-shadow: var(--s-md);
+  box-shadow: var(--s-md), var(--s-glow);
 }
 
 .form-header {
@@ -241,10 +241,10 @@ async function handleRegister() {
   align-items: center;
   background: var(--c-surface-variant);
   border: 2px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: var(--r-medium);
   padding: 0 14px;
   min-height: 54px;
-  transition: all var(--ease);
+  transition: all var(--spring-default-spatial);
 }
 
 .field-wrap.focused {
@@ -258,7 +258,7 @@ async function handleRegister() {
   font-size: 20px;
   margin-right: 12px;
   flex-shrink: 0;
-  transition: color var(--ease);
+  transition: color var(--spring-fast-spatial);
 }
 
 .field-wrap.focused .field-icon-wrap { color: var(--c-primary); }
@@ -302,7 +302,7 @@ async function handleRegister() {
   color: var(--c-primary);
   text-decoration: none;
   font-weight: 700;
-  transition: opacity var(--ease);
+  transition: opacity var(--spring-fast-spatial);
 }
 .switch-link:hover { opacity: 0.8; }
 

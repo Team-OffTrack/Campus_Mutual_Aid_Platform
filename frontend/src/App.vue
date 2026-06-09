@@ -11,14 +11,15 @@
 </script>
 
 <style>
-/* Global page transition — defined in main.css with fallback here */
+/* Global page transition — M3E spring spatial */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity var(--dur-medium3) var(--ease-emphasized-decelerate),
+              transform var(--dur-medium3) var(--ease-emphasized-decelerate);
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(14px);
 }
 .page-leave-to {
   opacity: 0;

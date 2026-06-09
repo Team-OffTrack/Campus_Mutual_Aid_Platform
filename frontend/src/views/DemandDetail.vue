@@ -438,6 +438,7 @@ onMounted(fetchDetail)
 .detail-card {
   padding: 24px 20px;
   display: flex; flex-direction: column; gap: 16px;
+  border-radius: var(--r-extra-large);
 }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; }
@@ -452,7 +453,8 @@ onMounted(fetchDetail)
 
 .d-publisher {
   display: flex; align-items: center; gap: 12px;
-  padding: 14px; background: var(--c-surface-variant); border-radius: var(--r-md);
+  padding: 14px; background: var(--c-surface-variant); border-radius: var(--r-medium);
+  transition: background var(--spring-fast-spatial);
 }
 .pub-avatar {
   width: 42px; height: 42px; border-radius: 14px;
@@ -470,18 +472,19 @@ onMounted(fetchDetail)
 .d-images { display: flex; flex-wrap: wrap; gap: 8px; }
 .d-image-thumb {
   width: 100px; height: 100px;
-  object-fit: cover; border-radius: var(--r-sm);
-  cursor: pointer; transition: opacity var(--ease);
+  object-fit: cover; border-radius: var(--r-small);
+  cursor: pointer; transition: opacity var(--spring-fast-effects), transform var(--spring-fast-spatial);
 }
-.d-image-thumb:active { opacity: 0.8; }
+.d-image-thumb:active { opacity: 0.8; transform: scale(0.96); }
 
 .d-meta-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
 .meta-item {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 14px; background: var(--c-surface-variant); border-radius: var(--r-sm);
+  padding: 14px; background: var(--c-surface-variant); border-radius: var(--r-medium);
   color: var(--c-text-3);
+  transition: background var(--spring-fast-spatial);
 }
 .meta-item > div { display: flex; flex-direction: column; gap: 2px; }
 .meta-label { font-size: 11px; color: var(--c-text-3); }
@@ -545,7 +548,7 @@ onMounted(fetchDetail)
 .eval-divider { height: 1px; background: var(--c-border); margin: 4px 0; }
 .eval-form-title { font-size: 14px; font-weight: 600; color: var(--c-text-1); }
 .star-row { display: flex; gap: 6px; justify-content: center; padding: 4px 0; }
-.star-row .van-icon { cursor: pointer; transition: transform var(--dur-fast) var(--ease-std); }
+.star-row .van-icon { cursor: pointer; transition: transform var(--spring-fast-effects); }
 .star-row .van-icon:active { transform: scale(1.2); }
 .eval-input { background: var(--c-surface-variant); border-radius: var(--r-sm); }
 

@@ -189,6 +189,7 @@ function handleLogout() {
   padding: 24px 24px 64px;
   overflow: hidden;
   isolation: isolate;
+  border-radius: 0 0 var(--r-extra-large) var(--r-extra-large);
 }
 
 .hero-content {
@@ -275,6 +276,7 @@ function handleLogout() {
   padding: 18px 12px;
   position: relative;
   z-index: 10;
+  box-shadow: var(--s-md), var(--s-glow);
 }
 
 .stat-chip {
@@ -363,8 +365,9 @@ function handleLogout() {
   flex-direction: column;
   gap: 8px;
   cursor: pointer;
-  transition: transform var(--ease), box-shadow var(--ease);
+  transition: transform var(--spring-fast-spatial), box-shadow var(--spring-default-spatial);
   position: relative;
+  border-radius: var(--r-large);
 }
 .feat-card:active { transform: scale(0.97); }
 
@@ -421,7 +424,8 @@ function handleLogout() {
   justify-content: space-between;
   padding: 16px;
   cursor: pointer;
-  transition: transform var(--ease), box-shadow var(--ease);
+  border-radius: var(--r-large);
+  transition: transform var(--spring-fast-spatial), box-shadow var(--spring-default-spatial);
 }
 .action-card:active { transform: scale(0.985); }
 
@@ -523,13 +527,14 @@ function handleLogout() {
 
   .feat-card:hover {
     transform: translateY(-4px);
-    box-shadow: var(--s-md);
+    box-shadow: var(--s-md), var(--s-glow);
   }
   .feat-card:active { transform: scale(0.98); }
 
   .action-card:hover {
     box-shadow: var(--s-md);
     border-color: transparent;
+    transform: translateY(-2px);
   }
 
   .deco-1 { width: 400px; height: 400px; top: -160px; right: -120px; }

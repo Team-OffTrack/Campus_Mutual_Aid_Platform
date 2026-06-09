@@ -177,6 +177,7 @@ async function onActionSelect() {
   display: flex; align-items: center; gap: 12px;
   padding: 14px; margin-bottom: 8px;
   cursor: pointer;
+  border-radius: var(--r-large);
 }
 .user-card:active { background: var(--c-bg); }
 

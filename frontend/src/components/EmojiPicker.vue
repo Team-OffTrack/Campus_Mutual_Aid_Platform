@@ -105,10 +105,10 @@ function close() {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  border-radius: 10px;
+  border-radius: var(--r-small);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--ease), transform var(--ease);
+  transition: background var(--spring-fast-spatial), transform var(--spring-fast-spatial);
 }
 .emoji-tab:active { transform: scale(0.9); }
 .emoji-tab.tab-sel { background: var(--c-primary-container); }
@@ -130,7 +130,7 @@ function close() {
   cursor: pointer;
   border-radius: 8px;
   user-select: none;
-  transition: background var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std);
+  transition: background var(--spring-fast-effects), transform var(--spring-fast-effects);
 }
 .emoji-item:hover { background: var(--c-bg); }
 .emoji-item:active {
@@ -139,8 +139,8 @@ function close() {
 }
 
 /* Transition */
-.emoji-fade-enter-active { transition: all 0.2s var(--ease-em); }
-.emoji-fade-leave-active { transition: all 0.15s var(--ease-in); }
+.emoji-fade-enter-active { transition: all var(--dur-short4) var(--ease-emphasized); }
+.emoji-fade-leave-active { transition: all var(--dur-short3) var(--ease-emphasized-accelerate); }
 .emoji-fade-enter-from,
 .emoji-fade-leave-to { opacity: 0; }
 .emoji-fade-enter-from .emoji-panel { transform: translateX(-50%) translateY(12px) scale(0.95); }

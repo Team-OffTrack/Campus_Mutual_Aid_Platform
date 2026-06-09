@@ -258,24 +258,24 @@ onBeforeUnmount(stopPolling)
 
 /* Bubbles */
 .msg-bubble {
-  max-width: 72%; padding: 10px 14px; border-radius: 18px;
+  max-width: 72%; padding: 10px 14px; border-radius: var(--r-large);
   background: var(--c-surface); box-shadow: var(--s-xs);
   display: flex; flex-direction: column; gap: 3px;
 }
 .bubble-mine {
   background: linear-gradient(135deg, var(--c-primary) 0%, #7C5CE7 100%);
   color: #fff;
-  border-bottom-right-radius: 6px;
+  border-radius: var(--r-large) var(--r-large) var(--r-small) var(--r-large);
 }
-.msg-bubble:not(.bubble-mine) { border-bottom-left-radius: 6px; }
+.msg-bubble:not(.bubble-mine) { border-radius: var(--r-large) var(--r-large) var(--r-large) var(--r-small); }
 
 .msg-text { font-size: 15px; line-height: 1.55; word-break: break-word; margin: 0; }
 .bubble-mine .msg-text { color: #fff; }
 
 /* Image */
 .msg-image {
-  max-width: 240px; max-height: 240px; border-radius: 10px;
-  object-fit: cover; cursor: pointer; transition: opacity var(--ease);
+  max-width: 240px; max-height: 240px; border-radius: var(--r-small);
+  object-fit: cover; cursor: pointer; transition: opacity var(--spring-fast-effects), transform var(--spring-fast-spatial);
 }
 .msg-image:active { opacity: 0.85; }
 .bubble-mine .msg-image { border-bottom-right-radius: 3px; }
@@ -300,16 +300,16 @@ onBeforeUnmount(stopPolling)
   display: flex; align-items: center; justify-content: center;
   border: none; background: var(--c-surface-variant); border-radius: 50%;
   color: var(--c-text-2); cursor: pointer;
-  transition: background var(--ease), transform var(--ease);
+  transition: background var(--spring-fast-spatial), transform var(--spring-fast-spatial);
 }
 .img-btn:active { background: var(--c-border); transform: scale(0.9); }
 .img-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .emoji-trigger { font-size: 20px; line-height: 1; }
 
 .chat-input {
-  flex: 1; background: var(--c-surface-variant); border-radius: 22px;
+  flex: 1; background: var(--c-surface-variant); border-radius: var(--r-full);
   padding: 6px 14px !important; min-height: 40px;
-  transition: background var(--ease);
+  transition: background var(--spring-fast-spatial), box-shadow var(--spring-fast-spatial);
 }
 .chat-input:focus-within { background: #fff; box-shadow: 0 0 0 2px rgba(103,80,164,0.15); }
 .chat-input :deep(.van-field__control) { font-size: 15px; }

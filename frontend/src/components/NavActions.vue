@@ -51,7 +51,7 @@ onMounted(fetchUnread)
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background var(--ease), transform var(--ease);
+  transition: background var(--spring-fast-spatial), transform var(--spring-fast-spatial);
 }
 .nav-bell:active { transform: scale(0.9); background: rgba(0,0,0,0.06); }
 
@@ -74,8 +74,8 @@ onMounted(fetchUnread)
   justify-content: center;
   padding: 0 5px;
   line-height: 1;
-  box-shadow: 0 2px 6px rgba(239,68,68,0.4);
-  animation: badge-in 0.3s var(--ease-em);
+  box-shadow: var(--s-danger);
+  animation: badge-in 0.3s var(--ease-emphasized-decelerate);
 }
 
 @keyframes badge-in {
@@ -97,8 +97,8 @@ onMounted(fetchUnread)
   justify-content: center;
   cursor: pointer;
   overflow: hidden;
-  transition: transform var(--ease), box-shadow var(--ease);
-  box-shadow: 0 2px 8px rgba(103, 80, 164, 0.3);
+  transition: transform var(--spring-fast-spatial), box-shadow var(--spring-fast-spatial);
+  box-shadow: var(--s-primary);
 }
 .nav-avatar:active { transform: scale(0.92); }
 .nav-avatar .avatar-img {

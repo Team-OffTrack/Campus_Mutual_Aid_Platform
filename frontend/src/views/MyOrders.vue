@@ -144,10 +144,10 @@ fetchOrders()
 }
 .tab-chip {
   flex: 1; text-align: center;
-  padding: 11px 0; border-radius: var(--r-md);
+  padding: 11px 0; border-radius: var(--r-medium);
   font-size: 14px; font-weight: 600; color: var(--c-text-2);
   background: var(--c-surface-variant); cursor: pointer;
-  transition: all var(--ease);
+  transition: all var(--spring-fast-spatial);
 }
 .tab-on { background: var(--c-primary); color: #fff; box-shadow: 0 2px 8px rgba(103,80,164,0.3); }
 
@@ -157,7 +157,7 @@ fetchOrders()
 
 /* Cards */
 .mobile-list { display: flex; flex-direction: column; gap: 10px; }
-.order-card { padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; }
+.order-card { padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; border-radius: var(--r-large); }
 .order-card:active { background: var(--c-bg); }
 .card-top { display: flex; justify-content: space-between; align-items: center; }
 .card-type { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }

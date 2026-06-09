@@ -1,13 +1,13 @@
 /* ============================================================
    Design System — Campus Help Frontend (Material 3 Expressive)
-   Tokens → Vant overrides → Utilities → Responsive breakpoints
+   Tokens sourced from @m3e/web (https://github.com/matraic/m3e)
    ============================================================ */
 
 :root {
   /* ═══════════════════════════════════════
-     Brand Palette (M3-inspired tonal)
+     Brand Palette (M3 tonal)
      ═══════════════════════════════════════ */
-  --c-primary:        #6750A4;   /* M3 Primary */
+  --c-primary:        #6750A4;
   --c-primary-deep:   #4F378B;
   --c-primary-soft:   #F3EDF7;
   --c-primary-container: #EADDFF;
@@ -45,6 +45,15 @@
   --c-outline: #79747E;
 
   /* ═══════════════════════════════════════
+     Color Bloom — M3E radial glow & surface tint
+     ═══════════════════════════════════════ */
+  --bloom-primary:   radial-gradient(circle at 30% 20%, rgba(103,80,164,0.18) 0%, transparent 60%);
+  --bloom-secondary: radial-gradient(circle at 70% 80%, rgba(98,91,113,0.12) 0%, transparent 55%);
+  --bloom-accent:    radial-gradient(circle at 60% 30%, rgba(0,151,167,0.14) 0%, transparent 55%);
+  --bloom-warm:      radial-gradient(circle at 50% 50%, rgba(237,108,2,0.10) 0%, transparent 60%);
+  --surface-tint:    linear-gradient(180deg, rgba(103,80,164,0.03) 0%, transparent 40%);
+
+  /* ═══════════════════════════════════════
      Gradients (expressive)
      ═══════════════════════════════════════ */
   --g-hero:    linear-gradient(160deg, #6750A4 0%, #9A4DB5 40%, #D63384 100%);
@@ -66,50 +75,132 @@
   --feat-6-bg: #FFFDE7; --feat-6-ic: #F9A825;
 
   /* ═══════════════════════════════════════
-     Radii (M3 rounded)
+     Corner Radii — M3E asymmetric system
+     From: /tmp/m3e ShapeToken.ts
      ═══════════════════════════════════════ */
-  --r-xs:  6px;
-  --r-sm:  10px;
-  --r-md:  16px;
-  --r-lg:  24px;
-  --r-xl:  32px;
-  --r-full: 9999px;
+
+  /* Symmetric */
+  --r-extra-small: 0.25rem;   /*  4px */
+  --r-small:       0.5rem;    /*  8px */
+  --r-medium:      0.75rem;   /* 12px */
+  --r-large:       1rem;      /* 16px */
+  --r-extra-large: 1.75rem;   /* 28px */
+  --r-full:        9999px;
+
+  /* Backward-compat aliases */
+  --r-xs: var(--r-extra-small);
+  --r-sm: var(--r-small);
+  --r-md: var(--r-medium);
+  --r-lg: var(--r-large);
+  --r-xl: var(--r-extra-large);
+
+  /* Asymmetric — M3E signature feature */
+  --r-extra-large-top:   1.75rem 1.75rem 0 0;
+  --r-extra-large-end:   0 1.75rem 1.75rem 0;
+  --r-extra-large-start: 1.75rem 0 0 1.75rem;
+  --r-large-top:         1rem 1rem 0 0;
+  --r-large-end:         0 1rem 1rem 0;
+  --r-large-start:       1rem 0 0 1rem;
+  --r-large-bottom:      0 0 1rem 1rem;
+  --r-medium-top:        0.75rem 0.75rem 0 0;
+  --r-medium-end:        0 0.75rem 0.75rem 0;
+  --r-medium-start:      0.75rem 0 0 0.75rem;
+  --r-small-top:         0.5rem 0.5rem 0 0;
+  --r-small-end:         0 0.5rem 0.5rem 0;
+  --r-small-start:       0.5rem 0 0 0.5rem;
 
   /* ═══════════════════════════════════════
-     Shadows / Elevation (M3 hierarchy)
+     Shadows — M3 elevation + colored bloom
      ═══════════════════════════════════════ */
   --s-none: 0 0 0 0 transparent;
+
+  /* Neutral elevation shadows */
   --s-xs:   0 1px 3px  rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --s-sm:   0 2px 8px  rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
   --s-md:   0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
   --s-lg:   0 8px 36px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
   --s-xl:   0 16px 56px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06);
 
-  /* ═══════════════════════════════════════
-     Typography (M3 type scale)
-     ═══════════════════════════════════════ */
-  --t-display: 700 36px/1.2 'Inter', -apple-system, sans-serif;
-  --t-headline: 700 28px/1.25 'Inter', -apple-system, sans-serif;
-  --t-title: 600 22px/1.3 'Inter', -apple-system, sans-serif;
-  --t-body-lg: 400 16px/1.6 'Inter', -apple-system, sans-serif;
-  --t-body: 400 14px/1.6 'Inter', -apple-system, sans-serif;
-  --t-label: 600 12px/1.4 'Inter', -apple-system, sans-serif;
-  --t-caption: 400 11px/1.4 'Inter', -apple-system, sans-serif;
+  /* Colored shadows — M3E bloom (color-tinted depth) */
+  --s-primary:   0 4px 20px rgba(103, 80, 164, 0.28);
+  --s-primary-lg: 0 8px 36px rgba(103, 80, 164, 0.32);
+  --s-accent:    0 4px 18px rgba(0, 151, 167, 0.24);
+  --s-success:   0 4px 16px rgba(46, 125, 50, 0.22);
+  --s-warning:   0 4px 16px rgba(237, 108, 2, 0.24);
+  --s-danger:    0 4px 16px rgba(211, 47, 47, 0.22);
+  --s-glow:      0 0 32px rgba(103, 80, 164, 0.15);
 
   /* ═══════════════════════════════════════
-     Motion (M3 duration + easing tokens)
+     M3 Duration Scale
+     From: /tmp/m3e MotionToken.ts
      ═══════════════════════════════════════ */
-  --ease-em: cubic-bezier(0.4, 0.0, 0.2, 1.0);    /* emphasized */
-  --ease-std: cubic-bezier(0.2, 0.0, 0.0, 1.0);   /* standard */
-  --ease-in: cubic-bezier(0.0, 0.0, 0.2, 1.0);
-  --ease-out: cubic-bezier(0.4, 0.0, 1.0, 1.0);
-  --dur-fast: 120ms;
-  --dur-md: 240ms;
-  --dur-lg: 380ms;
-  --dur-xl: 500ms;
+  --dur-short1: 50ms;
+  --dur-short2: 100ms;
+  --dur-short3: 150ms;
+  --dur-short4: 200ms;
+  --dur-medium1: 250ms;
+  --dur-medium2: 300ms;
+  --dur-medium3: 350ms;
+  --dur-medium4: 400ms;
+  --dur-long1: 450ms;
+  --dur-long2: 500ms;
+  --dur-long3: 550ms;
+  --dur-long4: 600ms;
+  --dur-extra-long1: 700ms;
+  --dur-extra-long2: 800ms;
+  --dur-extra-long3: 900ms;
+  --dur-extra-long4: 1000ms;
 
-  /* Shorthand for hover/active */
-  --ease: var(--dur-md) var(--ease-std);
+  /* Backward-compat aliases — updated to M3E values */
+  --dur-fast: var(--dur-short3);   /* 150ms */
+  --dur-md:   var(--dur-medium3);  /* 350ms */
+  --dur-lg:   var(--dur-long2);    /* 500ms */
+  --dur-xl:   var(--dur-long4);    /* 600ms */
+
+  /* ═══════════════════════════════════════
+     M3 Easing Curves
+     From: /tmp/m3e MotionToken.ts
+     ═══════════════════════════════════════ */
+  --ease-emphasized:            cubic-bezier(0.2, 0.0, 0, 1.0);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  --ease-standard:              cubic-bezier(0.2, 0.0, 0, 1.0);
+  --ease-standard-decelerate:   cubic-bezier(0, 0, 0, 1);
+  --ease-standard-accelerate:   cubic-bezier(0.3, 0, 1, 1);
+
+  /* Backward-compat aliases — updated to M3E values */
+  --ease-em:  var(--ease-emphasized);
+  --ease-std: var(--ease-standard);
+  --ease-in:  var(--ease-emphasized-accelerate);
+  --ease-out: var(--ease-emphasized-decelerate);
+
+  /* ═══════════════════════════════════════
+     M3E Spring Curves — the defining M3E feature
+     From: /tmp/m3e MotionToken.ts SpringToken
+     ═══════════════════════════════════════ */
+  --spring-fast-spatial:    350ms cubic-bezier(0.27, 1.06, 0.18, 1.00);
+  --spring-default-spatial: 500ms cubic-bezier(0.27, 1.06, 0.18, 1.00);
+  --spring-slow-spatial:    750ms cubic-bezier(0.27, 1.06, 0.18, 1.00);
+  --spring-fast-effects:    150ms cubic-bezier(0.31, 0.94, 0.34, 1.00);
+  --spring-default-effects: 200ms cubic-bezier(0.34, 0.80, 0.34, 1.00);
+  --spring-slow-effects:    200ms cubic-bezier(0.34, 0.88, 0.34, 1.00);
+
+  /* ═══════════════════════════════════════
+     Shorthand — updated for spring-like feel
+     This single change cascades through ALL views
+     ═══════════════════════════════════════ */
+  --ease: var(--dur-medium3) var(--ease-emphasized);
+
+  /* ═══════════════════════════════════════
+     M3 Typography Scale (enhanced contrast)
+     ═══════════════════════════════════════ */
+  --t-display:  800 48px/1.05 'Inter', -apple-system, sans-serif;
+  --t-headline: 700 30px/1.2 'Inter', -apple-system, sans-serif;
+  --t-title:    600 22px/1.28 'Inter', -apple-system, sans-serif;
+  --t-body-lg:  400 16px/1.6 'Inter', -apple-system, sans-serif;
+  --t-body:     400 14px/1.6 'Inter', -apple-system, sans-serif;
+  --t-label:    600 12px/1.4 'Inter', -apple-system, sans-serif;
+  --t-caption:  400 11px/1.4 'Inter', -apple-system, sans-serif;
 
   /* ═══════════════════════════════════════
      Layout
@@ -160,16 +251,16 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   Vant overrides
+   Vant overrides — with spring transitions
    ═══════════════════════════════════════ */
 .van-nav-bar__content { height: 52px; }
 
 .van-button--primary {
   background: var(--g-btn) !important;
   border: none !important;
-  box-shadow: 0 4px 18px rgba(103, 80, 164, 0.36) !important;
+  box-shadow: var(--s-primary) !important;
   font-weight: 600 !important;
-  transition: all var(--ease) !important;
+  transition: all var(--ease), transform var(--spring-fast-spatial) !important;
 }
 .van-button--primary:active { transform: scale(0.97); opacity: 0.88; }
 
@@ -191,12 +282,12 @@ body {
 .van-switch--on { background: var(--c-primary) !important; }
 
 .van-dialog {
-  border-radius: var(--r-lg) !important;
+  border-radius: var(--r-large) !important;
   overflow: hidden;
 }
 
 .van-toast {
-  border-radius: var(--r-md) !important;
+  border-radius: var(--r-medium) !important;
   font-weight: 600 !important;
 }
 
@@ -210,28 +301,28 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   Card base
+   Card base — with spring hover
    ═══════════════════════════════════════ */
 .card {
   background: var(--c-surface);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-large);
   box-shadow: var(--s-sm);
   overflow: hidden;
-  transition: box-shadow var(--ease), transform var(--ease);
+  transition: box-shadow var(--spring-default-spatial), transform var(--spring-fast-spatial);
 }
 .card:active { transform: scale(0.985); }
 .card-elevated { box-shadow: var(--s-md); }
 .card-flat { box-shadow: var(--s-xs); }
 
 /* ═══════════════════════════════════════
-   Glass morphism card
+   Glass morphism card — enhanced blur
    ═══════════════════════════════════════ */
 .glass {
   background: rgba(255,255,255,0.72);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.55);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-large);
   box-shadow: var(--s-sm);
 }
 
@@ -239,6 +330,41 @@ body {
   background: rgba(255,255,255,0.85);
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
+}
+
+/* ═══════════════════════════════════════
+   M3E Organic Shape Utilities
+   Using border-radius asymmetry for blob-like forms
+   ═══════════════════════════════════════ */
+.shape-blob {
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+}
+.shape-blob-alt {
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+}
+.shape-blob-sm {
+  border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+}
+.shape-blob-lg {
+  border-radius: 35% 65% 60% 40% / 45% 40% 55% 60%;
+}
+.shape-pill-soft {
+  border-radius: 40% 60% 55% 45% / 45% 50% 50% 55%;
+}
+
+/* Clip-path organic shapes — from /tmp/m3e ShapePolygon.ts */
+.shape-burst {
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%,
+    79% 91%, 50% 70%, 21% 91%, 32% 57%,
+    2% 35%, 39% 35%
+  );
+}
+.shape-hex {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.shape-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 
 /* ═══════════════════════════════════════
@@ -265,23 +391,23 @@ body {
 .t-caption { font: var(--t-caption); }
 
 /* ═══════════════════════════════════════
-   Skeleton loading animation
+   Skeleton loading — M3E spring shimmer
    ═══════════════════════════════════════ */
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, var(--c-border) 25%, #E7E0EC 50%, var(--c-border) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--r-sm);
-}
-
 @keyframes skeleton-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--c-border) 25%,
+    #E7E0EC 37%,
+    var(--c-border) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s var(--ease-emphasized) infinite;
+  border-radius: var(--r-small);
 }
 
 .skeleton-text {
@@ -305,24 +431,24 @@ body {
 
 .skeleton-card {
   height: 120px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-medium);
 }
 
 /* ═══════════════════════════════════════
-   Page transition animations
+   Page transitions — M3E spring spatial
    ═══════════════════════════════════════ */
 .page-enter-active {
-  animation: page-in var(--dur-lg) var(--ease-em);
+  animation: page-in var(--dur-medium3) var(--ease-emphasized-decelerate);
 }
 
 .page-leave-active {
-  animation: page-out var(--dur-fast) var(--ease-in);
+  animation: page-out var(--dur-short3) var(--ease-emphasized-accelerate);
 }
 
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -336,32 +462,32 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   Staggered list animation
+   Staggered list animation — M3E spring
    ═══════════════════════════════════════ */
 .list-enter-active {
-  transition: all var(--dur-md) var(--ease-em);
+  transition: all var(--spring-default-spatial);
 }
 
 .list-enter-from {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(24px);
 }
 
 /* ═══════════════════════════════════════
-   Pulse ripple (for notification dot, etc.)
+   Pulse ripple — M3E effects spring
    ═══════════════════════════════════════ */
 @keyframes pulse-ripple {
   0% { box-shadow: 0 0 0 0 rgba(103, 80, 164, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(103, 80, 164, 0); }
+  70% { box-shadow: 0 0 0 10px rgba(103, 80, 164, 0); }
   100% { box-shadow: 0 0 0 0 rgba(103, 80, 164, 0); }
 }
 
 .pulse-dot {
-  animation: pulse-ripple 2s ease-out infinite;
+  animation: pulse-ripple 2s var(--ease-emphasized) infinite;
 }
 
 /* ═══════════════════════════════════════
-   Float animation (decorative elements)
+   Float animation — M3E slow spatial feel
    ═══════════════════════════════════════ */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -370,12 +496,39 @@ body {
 }
 
 .float-slow {
-  animation: float 6s ease-in-out infinite;
+  animation: float 7s var(--ease-emphasized) infinite;
 }
 
 .float-fast {
-  animation: float 4s ease-in-out infinite;
+  animation: float 4.5s var(--ease-emphasized) infinite;
 }
+
+/* ═══════════════════════════════════════
+   Color Bloom utility classes
+   ═══════════════════════════════════════ */
+.bloom-primary {
+  background: var(--bloom-primary);
+}
+.bloom-warm {
+  background: var(--bloom-warm);
+}
+.surface-tint {
+  background: var(--surface-tint);
+}
+
+/* ═══════════════════════════════════════
+   Asymmetric radius utility classes
+   ═══════════════════════════════════════ */
+.r-extra-large-top   { border-radius: var(--r-extra-large-top); }
+.r-extra-large-end   { border-radius: var(--r-extra-large-end); }
+.r-extra-large-start { border-radius: var(--r-extra-large-start); }
+.r-large-top         { border-radius: var(--r-large-top); }
+.r-large-end         { border-radius: var(--r-large-end); }
+.r-large-start       { border-radius: var(--r-large-start); }
+.r-large-bottom      { border-radius: var(--r-large-bottom); }
+.r-medium-top        { border-radius: var(--r-medium-top); }
+.r-medium-end        { border-radius: var(--r-medium-end); }
+.r-medium-start      { border-radius: var(--r-medium-start); }
 
 /* ═══════════════════════════════════════
    Scrollbar styling

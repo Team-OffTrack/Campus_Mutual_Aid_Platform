@@ -68,7 +68,7 @@ defineProps({
 
 .skeleton-card-item {
   background: var(--c-surface);
-  border-radius: var(--r-md);
+  border-radius: var(--r-large);
   padding: 16px;
   box-shadow: var(--s-xs);
 }
@@ -88,7 +88,7 @@ defineProps({
 
 .skeleton-list-item {
   background: var(--c-surface);
-  border-radius: var(--r-md);
+  border-radius: var(--r-large);
   padding: 16px;
   box-shadow: var(--s-xs);
   display: flex;

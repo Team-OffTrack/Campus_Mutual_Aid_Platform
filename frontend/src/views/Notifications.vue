@@ -156,10 +156,10 @@ onMounted(fetchNotifications)
 }
 .tab-chip {
   flex: 1; text-align: center;
-  padding: 11px 0; border-radius: var(--r-md);
+  padding: 11px 0; border-radius: var(--r-medium);
   font-size: 14px; font-weight: 600; color: var(--c-text-2);
   background: var(--c-surface-variant); cursor: pointer;
-  transition: all var(--ease);
+  transition: all var(--spring-fast-spatial);
 }
 .tab-on { background: var(--c-primary); color: #fff; box-shadow: 0 2px 8px rgba(103,80,164,0.3); }
 
@@ -174,6 +174,7 @@ onMounted(fetchNotifications)
   display: flex; align-items: center; gap: 12px;
   padding: 14px; margin-bottom: 8px;
   cursor: pointer;
+  border-radius: var(--r-large);
 }
 .notif-card.is-unread {
   background: #F7F2FA;
@@ -210,6 +211,7 @@ onMounted(fetchNotifications)
   display: flex; align-items: center; gap: 12px;
   padding: 14px; margin-bottom: 8px;
   cursor: pointer;
+  border-radius: var(--r-large);
 }
 .conv-card.has-unread { background: #F7F2FA; }
 .conv-card:active { background: var(--c-bg); }

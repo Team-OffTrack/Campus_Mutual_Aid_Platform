@@ -160,7 +160,7 @@ async function handlePublish() {
 .nav-title { font-weight: 600; }
 
 .content-wrap { padding: 16px; }
-.publish-card { padding: 24px 20px; }
+.publish-card { padding: 24px 20px; border-radius: var(--r-extra-large); }
 .publish-form { display: flex; flex-direction: column; gap: 18px; }
 
 /* Type grid */
@@ -171,12 +171,12 @@ async function handlePublish() {
 .type-chip {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 11px 8px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-medium);
   border: 2px solid var(--c-border);
   font-size: 13px; font-weight: 600; color: var(--c-text-2);
   background: var(--c-surface-variant);
   cursor: pointer;
-  transition: all var(--ease);
+  transition: all var(--spring-fast-spatial);
 }
 .type-chip:active { transform: scale(0.96); }
 .chip-active { box-shadow: 0 2px 8px rgba(0,0,0,0.15); border-color: transparent !important; }
@@ -186,10 +186,10 @@ async function handlePublish() {
   display: flex; align-items: center;
   background: var(--c-surface-variant);
   border: 2px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: var(--r-medium);
   padding: 0 14px;
   min-height: 54px;
-  transition: all var(--ease);
+  transition: all var(--spring-default-spatial);
 }
 .field-wrap.focused {
   border-color: var(--c-primary);
@@ -201,7 +201,7 @@ async function handlePublish() {
 .field-icon-wrap {
   color: var(--c-text-3); font-size: 20px;
   margin-right: 12px; flex-shrink: 0;
-  transition: color var(--ease);
+  transition: color var(--spring-fast-spatial);
 }
 .field-wrap.focused .field-icon-wrap { color: var(--c-primary); }
 

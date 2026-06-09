@@ -249,6 +249,7 @@ function handleLogout() {
   text-align: center;
   overflow: hidden;
   isolation: isolate;
+  border-radius: 0 0 var(--r-extra-large) var(--r-extra-large);
 }
 
 .hero-deco { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
@@ -272,7 +273,7 @@ function handleLogout() {
   font-size: 38px; font-weight: 800; color: #fff;
   backdrop-filter: blur(10px);
   overflow: hidden; position: relative; cursor: pointer;
-  transition: transform var(--ease), box-shadow var(--ease);
+  transition: transform var(--spring-fast-spatial), box-shadow var(--spring-default-spatial);
   box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
 .avatar-circle:active { transform: scale(0.95); }
@@ -314,6 +315,7 @@ function handleLogout() {
   margin: -36px 0 0;
   padding: 18px 0;
   position: relative; z-index: 10;
+  box-shadow: var(--s-md), var(--s-glow);
 }
 .stat-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .stat-num { font-size: 22px; font-weight: 700; }

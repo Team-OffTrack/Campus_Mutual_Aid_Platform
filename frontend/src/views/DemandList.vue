@@ -221,8 +221,8 @@ onMounted(() => fetchDemands())
 .sort-bar { display: flex; gap: 8px; padding: 0 16px; }
 .sort-chip {
   font-size: 12px; font-weight: 600; color: var(--c-text-3);
-  padding: 5px 14px; border-radius: 16px;
-  cursor: pointer; transition: all var(--ease);
+  padding: 5px 14px; border-radius: var(--r-full);
+  cursor: pointer; transition: all var(--spring-fast-spatial);
   display: flex; align-items: center; gap: 3px;
   background: var(--c-surface-variant);
 }
@@ -243,6 +243,7 @@ onMounted(() => fetchDemands())
   margin-bottom: 10px;
   cursor: pointer;
   display: flex; flex-direction: column; gap: 10px;
+  border-radius: var(--r-large);
 }
 .demand-card:active { background: var(--c-bg); }
 
@@ -277,10 +278,10 @@ onMounted(() => fetchDemands())
   position: fixed; bottom: 28px; right: 24px;
   width: 56px; height: 56px; border-radius: 50%;
   background: var(--g-btn);
-  box-shadow: 0 6px 24px rgba(103, 80, 164, 0.44);
+  box-shadow: var(--s-primary-lg);
   display: flex; align-items: center; justify-content: center;
   color: #fff; cursor: pointer; z-index: 20;
-  transition: transform var(--ease), box-shadow var(--ease);
+  transition: transform var(--spring-fast-spatial), box-shadow var(--spring-default-spatial);
 }
 .fab:active { transform: scale(0.9); }
 
