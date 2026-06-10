@@ -67,7 +67,7 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const auth = useAuthStore()
 
   if (!auth.isLoggedIn && !to.meta.guest) {

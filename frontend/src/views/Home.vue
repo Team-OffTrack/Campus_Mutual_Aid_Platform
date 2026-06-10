@@ -33,7 +33,7 @@
             <van-icon name="gold-coin-o" color="#6750A4" size="16" />
           </div>
           <div class="stat-text">
-            <span class="stat-val">0</span>
+            <span class="stat-val">{{ stats.availablePoints != null ? stats.availablePoints : '—' }}</span>
             <span class="stat-label">可用积分</span>
           </div>
         </div>
@@ -43,18 +43,18 @@
             <van-icon name="star-o" color="#2E7D32" size="16" />
           </div>
           <div class="stat-text">
-            <span class="stat-val">5.0</span>
+            <span class="stat-val">{{ stats.reputationScore != null ? stats.reputationScore : '—' }}</span>
             <span class="stat-label">信誉评分</span>
           </div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-chip">
           <div class="stat-icon-wrap" style="background:#FFF3E0">
-            <van-icon name="friends-o" color="#E65100" size="16" />
+            <van-icon name="lock-o" color="#E65100" size="16" />
           </div>
           <div class="stat-text">
-            <span class="stat-val">0</span>
-            <span class="stat-label">互助次数</span>
+            <span class="stat-val">{{ stats.frozenPoints != null ? stats.frozenPoints : '—' }}</span>
+            <span class="stat-label">冻结积分</span>
           </div>
         </div>
       </div>
@@ -131,14 +131,17 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { useAuthStore } from '@/stores/auth'
+import { getProfile } from '@/api/user'
 import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const stats = ref({ availablePoints: null, reputationScore: null, frozenPoints: null })
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -168,6 +171,17 @@ async function handleLogout() {
   showToast('已退出')
   router.push('/login')
 }
+
+onMounted(async () => {
+  try {
+    const data = await getProfile()
+    stats.value = {
+      availablePoints: data.availablePoints ?? 0,
+      reputationScore: data.reputationScore ?? 5.0,
+      frozenPoints: data.frozenPoints ?? 0,
+    }
+  } catch { /* use fallback placeholders */ }
+})
 </script>
 
 <style scoped>

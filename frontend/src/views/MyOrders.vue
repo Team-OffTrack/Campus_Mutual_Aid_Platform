@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { myOrders } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
@@ -103,7 +103,7 @@ const TYPE_STYLES = {
 }
 
 const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
-const STATUS_LABELS = { OPEN: '进行中', IN_PROGRESS: '已接单', COMPLETED: '已完成', CANCELLED: '已取消' }
+const STATUS_LABELS = { OPEN: '待接单', IN_PROGRESS: '进行中', COMPLETED: '已完成', CANCELLED: '已取消' }
 
 function typeLabel(v) { return TYPE_LABELS[v] || v }
 function typeStyle(v) { return TYPE_STYLES[v] || TYPE_STYLES.other }
@@ -140,7 +140,7 @@ async function fetchOrders() {
   finally { loading.value = false }
 }
 
-fetchOrders()
+onMounted(() => fetchOrders())
 </script>
 
 <style scoped>
@@ -174,9 +174,9 @@ fetchOrders()
 .card-top { display: flex; justify-content: space-between; align-items: center; }
 .card-type { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
 .card-status { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
-.s-open { background: #E8F5E9; color: #2E7D32; }
-.s-in_progress { background: #E3F2FD; color: #1565C0; }
-.s-completed { background: #F5F5F5; color: #9E9E9E; }
+.s-open { background: #E3F2FD; color: #1565C0; }
+.s-in_progress { background: #FFF3E0; color: #E65100; }
+.s-completed { background: #E8F5E9; color: #2E7D32; }
 .s-cancelled { background: #FFEBEE; color: #D32F2F; }
 .card-title { font-size: 16px; font-weight: 700; color: var(--c-text-1); }
 .card-meta { font-size: 13px; color: var(--c-text-3); display: flex; align-items: center; gap: 4px; }

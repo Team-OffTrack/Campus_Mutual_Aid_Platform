@@ -360,7 +360,7 @@ async function submitEvaluation() {
     evaluations.value = [...evaluations.value, result]
     ratingValue.value = 5; ratingComment.value = ''
     fetchEvaluations()
-  } catch { showToast('提交评价失败，请重试') }
+  } catch (e) { showToast(e.message || '提交评价失败，请重试') }
   finally { submittingEval.value = false }
 }
 
@@ -379,7 +379,7 @@ async function submitUpdateEvaluation() {
     editingMyEval.value = false
     ratingValue.value = 5; ratingComment.value = ''
     fetchEvaluations()
-  } catch { showToast('修改失败，请重试') }
+  } catch (e) { showToast(e.message || '修改失败，请重试') }
   finally { submittingEval.value = false }
 }
 
@@ -391,7 +391,7 @@ async function handleStartChat() {
     const targetName = isOwner.value ? demand.value.acceptorName : demand.value.publisherName
     const targetAvatar = isOwner.value ? demand.value.acceptorAvatar : demand.value.publisherAvatar
     router.push('/chat/' + conv.conversationId + '?name=' + encodeURIComponent(targetName || '') + '&avatar=' + encodeURIComponent(targetAvatar || ''))
-  } catch { showToast('创建会话失败，请重试') }
+  } catch (e) { showToast(e.message || '创建会话失败，请重试') }
   finally { startingChat.value = false }
 }
 
@@ -400,7 +400,7 @@ async function handleCancel() {
   catch { return }
   acting.value = true
   try { await cancelDemand(demand.value.demandId); demand.value.status = 'CANCELLED'; showToast('已取消') }
-  catch { showToast('取消失败，请重试') }
+  catch (e) { showToast(e.message || '取消失败，请重试') }
   finally { acting.value = false }
 }
 
@@ -409,7 +409,7 @@ async function handleAccept() {
   catch { return }
   acting.value = true
   try { demand.value = await acceptDemand(demand.value.demandId); showToast('接单成功') }
-  catch { showToast('接单失败，请重试') }
+  catch (e) { showToast(e.message || '接单失败，请重试') }
   finally { acting.value = false }
 }
 
@@ -418,7 +418,7 @@ async function handleComplete() {
   catch { return }
   acting.value = true
   try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); await fetchEvaluations() }
-  catch { showToast('操作失败，请重试') }
+  catch (e) { showToast(e.message || '操作失败，请重试') }
   finally { acting.value = false }
 }
 

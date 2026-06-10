@@ -140,7 +140,7 @@ async function fetchMessages() {
     const msgs = await getMessages(conversationId.value)
     messages.value = msgs
     scrollToBottom()
-  } catch { showToast('消息加载失败') }
+  } catch (e) { showToast(e.message || '消息加载失败') }
 }
 
 async function loadProfileInfo() {
@@ -161,7 +161,7 @@ async function onFilePicked(e) {
     const msg = await sendMessage(conversationId.value, { type: 'image', imageUrl: url })
     messages.value = [...messages.value, msg]
     scrollToBottom()
-  } catch { showToast('图片发送失败，请重试') }
+  } catch (e) { showToast(e.message || '图片发送失败，请重试') }
   finally {
     uploading.value = false
     if (fileInputRef.value) fileInputRef.value.value = ''
@@ -188,7 +188,7 @@ async function handleSend() {
     messages.value = [...messages.value, msg]
     inputText.value = ''
     scrollToBottom()
-  } catch { showToast('发送失败，请重试') }
+  } catch (e) { showToast(e.message || '发送失败，请重试') }
   finally { sending.value = false }
 }
 

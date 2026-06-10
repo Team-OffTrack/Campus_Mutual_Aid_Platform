@@ -3,6 +3,7 @@ package cn.seecoder.campushelp.service.impl;
 import cn.seecoder.campushelp.common.BusinessException;
 import cn.seecoder.campushelp.common.ResultCode;
 import cn.seecoder.campushelp.entity.Notification;
+import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.NotificationMapper;
 import cn.seecoder.campushelp.service.NotificationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -36,7 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notifyDemandAccepted(Long publisherId, String demandTitle, Long demandId, String acceptorName) {
-        create(publisherId, "ACCEPT",
+        create(publisherId, NotificationType.ACCEPT,
                 "有人接单了",
                 "您的需求「" + demandTitle + "」已被 " + acceptorName + " 接单",
                 demandId);
@@ -44,7 +45,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notifyDemandCompleted(Long publisherId, String demandTitle, Long demandId) {
-        create(publisherId, "COMPLETE",
+        create(publisherId, NotificationType.COMPLETE,
                 "需求已完成",
                 "您的需求「" + demandTitle + "」已确认完成",
                 demandId);
@@ -52,7 +53,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notifyDemandCancelled(Long targetUserId, String demandTitle, Long demandId) {
-        create(targetUserId, "CANCEL",
+        create(targetUserId, NotificationType.CANCEL,
                 "需求已取消",
                 "需求「" + demandTitle + "」已被发布者取消",
                 demandId);
@@ -60,7 +61,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notifyTaskCompleted(Long acceptorId, String demandTitle, Long demandId) {
-        create(acceptorId, "COMPLETE",
+        create(acceptorId, NotificationType.COMPLETE,
                 "任务已完成",
                 "您承接的需求「" + demandTitle + "」已被发布者确认完成，去评价一下吧",
                 demandId);
@@ -69,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void notifyEvaluationReceived(Long targetUserId, String demandTitle, Long demandId,
                                           String evaluatorName, int rating) {
-        create(targetUserId, "EVALUATION",
+        create(targetUserId, NotificationType.EVALUATION,
                 "收到新评价",
                 evaluatorName + " 对需求「" + demandTitle + "」给出了 " + rating + " 星评价",
                 demandId);
@@ -78,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void notifyEvaluationUpdated(Long targetUserId, String demandTitle, Long demandId,
                                          String evaluatorName, int rating) {
-        create(targetUserId, "EVALUATION",
+        create(targetUserId, NotificationType.EVALUATION,
                 "评价已更新",
                 evaluatorName + " 修改了对需求「" + demandTitle + "」的评价（" + rating + " 星）",
                 demandId);

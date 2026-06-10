@@ -107,9 +107,12 @@ onMounted(fetchUnread)
   object-fit: cover;
 }
 .nav-light .nav-avatar {
-  background: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.38);
   border: 2px solid rgba(255,255,255,0.55);
   box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.nav-light .avatar-letter {
+  color: var(--c-primary);
 }
 .avatar-letter { line-height: 1; }
 </style>

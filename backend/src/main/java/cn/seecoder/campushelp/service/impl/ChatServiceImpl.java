@@ -32,6 +32,8 @@ import java.util.*;
 @Service
 public class ChatServiceImpl implements ChatService {
 
+    private static final int MAX_MESSAGE_PREVIEW = 500;
+
     private final ConversationMapper conversationMapper;
     private final MessageMapper messageMapper;
     private final DemandMapper demandMapper;
@@ -178,7 +180,7 @@ public class ChatServiceImpl implements ChatService {
 
         // Update conversation snapshot
         String snapshot = "image".equals(msgType) ? "[图片]" : msg.getContent();
-        conv.setLastMessage(snapshot.length() > 500 ? snapshot.substring(0, 500) : snapshot);
+        conv.setLastMessage(snapshot.length() > MAX_MESSAGE_PREVIEW ? snapshot.substring(0, MAX_MESSAGE_PREVIEW) : snapshot);
         conv.setLastMessageAt(LocalDateTime.now());
         conversationMapper.updateById(conv);
 

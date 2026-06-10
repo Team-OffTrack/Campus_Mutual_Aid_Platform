@@ -8,6 +8,7 @@ import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.Evaluation;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.UserAccount;
+import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.EvaluationMapper;
 import cn.seecoder.campushelp.mapper.UserAccountMapper;
@@ -46,7 +47,7 @@ public class EvaluationServiceImpl implements EvaluationService {
         if (demand == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "需求不存在");
         }
-        if (!"COMPLETED".equals(demand.getStatus())) {
+        if (!DemandStatus.COMPLETED.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "只能评价已完成的需求");
         }
 
@@ -164,10 +165,13 @@ public class EvaluationServiceImpl implements EvaluationService {
                 .toList();
     }
 
+    private static final double REPUTATION_RATING_WEIGHT = 0.6;
+    private static final double REPUTATION_COMPLETION_WEIGHT = 0.4;
+
     /**
      * Recalculate the user's credit score.
      *
-     * Formula: score = 0.6 × avgRating + 0.4 × (completionRate × 5)
+     * Formula: score = w1 × avgRating + w2 × (completionRate × 5)
      * - avgRating: average of all received evaluation ratings (1–5), defaults to 5.0
      * - completionRate: COMPLETED / (COMPLETED + CANCELLED) as an acceptor, defaults to 1.0
      * - Result rounded to 1 decimal place.
@@ -184,16 +188,16 @@ public class EvaluationServiceImpl implements EvaluationService {
         long completed = demandMapper.selectCount(
                 new LambdaQueryWrapper<Demand>()
                         .eq(Demand::getAcceptorId, userId)
-                        .eq(Demand::getStatus, "COMPLETED"));
+                        .eq(Demand::getStatus, DemandStatus.COMPLETED));
         long cancelled = demandMapper.selectCount(
                 new LambdaQueryWrapper<Demand>()
                         .eq(Demand::getAcceptorId, userId)
-                        .eq(Demand::getStatus, "CANCELLED"));
+                        .eq(Demand::getStatus, DemandStatus.CANCELLED));
         long concluded = completed + cancelled;
         double completionRate = concluded > 0 ? (double) completed / concluded : 1.0;
 
         // 3) Weighted credit score
-        double score = 0.6 * avgRating + 0.4 * (completionRate * 5.0);
+        double score = REPUTATION_RATING_WEIGHT * avgRating + REPUTATION_COMPLETION_WEIGHT * (completionRate * 5.0);
         score = Math.round(score * 10.0) / 10.0;
 
         UserAccount account = userAccountMapper.selectOne(

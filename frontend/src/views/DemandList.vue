@@ -72,8 +72,8 @@
     </div>
 
     <!-- ═══ Mobile card feed ═══ -->
-    <van-list v-model:loading="loading" :finished="finished"
-      finished-text="— 已加载全部 —" class="mobile-list" @load="fetchDemands">
+    <van-list v-model:loading="loading" :finished="finished" :error="loadError"
+      finished-text="— 已加载全部 —" error-text="加载失败，点击重试" class="mobile-list" @load="fetchDemands">
       <div v-for="d in demands" :key="d.demandId" class="demand-card card"
         @click="router.push('/demands/' + d.demandId)">
         <div class="card-top">
@@ -101,7 +101,7 @@
     </van-list>
 
     <!-- ═══ Floating action button (mobile only) ═══ -->
-    <div class="fab" @click="router.push('/demands/publish')">
+    <div class="fab" role="button" aria-label="发布需求" @click="router.push('/demands/publish')">
       <van-icon name="add-o" size="24" />
     </div>
   </div>
@@ -178,10 +178,12 @@ function onSearch() {
 }
 
 const fetchError = ref(false)
+const loadError = ref(false)
 
 async function fetchDemands() {
   loading.value = true
   fetchError.value = false
+  loadError.value = false
   try {
     const page = await listDemands({
       pageNum, pageSize: 20,
@@ -194,6 +196,8 @@ async function fetchDemands() {
   } catch (e) {
     if (demands.value.length === 0) {
       fetchError.value = true
+    } else {
+      loadError.value = true
     }
   }
   finally { loading.value = false }

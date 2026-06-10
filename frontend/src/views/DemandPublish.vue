@@ -150,7 +150,7 @@ async function handlePublish() {
     await publishDemand(payload)
     showToast('发布成功')
     router.push('/demands')
-  } catch { showToast('发布失败，请重试') }
+  } catch (e) { showToast(e.message || '发布失败，请重试') }
   finally { loading.value = false }
 }
 </script>

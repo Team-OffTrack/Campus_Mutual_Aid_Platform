@@ -28,11 +28,11 @@
             class="notif-card card" :class="{ 'is-unread': !n.read }"
             @click="handleClick(n)">
             <div class="n-left">
-              <div class="n-icon" :class="'icon-' + n.type.toLowerCase()">
+              <div class="n-icon" :class="'icon-' + (n.type || '').toLowerCase()">
                 <van-icon v-if="n.type === 'ACCEPT'" name="user-o" />
                 <van-icon v-else-if="n.type === 'COMPLETE'" name="success" />
                 <van-icon v-else-if="n.type === 'EVALUATION'" name="star-o" />
-                <van-icon v-else name="close" />
+                <van-icon v-else name="info-o" />
               </div>
             </div>
             <div class="n-body">
@@ -125,14 +125,14 @@ async function handleClick(n) {
 async function fetchNotifications() {
   loadingNotif.value = true
   try { notifications.value = await listNotifications() }
-  catch { showToast('消息加载失败') }
+  catch (e) { showToast(e.message || '消息加载失败') }
   finally { loadingNotif.value = false }
 }
 
 async function fetchConversations() {
   loadingConvs.value = true
   try { conversations.value = await getConversations() }
-  catch { showToast('私信列表加载失败') }
+  catch (e) { showToast(e.message || '私信列表加载失败') }
   finally { loadingConvs.value = false }
 }
 

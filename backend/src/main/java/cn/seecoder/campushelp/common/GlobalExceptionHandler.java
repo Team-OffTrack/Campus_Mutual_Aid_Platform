@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResult<Void>> handleBusiness(BusinessException e) {
         HttpStatus httpStatus = switch (e.getCode()) {
+            case ResultCode.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case ResultCode.FORBIDDEN   -> HttpStatus.FORBIDDEN;
             case ResultCode.NOT_FOUND   -> HttpStatus.NOT_FOUND;
             case ResultCode.CONFLICT    -> HttpStatus.CONFLICT;

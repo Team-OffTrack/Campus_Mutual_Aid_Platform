@@ -19,11 +19,10 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
 
 jwt:
-  secret: Y2FtcHVzLWhlbHAtc2VjcmV0LWtleS0yMDI2LW1heS1zZWN1cmUtYW5kLWxvbmc=
+  secret: ${JWT_SECRET:Y2FtcHVzLWhlbHAtc2VjcmV0LWtleS0yMDI2LW1heS1zZWN1cmUtYW5kLWxvbmc=}
   expiration: 86400000

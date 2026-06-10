@@ -43,7 +43,6 @@
 | 数据库 | MySQL / MariaDB | 生产数据库 |
 | 数据库迁移 | Flyway | 版本化 SQL 迁移 |
 | 测试数据库 | H2 | 内存库，测试用 |
-| 缓存 | Redis | Token 黑名单等（预留） |
 | 前端框架 | Vue 3 + Vite | Composition API |
 | UI 组件库 | Vant 4 | 移动端优先 |
 | 状态管理 | Pinia | 用户认证状态 |
@@ -89,14 +88,13 @@
 - **JDK 17+**
 - **Maven 3.8+**
 - **MariaDB**（Arch: `sudo pacman -S mariadb`；Debian: `sudo apt install mariadb-server`）
-- **Redis**（Arch: `sudo pacman -S redis`；Debian: `sudo apt install redis-server`）
 - **Node.js 18+**
 
 ### 1. 初始化数据库
 
 ```bash
 # 启动服务
-sudo systemctl start mariadb redis
+sudo systemctl start mariadb
 
 # 创建数据库
 sudo mariadb -u root -e "CREATE DATABASE IF NOT EXISTS campus_help DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -178,13 +176,24 @@ spring:
 
 如需修改数据库密码，只改 `username` 和 `password` 即可。注意 JDBC URL 中字符集写 `UTF-8`（Java 标准名），不是 `utf8mb4`（MySQL 内部名）。
 
-### 前端 — `frontend/.env.development`
+### 前端环境变量
+
+前端开发环境通过 Vite 内置代理将 `/api` 请求转发到后端 `localhost:8080`，无需额外配置 `VITE_API_BASE`。生产环境构建时使用 `/api/v1`（由 Nginx 代理）。
+
+如需自定义 API 地址，可创建 `frontend/.env.development`：
 
 ```
-VITE_API_BASE=http://localhost:5173/api/v1   # 开发环境，走 Vite 代理
+VITE_API_BASE=http://localhost:5173/api/v1
 ```
 
-生产环境构建时自动切换为 `.env.production` 中的 `/api/v1`（由 Nginx 代理）。
+### 后端环境变量
+
+以下敏感配置支持通过环境变量覆盖（默认值适用于本地开发）：
+
+| 环境变量 | 默认值 | 说明 |
+|----------|--------|------|
+| `JWT_SECRET` | (内置 Base64 密钥) | JWT 签名密钥 |
+| `DB_PASSWORD` | `root` | MariaDB 数据库密码 |
 
 ---
 
@@ -195,10 +204,13 @@ VITE_API_BASE=http://localhost:5173/api/v1   # 开发环境，走 Vite 代理
 在 `backend/src/main/resources/db/migration/` 下新建递增版本文件：
 
 ```
-V1__init_user_tables.sql    # 已执行——绝不修改
-V2__add_order_tables.sql    # 下次新增的迁移
-V3__alter_user_add_phone.sql
+V1__init_user_tables.sql         # 已执行——绝不修改
+V2__create_demand_table.sql      # 已执行
+V3__add_acceptor_to_demand.sql   # 已执行
+V8__add_image_to_message.sql     # 最新迁移
 ```
+
+> **已知差异**：V5（evaluation）和 V6（chat）迁移使用了 `TIMESTAMP` 类型，而 V1/V2/V4 使用 `DATETIME`。这在功能上没有影响，但 `TIMESTAMP` 有 2038 年范围限制和自动时区转换行为。现有已执行的迁移文件不能修改（Flyway checksum 校验），如需统一可在未来新建迁移中 ALTER COLUMN。
 
 **规则**：已应用的迁移文件永远不要修改。Flyway 会对已执行文件做 checksum 校验，修改会直接报错。
 

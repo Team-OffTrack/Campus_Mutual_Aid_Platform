@@ -6,6 +6,7 @@ import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.User;
+import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.service.DemandService;
@@ -52,7 +53,7 @@ public class DemandServiceImpl implements DemandService {
         demand.setRewardAmount(request.getRewardAmount() != null ? request.getRewardAmount() : 0);
         demand.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous() ? 1 : 0);
         demand.setImages(request.getImages());
-        demand.setStatus("OPEN");
+        demand.setStatus(DemandStatus.OPEN);
 
         if (demand.getRewardAmount() < 0) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "悬赏金额不能为负数");
@@ -99,7 +100,7 @@ public class DemandServiceImpl implements DemandService {
             wrapper.and(w -> w.like(Demand::getTitle, keyword).or().like(Demand::getDescription, keyword));
         }
         // Only show open/in-progress demands in list by default
-        wrapper.in(Demand::getStatus, "OPEN", "IN_PROGRESS");
+        wrapper.in(Demand::getStatus, DemandStatus.OPEN, DemandStatus.IN_PROGRESS);
 
         // Sort: newest (default), reward_high, reward_low, deadline
         if ("reward_high".equals(sortBy)) {
@@ -148,7 +149,7 @@ public class DemandServiceImpl implements DemandService {
         if (!demand.getPublisherId().equals(userId)) {
             throw new BusinessException(ResultCode.FORBIDDEN, "只能取消自己的需求");
         }
-        if ("COMPLETED".equals(demand.getStatus()) || "CANCELLED".equals(demand.getStatus())) {
+        if (DemandStatus.COMPLETED.equals(demand.getStatus()) || DemandStatus.CANCELLED.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已结束，无法取消");
         }
         // Notify acceptor if there is one
@@ -156,7 +157,7 @@ public class DemandServiceImpl implements DemandService {
             notificationService.notifyDemandCancelled(
                     demand.getAcceptorId(), demand.getTitle(), demand.getDemandId());
         }
-        demand.setStatus("CANCELLED");
+        demand.setStatus(DemandStatus.CANCELLED);
         demandMapper.updateById(demand);
     }
 
@@ -167,11 +168,11 @@ public class DemandServiceImpl implements DemandService {
         if (demand.getPublisherId().equals(acceptorId)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "不能接自己的需求");
         }
-        if (!"OPEN".equals(demand.getStatus())) {
+        if (!DemandStatus.OPEN.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已被接取或已结束");
         }
         demand.setAcceptorId(acceptorId);
-        demand.setStatus("IN_PROGRESS");
+        demand.setStatus(DemandStatus.IN_PROGRESS);
         demandMapper.updateById(demand);
 
         User publisher = userMapper.selectById(demand.getPublisherId());
@@ -190,10 +191,10 @@ public class DemandServiceImpl implements DemandService {
         if (!demand.getPublisherId().equals(userId)) {
             throw new BusinessException(ResultCode.FORBIDDEN, "只有发布者可以确认完成");
         }
-        if (!"IN_PROGRESS".equals(demand.getStatus())) {
+        if (!DemandStatus.IN_PROGRESS.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "只能完成进行中的需求");
         }
-        demand.setStatus("COMPLETED");
+        demand.setStatus(DemandStatus.COMPLETED);
         demandMapper.updateById(demand);
 
         User publisher = userMapper.selectById(demand.getPublisherId());

@@ -1,6 +1,7 @@
 stages:
   - install
   - check
+  - test
 
 cache:
   key: "${CI_COMMIT_REF_SLUG}-backend"
@@ -30,6 +31,19 @@ backend-checkstyle:
     - cd backend
   script:
     - mvn checkstyle:check
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-backend"
+    paths:
+      - backend/.m2/
+    policy: pull-push
+
+backend-test:
+  stage: test
+  image: maven:3.9.9-eclipse-temurin-17
+  before_script:
+    - cd backend
+  script:
+    - mvn clean test
   cache:
     key: "${CI_COMMIT_REF_SLUG}-backend"
     paths:

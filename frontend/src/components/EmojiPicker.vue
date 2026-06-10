@@ -11,7 +11,7 @@
 
         <!-- Emoji grid -->
         <div class="emoji-grid">
-          <span v-for="(e, i) in currentEmojis" :key="i" class="emoji-item"
+          <span v-for="e in currentEmojis" :key="e" class="emoji-item"
             @click="pick(e)">{{ e }}</span>
         </div>
       </div>

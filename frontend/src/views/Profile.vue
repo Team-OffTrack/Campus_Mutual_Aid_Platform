@@ -15,7 +15,7 @@
         <div class="deco-circle deco-2 float-fast"></div>
       </div>
 
-      <div class="avatar-wrap" @click="triggerAvatar">
+      <div class="avatar-wrap" role="button" aria-label="编辑头像" @click="triggerAvatar">
         <div class="avatar-circle" :class="{ uploading: uploadingAvatar }">
           <img v-if="profile.avatar" :src="profile.avatar" class="avatar-img" />
           <span v-else class="avatar-letter">{{ nameInitial }}</span>
@@ -170,10 +170,11 @@ async function handleAvatarChange(e) {
   try {
     const avatarUrl = await uploadAvatar(file)
     profile.value.avatar = avatarUrl
+    form.avatar = avatarUrl
     authStore.avatar = avatarUrl
     localStorage.setItem('avatar', avatarUrl)
     showToast('头像已更新')
-  } catch { showToast('头像上传失败') }
+  } catch (e) { showToast(e.message || '头像上传失败') }
   finally { uploadingAvatar.value = false }
   e.target.value = ''
 }
@@ -187,21 +188,21 @@ onMounted(async () => {
     form.name = data.name || ''
     form.isAnonymous = data.isAnonymous || false
     form.maskName = data.maskName || ''
-  } catch { showToast('个人资料加载失败') }
+  } catch (e) { showToast(e.message || '个人资料加载失败') }
 })
 
 async function handleSave() {
   loading.value = true
   try {
     const payload = {}
-    if (form.name) payload.name = form.name
+    if (form.name && form.name !== profile.value.name) payload.name = form.name
     if (form.avatar) payload.avatar = form.avatar
     if (form.isAnonymous !== profile.value.isAnonymous) payload.isAnonymous = form.isAnonymous
     if (form.maskName !== (profile.value.maskName || '')) payload.maskName = form.maskName
     const data = await updateProfile(payload)
     profile.value = data
     showToast('保存成功')
-  } catch { showToast('保存失败，请重试') }
+  } catch (e) { showToast(e.message || '保存失败，请重试') }
   finally { loading.value = false }
 }
 
@@ -214,7 +215,7 @@ async function handleChangePassword() {
     showToast('密码已修改')
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
-  } catch { showToast('密码修改失败，请检查旧密码是否正确') }
+  } catch (e) { showToast(e.message || '密码修改失败，请检查旧密码是否正确') }
   finally { changingPassword.value = false }
 }
 

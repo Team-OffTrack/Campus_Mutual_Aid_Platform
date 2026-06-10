@@ -427,41 +427,6 @@ a:focus-visible {
 }
 
 /* ═══════════════════════════════════════
-   M3E Organic Shape Utilities
-   Using border-radius asymmetry for blob-like forms
-   ═══════════════════════════════════════ */
-.shape-blob {
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-}
-.shape-blob-alt {
-  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-}
-.shape-blob-sm {
-  border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
-}
-.shape-blob-lg {
-  border-radius: 35% 65% 60% 40% / 45% 40% 55% 60%;
-}
-.shape-pill-soft {
-  border-radius: 40% 60% 55% 45% / 45% 50% 50% 55%;
-}
-
-/* Clip-path organic shapes — from /tmp/m3e ShapePolygon.ts */
-.shape-burst {
-  clip-path: polygon(
-    50% 0%, 61% 35%, 98% 35%, 68% 57%,
-    79% 91%, 50% 70%, 21% 91%, 32% 57%,
-    2% 35%, 39% 35%
-  );
-}
-.shape-hex {
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-}
-.shape-diamond {
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-}
-
-/* ═══════════════════════════════════════
    Content container
    ═══════════════════════════════════════ */
 .content-wrap {
@@ -472,61 +437,6 @@ a:focus-visible {
 }
 @media (min-width: 768px) { .content-wrap { padding: 0 32px; } }
 @media (min-width: 1024px) { .content-wrap { padding: 0 48px; } }
-
-/* ═══════════════════════════════════════
-   Typography utility classes
-   ═══════════════════════════════════════ */
-.t-display { font: var(--t-display); letter-spacing: -0.5px; }
-.t-headline { font: var(--t-headline); letter-spacing: -0.25px; }
-.t-title { font: var(--t-title); }
-.t-body-lg { font: var(--t-body-lg); }
-.t-body { font: var(--t-body); }
-.t-label { font: var(--t-label); text-transform: uppercase; letter-spacing: 0.5px; }
-.t-caption { font: var(--t-caption); }
-
-/* ═══════════════════════════════════════
-   Skeleton loading — M3E spring shimmer
-   ═══════════════════════════════════════ */
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--c-border) 25%,
-    #E7E0EC 37%,
-    var(--c-border) 63%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 2s var(--ease-emphasized) infinite;
-  border-radius: var(--r-small);
-}
-
-.skeleton-text {
-  height: 14px;
-  margin-bottom: 8px;
-  border-radius: 7px;
-}
-
-.skeleton-title {
-  height: 20px;
-  width: 60%;
-  margin-bottom: 12px;
-  border-radius: 10px;
-}
-
-.skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-}
-
-.skeleton-card {
-  height: 120px;
-  border-radius: var(--r-medium);
-}
 
 /* ═══════════════════════════════════════
    Page transitions — M3E spring spatial
@@ -553,18 +463,6 @@ a:focus-visible {
 @keyframes page-out {
   from { opacity: 1; }
   to { opacity: 0; }
-}
-
-/* ═══════════════════════════════════════
-   Staggered list animation — M3E spring
-   ═══════════════════════════════════════ */
-.list-enter-active {
-  transition: all var(--spring-default-spatial);
-}
-
-.list-enter-from {
-  opacity: 0;
-  transform: translateY(24px);
 }
 
 /* ═══════════════════════════════════════
@@ -596,33 +494,6 @@ a:focus-visible {
 .float-fast {
   animation: float 4.5s var(--ease-emphasized) infinite;
 }
-
-/* ═══════════════════════════════════════
-   Color Bloom utility classes
-   ═══════════════════════════════════════ */
-.bloom-primary {
-  background: var(--bloom-primary);
-}
-.bloom-warm {
-  background: var(--bloom-warm);
-}
-.surface-tint {
-  background: var(--surface-tint);
-}
-
-/* ═══════════════════════════════════════
-   Asymmetric radius utility classes
-   ═══════════════════════════════════════ */
-.r-extra-large-top   { border-radius: var(--r-extra-large-top); }
-.r-extra-large-end   { border-radius: var(--r-extra-large-end); }
-.r-extra-large-start { border-radius: var(--r-extra-large-start); }
-.r-large-top         { border-radius: var(--r-large-top); }
-.r-large-end         { border-radius: var(--r-large-end); }
-.r-large-start       { border-radius: var(--r-large-start); }
-.r-large-bottom      { border-radius: var(--r-large-bottom); }
-.r-medium-top        { border-radius: var(--r-medium-top); }
-.r-medium-end        { border-radius: var(--r-medium-end); }
-.r-medium-start      { border-radius: var(--r-medium-start); }
 
 /* ═══════════════════════════════════════
    Scrollbar styling
