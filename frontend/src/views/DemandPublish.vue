@@ -160,6 +160,34 @@
             </div>
           </template>
 
+          <!-- team -->
+          <template v-if="form.type === 'team'">
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <van-field v-model.number="attrs.team.team_size" type="number"
+                  placeholder="队伍人数（至少2人）" class="bare-field" />
+              </div>
+              <div class="field-wrap split-field">
+                <select v-model="attrs.team.team_type" class="bare-select">
+                  <option value="">队伍类型</option>
+                  <option value="course_project">课程项目</option>
+                  <option value="competition">竞赛</option>
+                  <option value="club">社团</option>
+                  <option value="other">其他</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-wrap" :class="{ focused: focusedField === 'teamTags' }">
+              <div class="field-icon-wrap"><van-icon name="friends-o" /></div>
+              <van-field v-model="attrs.team.team_tags" placeholder="技能标签（如：Python,机器学习,前端，逗号分隔）"
+                class="bare-field"
+                @focus="focusedField = 'teamTags'" @blur="focusedField = null" />
+            </div>
+            <div class="form-section">
+              <label class="section-label">💡 发布后你将自动成为队长，队员可申请加入</label>
+            </div>
+          </template>
+
           <!-- Image upload -->
           <div class="form-section">
             <label class="section-label">添加图片（选填）</label>
@@ -249,7 +277,8 @@ const attrs = reactive({
   errand: { pickup_location: '', item_category: '', urgency: 'normal' },
   trade: { item_condition: '', item_price: null, trade_category: '' },
   lost_found: { lf_type: 'LOST', item_category: '', lost_found_date: '' },
-  study: { subject: '', study_mode: '', difficulty: '', preferred_time: '' }
+  study: { subject: '', study_mode: '', difficulty: '', preferred_time: '' },
+  team: { team_size: 2, team_tags: '', team_type: '' }
 })
 
 const demandTypes = Object.values(DEMAND_TYPES)
@@ -289,6 +318,12 @@ async function handlePublish() {
       if (Object.keys(filtered).length > 0) {
         payload.attributes = filtered
       }
+    }
+    // team: validate team_size
+    if (form.type === 'team' && attrs.team.team_size < 2) {
+      showToast('队伍人数至少为2人')
+      loading.value = false
+      return
     }
     // trade: sync item_price to rewardAmount
     if (form.type === 'trade' && attrs.trade.item_price != null) {

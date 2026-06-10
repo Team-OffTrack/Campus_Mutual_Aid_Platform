@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +33,8 @@ public class DemandResponse {
     private String images;
     private String status;
     private Map<String, Object> attributes;
+    private List<TeamMemberResponse> teamMembers;
+    private Integer joinedCount;
     private LocalDateTime createTime;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -43,6 +46,12 @@ public class DemandResponse {
 
     /** Full constructor with optional acceptor info for detail views. */
     public static DemandResponse from(Demand demand, User publisher, User acceptor) {
+        return from(demand, publisher, acceptor, null);
+    }
+
+    /** Full constructor with optional team member info for team-type demands. */
+    public static DemandResponse from(Demand demand, User publisher, User acceptor,
+                                       List<TeamMemberResponse> teamMembers) {
         DemandResponse rsp = new DemandResponse();
         rsp.demandId = demand.getDemandId();
         rsp.publisherId = demand.getPublisherId();
@@ -58,6 +67,7 @@ public class DemandResponse {
         rsp.images = demand.getImages();
         rsp.status = demand.getStatus();
         rsp.attributes = parseAttributes(demand.getAttributes());
+        rsp.teamMembers = teamMembers;
         rsp.createTime = demand.getCreateTime();
 
         if (demand.isAnonymous()) {
@@ -106,5 +116,9 @@ public class DemandResponse {
     public String getStatus() { return status; }
     public Map<String, Object> getAttributes() { return attributes; }
     public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
+    public List<TeamMemberResponse> getTeamMembers() { return teamMembers; }
+    public void setTeamMembers(List<TeamMemberResponse> teamMembers) { this.teamMembers = teamMembers; }
+    public Integer getJoinedCount() { return joinedCount; }
+    public void setJoinedCount(Integer joinedCount) { this.joinedCount = joinedCount; }
     public LocalDateTime getCreateTime() { return createTime; }
 }

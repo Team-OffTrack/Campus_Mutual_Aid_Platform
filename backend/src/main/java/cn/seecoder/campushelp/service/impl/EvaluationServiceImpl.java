@@ -50,6 +50,9 @@ public class EvaluationServiceImpl implements EvaluationService {
         if (!DemandStatus.COMPLETED.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "只能评价已完成的需求");
         }
+        if ("team".equals(demand.getType())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "组队类型暂不支持评价");
+        }
 
         Long publisherId = demand.getPublisherId();
         Long acceptorId = demand.getAcceptorId();

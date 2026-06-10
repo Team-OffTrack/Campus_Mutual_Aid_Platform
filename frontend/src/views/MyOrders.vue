@@ -11,6 +11,8 @@
         @click="switchTab('publisher')">我发布的</span>
       <span class="tab-chip" :class="{ 'tab-on': activeTab === 'acceptor' }"
         @click="switchTab('acceptor')">我接取的</span>
+      <span class="tab-chip" :class="{ 'tab-on': activeTab === 'team' }"
+        @click="switchTab('team')">我的队伍</span>
     </div>
 
     <div class="content-wrap">
@@ -24,7 +26,7 @@
         </template>
         <template v-else>
           <van-icon name="notes-o" size="48" color="#C4C0CA" />
-          <p>{{ activeTab === 'publisher' ? '还没有发布过需求' : '还没有接过单' }}</p>
+          <p>{{ activeTab === 'publisher' ? '还没有发布过需求' : activeTab === 'acceptor' ? '还没有接过单' : '还没有加入队伍' }}</p>
         </template>
       </div>
 
@@ -36,7 +38,7 @@
               <tr>
                 <th class="col-type">类型</th>
                 <th class="col-title">标题</th>
-                <th class="col-other">{{ activeTab === 'publisher' ? '接单人' : '发布者' }}</th>
+                <th class="col-other">{{ activeTab === 'publisher' ? '接单人' : activeTab === 'acceptor' ? '发布者' : '队长' }}</th>
                 <th class="col-reward">报酬</th>
                 <th class="col-status">状态</th>
                 <th class="col-time">时间</th>
@@ -66,7 +68,7 @@
             </div>
             <h3 class="card-title">{{ o.title }}</h3>
             <div class="card-meta">
-              <span>{{ activeTab === 'publisher' ? '接单人' : '发布者' }}：</span>
+              <span>{{ activeTab === 'publisher' ? '接单人' : activeTab === 'acceptor' ? '发布者' : '队长' }}：</span>
               <span class="meta-name">{{ activeTab === 'publisher' ? (o.acceptorName || '暂无') : o.publisherName }}</span>
               <span class="meta-divider">·</span>
               <span class="meta-reward">{{ rewardText(o) }}</span>
@@ -84,7 +86,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { myOrders } from '@/api/demand'
+import { myOrders, myTeamOrders } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
 import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
 
@@ -101,6 +103,7 @@ function typeStyle(v) { return TYPE_STYLES[v] || TYPE_STYLES.other }
 function statusLabel(v) { return STATUS_LABELS[v] || v }
 
 function rewardText(d) {
+  if (d.type === 'team') return '组队'
   if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
   if (d.rewardType === 'cash') return '¥' + d.rewardAmount
   if (d.rewardType === 'point') return d.rewardAmount + ' 积分'
@@ -123,8 +126,13 @@ async function switchTab(tab) { activeTab.value = tab; await fetchOrders() }
 async function fetchOrders() {
   loading.value = true
   fetchError.value = false
-  try { orders.value = await myOrders(activeTab.value) }
-  catch (e) {
+  try {
+    if (activeTab.value === 'team') {
+      orders.value = await myTeamOrders()
+    } else {
+      orders.value = await myOrders(activeTab.value)
+    }
+  } catch (e) {
     orders.value = []
     fetchError.value = true
   }

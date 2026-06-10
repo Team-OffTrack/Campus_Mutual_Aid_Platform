@@ -115,3 +115,16 @@ CREATE TABLE IF NOT EXISTS message (
     FOREIGN KEY (conversation_id) REFERENCES conversation(conversation_id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id)       REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS team_member (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    demand_id   BIGINT NOT NULL,
+    user_id     BIGINT NOT NULL,
+    role        VARCHAR(16) NOT NULL DEFAULT 'MEMBER',
+    status      VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+    message     VARCHAR(256),
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (demand_id, user_id),
+    FOREIGN KEY (demand_id) REFERENCES demand(demand_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);

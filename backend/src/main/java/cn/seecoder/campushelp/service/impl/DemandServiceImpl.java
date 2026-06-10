@@ -9,8 +9,10 @@ import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
+import cn.seecoder.campushelp.dto.TeamMemberResponse;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.NotificationService;
+import cn.seecoder.campushelp.service.TeamMemberService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,13 +34,16 @@ public class DemandServiceImpl implements DemandService {
     private final DemandMapper demandMapper;
     private final UserMapper userMapper;
     private final NotificationService notificationService;
+    private final TeamMemberService teamMemberService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
-                             NotificationService notificationService) {
+                             NotificationService notificationService,
+                             TeamMemberService teamMemberService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
         this.notificationService = notificationService;
+        this.teamMemberService = teamMemberService;
     }
 
     @Override
@@ -75,6 +80,11 @@ public class DemandServiceImpl implements DemandService {
         }
 
         demandMapper.insert(demand);
+
+        // Auto-join publisher as leader for team demands
+        if ("team".equals(request.getType())) {
+            teamMemberService.autoJoinLeader(demand.getDemandId(), publisherId);
+        }
 
         User publisher = userMapper.selectById(publisherId);
         return DemandResponse.from(demand, publisher);
@@ -138,10 +148,24 @@ public class DemandServiceImpl implements DemandService {
             userMap = Map.of();
         }
 
+        // Pre-compute joinedCount for team-type demands
+        final Map<Long, Integer> teamCounts = new java.util.HashMap<>();
+        for (Demand d : demands) {
+            if ("team".equals(d.getType())) {
+                teamCounts.put(d.getDemandId(), teamMemberService.countJoined(d.getDemandId()));
+            }
+        }
+
         Page<DemandResponse> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         final Map<Long, User> finalMap = userMap;
         resultPage.setRecords(demands.stream()
-                .map(d -> DemandResponse.from(d, finalMap.get(d.getPublisherId())))
+                .map(d -> {
+                    DemandResponse rsp = DemandResponse.from(d, finalMap.get(d.getPublisherId()));
+                    if ("team".equals(d.getType())) {
+                        rsp.setJoinedCount(teamCounts.getOrDefault(d.getDemandId(), 0));
+                    }
+                    return rsp;
+                })
                 .toList());
         return resultPage;
     }
@@ -151,7 +175,13 @@ public class DemandServiceImpl implements DemandService {
         Demand demand = findDemandOrFail(demandId);
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;
-        return DemandResponse.from(demand, publisher, acceptor);
+
+        List<TeamMemberResponse> teamMembers = null;
+        if ("team".equals(demand.getType())) {
+            teamMembers = teamMemberService.getJoinedMembers(demandId);
+        }
+
+        return DemandResponse.from(demand, publisher, acceptor, teamMembers);
     }
 
     @Override
@@ -169,6 +199,17 @@ public class DemandServiceImpl implements DemandService {
             notificationService.notifyDemandCancelled(
                     demand.getAcceptorId(), demand.getTitle(), demand.getDemandId());
         }
+        // Notify all team members for team demands
+        if ("team".equals(demand.getType())) {
+            List<TeamMemberResponse> members = teamMemberService.getJoinedMembers(demandId);
+            for (TeamMemberResponse m : members) {
+                if (!m.getUserId().equals(userId)) {
+                    notificationService.create(m.getUserId(),
+                            cn.seecoder.campushelp.entity.enums.NotificationType.CANCEL,
+                            "队伍已解散", "队伍「" + demand.getTitle() + "」已被队长解散", demandId);
+                }
+            }
+        }
         demand.setStatus(DemandStatus.CANCELLED);
         demandMapper.updateById(demand);
     }
@@ -177,6 +218,9 @@ public class DemandServiceImpl implements DemandService {
     @Transactional
     public DemandResponse accept(Long demandId, Long acceptorId) {
         Demand demand = findDemandOrFail(demandId);
+        if ("team".equals(demand.getType())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "组队需求不使用接单，请申请加入队伍");
+        }
         if (demand.getPublisherId().equals(acceptorId)) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "不能接自己的需求");
         }
@@ -259,6 +303,32 @@ public class DemandServiceImpl implements DemandService {
                 .toList();
     }
 
+    @Override
+    public List<DemandResponse> myTeamOrders(Long userId) {
+        List<Long> demandIds = teamMemberService.getJoinedDemandIds(userId);
+        if (demandIds.isEmpty()) return List.of();
+
+        List<Demand> demands = demandMapper.selectBatchIds(demandIds);
+
+        // Batch-load all relevant users
+        java.util.Set<Long> userIds = new java.util.HashSet<>();
+        for (Demand d : demands) {
+            userIds.add(d.getPublisherId());
+        }
+
+        final Map<Long, User> userMap;
+        if (!userIds.isEmpty()) {
+            userMap = userMapper.selectBatchIds(new java.util.ArrayList<>(userIds)).stream()
+                    .collect(Collectors.toMap(User::getUserId, u -> u));
+        } else {
+            userMap = Map.of();
+        }
+
+        return demands.stream()
+                .map(d -> DemandResponse.from(d, userMap.get(d.getPublisherId())))
+                .toList();
+    }
+
     private void validateAttributes(String type, Map<String, Object> attrs) {
         if ("errand".equals(type)) {
             if (!(attrs.get("pickup_location") instanceof String s) || s.isBlank()) {
@@ -271,6 +341,18 @@ public class DemandServiceImpl implements DemandService {
             String lfType = (String) attrs.get("lf_type");
             if (!"LOST".equals(lfType) && !"FOUND".equals(lfType)) {
                 throw new BusinessException(ResultCode.BAD_REQUEST, "失物招领类型必须为 LOST 或 FOUND");
+            }
+        } else if ("team".equals(type)) {
+            Object sizeObj = attrs.get("team_size");
+            if (!(sizeObj instanceof Number n) || n.intValue() < 2) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "组队人数至少为2人");
+            }
+            if (attrs.containsKey("team_type")) {
+                Object typeObj = attrs.get("team_type");
+                if (typeObj instanceof String s && !s.isBlank()
+                    && !java.util.Set.of("course_project", "competition", "club", "other").contains(s)) {
+                    throw new BusinessException(ResultCode.BAD_REQUEST, "无效的队伍类型");
+                }
             }
         }
     }

@@ -140,10 +140,15 @@ function typeMeta(d) {
   if (d.type === 'trade' && a.item_price) return '¥' + a.item_price
   if (d.type === 'lost_found') return a.lf_type === 'LOST' ? '寻物' : a.lf_type === 'FOUND' ? '招领' : ''
   if (d.type === 'study') return a.subject || ''
+  if (d.type === 'team' && a.team_size) {
+    const filled = d.joinedCount || 0
+    return `${filled}/${a.team_size} 人`
+  }
   return ''
 }
 
 function rewardText(d) {
+  if (d.type === 'team') return '组队'
   if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
   if (d.rewardType === 'cash') return '¥' + d.rewardAmount
   if (d.rewardType === 'point') return d.rewardAmount + ' 积分'

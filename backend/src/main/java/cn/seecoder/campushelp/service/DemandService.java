@@ -38,4 +38,7 @@ public interface DemandService {
 
     /** List demands where the given user is publisher or acceptor. */
     List<DemandResponse> myOrders(Long userId, String role);
+
+    /** List demands where the user is a joined team member. */
+    List<DemandResponse> myTeamOrders(Long userId);
 }

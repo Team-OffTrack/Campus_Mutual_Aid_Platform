@@ -90,4 +90,11 @@ public class DemandController {
         demandService.cancel(demandId, userId);
         return ApiResult.success();
     }
+
+    /** List demands where the current user is a joined team member. */
+    @GetMapping("/my/team")
+    public ApiResult<List<DemandResponse>> myTeamOrders(Authentication auth) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(demandService.myTeamOrders(userId));
+    }
 }

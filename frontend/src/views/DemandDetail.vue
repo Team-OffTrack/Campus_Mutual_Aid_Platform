@@ -92,6 +92,62 @@
         </div>
       </div>
 
+      <!-- ═══ Team member wall (team type only) ═══ -->
+      <div v-if="demand.type === 'team'" class="detail-card card">
+        <h3 class="card-subtitle">队伍成员</h3>
+        <div class="team-progress">
+          <span class="team-progress-text">{{ joinedCount }}/{{ teamSize }} 人</span>
+          <div class="team-progress-bar">
+            <div class="team-progress-fill" :style="{ width: (teamSize > 0 ? (joinedCount / teamSize * 100) : 0) + '%' }"></div>
+          </div>
+        </div>
+
+        <!-- Skill tags -->
+        <div v-if="demand.attributes?.team_tags" class="team-tags">
+          <span v-for="tag in demand.attributes.team_tags.split(',')" :key="tag" class="team-tag">
+            {{ tag.trim() }}
+          </span>
+        </div>
+
+        <!-- Member list -->
+        <div class="team-member-list">
+          <div v-for="m in teamMembers" :key="m.id" class="team-member-item">
+            <div class="pub-avatar" :style="{ background: m.userAvatar ? 'transparent' : avatarColor(m.userName) }">
+              <img v-if="m.userAvatar" :src="m.userAvatar" class="avatar-img" />
+              <span v-else>{{ m.userName.charAt(0).toUpperCase() }}</span>
+            </div>
+            <div class="pub-info">
+              <span class="pub-name">{{ m.userName }}</span>
+              <span class="pub-time">{{ m.role === 'LEADER' ? '队长' : '队员' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending applicants (publisher only) -->
+        <div v-if="isOwner && teamApplicants.length > 0" class="team-applicants">
+          <div class="attrs-divider"></div>
+          <h4 class="card-subtitle" style="margin-top:8px">待审核申请 ({{ teamApplicants.length }})</h4>
+          <div v-for="a in teamApplicants" :key="a.id" class="applicant-item">
+            <div class="applicant-info">
+              <div class="pub-avatar" :style="{ background: a.userAvatar ? 'transparent' : avatarColor(a.userName) }">
+                <img v-if="a.userAvatar" :src="a.userAvatar" class="avatar-img" />
+                <span v-else>{{ a.userName.charAt(0).toUpperCase() }}</span>
+              </div>
+              <div>
+                <span class="pub-name">{{ a.userName }}</span>
+                <span v-if="a.message" class="applicant-msg">{{ a.message }}</span>
+              </div>
+            </div>
+            <div class="applicant-actions">
+              <van-button size="small" round type="primary" :loading="teamActionLoading"
+                @click.stop="handleApprove(a.userId)">同意</van-button>
+              <van-button size="small" round plain :loading="teamActionLoading"
+                @click.stop="handleReject(a.userId)">拒绝</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ Acceptor info ═══ -->
       <div class="detail-card card" v-if="demand.acceptorId">
         <h3 class="card-subtitle">接单人</h3>
@@ -110,31 +166,77 @@
       <!-- ═══ Action area ═══ -->
       <div class="action-section">
         <template v-if="demand.status === 'OPEN'">
-          <van-button v-if="isOwner" block round type="danger"
-            :loading="acting" class="action-btn" @click="handleCancel">
-            取消需求
-          </van-button>
-          <van-button v-else block round type="primary"
-            :loading="acting" class="action-btn" @click="handleAccept">
-            我要接单
-          </van-button>
+          <!-- Team actions -->
+          <template v-if="demand.type === 'team'">
+            <van-button v-if="isOwner" block round type="danger"
+              :loading="acting" class="action-btn" @click="handleCancel">
+              解散队伍
+            </van-button>
+            <van-button v-else-if="isTeamMember" block round type="default"
+              :loading="teamActionLoading" class="action-btn" @click="handleLeaveTeam">
+              退出队伍
+            </van-button>
+            <van-button v-else-if="canApply" block round type="primary"
+              :loading="teamActionLoading" class="action-btn" @click="handleApplyTeam">
+              申请加入
+            </van-button>
+            <div v-else-if="myMembership && myMembership.status === 'PENDING'" class="action-hint">
+              <van-icon name="clock-o" size="18" />
+              <span>等待队长审核…</span>
+            </div>
+            <div v-else-if="isTeamFull" class="action-hint cancelled">
+              <van-icon name="close" size="18" />
+              <span>队伍已满员</span>
+            </div>
+          </template>
+          <!-- Non-team actions -->
+          <template v-else>
+            <van-button v-if="isOwner" block round type="danger"
+              :loading="acting" class="action-btn" @click="handleCancel">
+              取消需求
+            </van-button>
+            <van-button v-else block round type="primary"
+              :loading="acting" class="action-btn" @click="handleAccept">
+              我要接单
+            </van-button>
+          </template>
         </template>
 
         <template v-if="demand.status === 'IN_PROGRESS'">
-          <div v-if="isOwner" class="action-row">
-            <van-button block round type="primary" class="action-btn"
-              :loading="acting" @click="handleComplete">
-              确认完成
-            </van-button>
-            <van-button block round type="default" class="cancel-btn-secondary action-btn"
-              :loading="acting" @click="handleCancel">
-              取消需求
-            </van-button>
-          </div>
-          <div v-else-if="isAcceptor" class="action-hint">
-            <van-icon name="clock-o" size="18" />
-            <span>等待发布者确认完成…</span>
-          </div>
+          <!-- Team IN_PROGRESS -->
+          <template v-if="demand.type === 'team'">
+            <div v-if="isOwner" class="action-row">
+              <van-button block round type="primary" class="action-btn"
+                :loading="acting" @click="handleComplete">
+                确认完成
+              </van-button>
+              <van-button block round type="default" class="cancel-btn-secondary action-btn"
+                :loading="acting" @click="handleCancel">
+                解散队伍
+              </van-button>
+            </div>
+            <div v-else-if="isTeamMember" class="action-hint">
+              <van-icon name="clock-o" size="18" />
+              <span>队伍进行中…</span>
+            </div>
+          </template>
+          <!-- Non-team -->
+          <template v-else>
+            <div v-if="isOwner" class="action-row">
+              <van-button block round type="primary" class="action-btn"
+                :loading="acting" @click="handleComplete">
+                确认完成
+              </van-button>
+              <van-button block round type="default" class="cancel-btn-secondary action-btn"
+                :loading="acting" @click="handleCancel">
+                取消需求
+              </van-button>
+            </div>
+            <div v-else-if="isAcceptor" class="action-hint">
+              <van-icon name="clock-o" size="18" />
+              <span>等待发布者确认完成…</span>
+            </div>
+          </template>
         </template>
 
         <div v-if="demand.status === 'COMPLETED'" class="action-hint done">
@@ -157,7 +259,7 @@
       </div>
 
       <!-- ═══ Evaluation section ═══ -->
-      <div v-if="demand.status === 'COMPLETED' || demand.status === 'CANCELLED'" class="detail-card card eval-section">
+      <div v-if="(demand.status === 'COMPLETED' || demand.status === 'CANCELLED') && demand.type !== 'team'" class="detail-card card eval-section">
         <h3 class="card-subtitle">评价</h3>
 
         <div v-if="evaluations.length > 0" class="eval-list">
@@ -251,7 +353,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import ImageViewer from '@/components/ImageViewer.vue'
-import { getDemand, cancelDemand, acceptDemand, completeDemand } from '@/api/demand'
+import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leaveTeam, getTeamApplicants, getMyMembership, approveApplicant, rejectApplicant, getTeamMembers } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
@@ -275,8 +377,18 @@ const showPreview = ref(false)
 const previewIndex = ref(0)
 const startingChat = ref(false)
 
+// Team state
+const teamMembers = ref([])
+const teamApplicants = ref([])
+const myMembership = ref(null)
+const teamActionLoading = ref(false)
+
 const chatTargetId = computed(() => {
   if (!demand.value) return null
+  if (demand.value.type === 'team') {
+    if (isOwner.value) return null
+    return demand.value.publisherId
+  }
   if (!isOwner.value) return demand.value.publisherId
   if (demand.value.acceptorId) return demand.value.acceptorId
   return null
@@ -284,8 +396,25 @@ const chatTargetId = computed(() => {
 
 const chatLabel = computed(() => {
   if (!demand.value) return ''
+  if (demand.value.type === 'team') return '私信队长'
   if (!isOwner.value) return '私信发布者'
   return '私信接单人'
+})
+
+const isTeamLeader = computed(() => myMembership.value && myMembership.value.role === 'LEADER')
+const isTeamMember = computed(() => myMembership.value && myMembership.value.status === 'JOINED')
+const teamSize = computed(() => {
+  if (!demand.value || demand.value.type !== 'team') return 0
+  return demand.value.attributes?.team_size || 2
+})
+const joinedCount = computed(() => teamMembers.value.length)
+const isTeamFull = computed(() => joinedCount.value >= teamSize.value && teamSize.value > 0)
+const canApply = computed(() => {
+  if (!demand.value || demand.value.type !== 'team') return false
+  if (demand.value.status !== 'OPEN') return false
+  if (isOwner.value) return false
+  if (myMembership.value) return false
+  return !isTeamFull.value
 })
 
 const userId = computed(() => Number(authStore.userId))
@@ -351,6 +480,14 @@ async function fetchDetail() {
     const id = route.params.demandId
     demand.value = await getDemand(id)
     error.value = null
+    // Fetch team data for team-type demands
+    if (demand.value.type === 'team' && demand.value.teamMembers) {
+      teamMembers.value = demand.value.teamMembers
+      try { myMembership.value = await getMyMembership(id) } catch {}
+      if (isOwner.value) {
+        try { teamApplicants.value = await getTeamApplicants(id) } catch {}
+      }
+    }
     await fetchEvaluations()
   } catch { error.value = '加载失败，请重试' }
 }
@@ -447,6 +584,59 @@ async function handleComplete() {
   try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); await fetchEvaluations() }
   catch (e) { showToast(e.message || '操作失败，请重试') }
   finally { acting.value = false }
+}
+
+// ── Team handlers ──
+
+async function refreshTeamData() {
+  const id = demand.value.demandId
+  try { teamMembers.value = await getTeamMembers(id) } catch {}
+  try { myMembership.value = await getMyMembership(id) } catch {}
+  if (isOwner.value) {
+    try { teamApplicants.value = await getTeamApplicants(id) } catch {}
+  }
+}
+
+async function handleApplyTeam() {
+  teamActionLoading.value = true
+  try {
+    await applyTeam(demand.value.demandId, null)
+    showToast('已提交申请')
+    await refreshTeamData()
+  } catch (e) { showToast(e.message || '申请失败，请重试') }
+  finally { teamActionLoading.value = false }
+}
+
+async function handleLeaveTeam() {
+  try { await showConfirmDialog({ title: '确认退出', message: '确定要退出这个队伍吗？' }) }
+  catch { return }
+  teamActionLoading.value = true
+  try {
+    await leaveTeam(demand.value.demandId)
+    showToast('已退出队伍')
+    await refreshTeamData()
+  } catch (e) { showToast(e.message || '操作失败') }
+  finally { teamActionLoading.value = false }
+}
+
+async function handleApprove(applicantId) {
+  teamActionLoading.value = true
+  try {
+    await approveApplicant(demand.value.demandId, applicantId)
+    showToast('已通过')
+    await refreshTeamData()
+  } catch (e) { showToast(e.message || '操作失败') }
+  finally { teamActionLoading.value = false }
+}
+
+async function handleReject(applicantId) {
+  teamActionLoading.value = true
+  try {
+    await rejectApplicant(demand.value.demandId, applicantId)
+    showToast('已拒绝')
+    teamApplicants.value = await getTeamApplicants(demand.value.demandId)
+  } catch (e) { showToast(e.message || '操作失败') }
+  finally { teamActionLoading.value = false }
 }
 
 onMounted(fetchDetail)
@@ -605,6 +795,39 @@ onMounted(fetchDetail)
 .my-eval-comment { font-size: 13px; color: var(--c-text-2); line-height: 1.5; margin: 0; }
 
 .eval-edit-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ═══════════════════════════════════════
+   Team section
+   ═══════════════════════════════════════ */
+.team-progress { display: flex; flex-direction: column; gap: 6px; }
+.team-progress-text { font-size: 14px; font-weight: 600; color: var(--c-text-1); }
+.team-progress-bar {
+  height: 8px; background: var(--c-surface-variant); border-radius: 4px; overflow: hidden;
+}
+.team-progress-fill {
+  height: 100%; background: var(--c-primary); border-radius: 4px;
+  transition: width var(--spring-default-spatial);
+}
+.team-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.team-tag {
+  font-size: 12px; padding: 4px 10px; border-radius: 6px;
+  background: var(--c-primary-container); color: var(--c-primary);
+  font-weight: 500;
+}
+.team-member-list { display: flex; flex-direction: column; gap: 10px; }
+.team-member-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.team-member-item .pub-avatar { width: 36px; height: 36px; border-radius: 10px; font-size: 15px; }
+
+.team-applicants { display: flex; flex-direction: column; gap: 12px; }
+.applicant-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px; background: var(--c-surface-variant); border-radius: var(--r-medium);
+}
+.applicant-info { display: flex; align-items: center; gap: 10px; }
+.applicant-info .pub-avatar { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
+.applicant-info > div { display: flex; flex-direction: column; }
+.applicant-msg { font-size: 12px; color: var(--c-text-3); margin-top: 2px; }
+.applicant-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* ═══════════════════════════════════════
    Desktop

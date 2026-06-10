@@ -35,3 +35,41 @@ export function uploadDemandImage(file) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// ── Team member APIs ──
+
+export function applyTeam(demandId, message) {
+  return client.post(`/demands/${demandId}/team/apply`, message ? { message } : {})
+}
+
+export function approveApplicant(demandId, applicantId) {
+  return client.put(`/demands/${demandId}/team/applicants/${applicantId}/approve`)
+}
+
+export function rejectApplicant(demandId, applicantId) {
+  return client.put(`/demands/${demandId}/team/applicants/${applicantId}/reject`)
+}
+
+export function leaveTeam(demandId) {
+  return client.post(`/demands/${demandId}/team/leave`)
+}
+
+export function removeTeamMember(demandId, memberId) {
+  return client.delete(`/demands/${demandId}/team/members/${memberId}`)
+}
+
+export function getTeamMembers(demandId) {
+  return client.get(`/demands/${demandId}/team/members`)
+}
+
+export function getTeamApplicants(demandId) {
+  return client.get(`/demands/${demandId}/team/applicants`)
+}
+
+export function getMyMembership(demandId) {
+  return client.get(`/demands/${demandId}/team/my-membership`)
+}
+
+export function myTeamOrders() {
+  return client.get('/demands/my/team')
+}
