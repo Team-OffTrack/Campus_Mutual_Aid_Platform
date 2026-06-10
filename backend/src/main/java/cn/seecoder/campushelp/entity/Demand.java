@@ -15,6 +15,7 @@ public class Demand {
     private String title;
     private String description;
     private String images;
+    private String attributes;
     private String location;
     private LocalDateTime deadline;
     private String rewardType;
@@ -48,6 +49,9 @@ public class Demand {
 
     public String getImages() { return images; }
     public void setImages(String images) { this.images = images; }
+
+    public String getAttributes() { return attributes; }
+    public void setAttributes(String attributes) { this.attributes = attributes; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

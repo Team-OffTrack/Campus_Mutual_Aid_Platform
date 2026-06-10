@@ -86,6 +86,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { myOrders } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
+import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
 
 const router = useRouter()
 const orders = ref([])
@@ -93,16 +94,6 @@ const loading = ref(false)
 const fetchError = ref(false)
 const activeTab = ref('publisher')
 
-const TYPE_STYLES = {
-  errand: { background: '#FFF0E5', color: '#E65100' },
-  trade: { background: '#E8F5E9', color: '#2E7D32' },
-  team: { background: '#E3F2FD', color: '#1565C0' },
-  lost_found: { background: '#F3E5F5', color: '#7B1FA2' },
-  study: { background: '#FCE4EC', color: '#C62828' },
-  other: { background: '#F5F5F5', color: '#616161' }
-}
-
-const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
 const STATUS_LABELS = { OPEN: '待接单', IN_PROGRESS: '进行中', COMPLETED: '已完成', CANCELLED: '已取消' }
 
 function typeLabel(v) { return TYPE_LABELS[v] || v }

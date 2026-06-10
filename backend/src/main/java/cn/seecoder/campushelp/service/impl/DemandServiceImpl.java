@@ -13,6 +13,7 @@ import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.NotificationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,6 +32,7 @@ public class DemandServiceImpl implements DemandService {
     private final DemandMapper demandMapper;
     private final UserMapper userMapper;
     private final NotificationService notificationService;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
                              NotificationService notificationService) {
@@ -54,6 +56,16 @@ public class DemandServiceImpl implements DemandService {
         demand.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous() ? 1 : 0);
         demand.setImages(request.getImages());
         demand.setStatus(DemandStatus.OPEN);
+
+        // Serialize type-specific attributes to JSON
+        if (request.getAttributes() != null && !request.getAttributes().isEmpty()) {
+            validateAttributes(request.getType(), request.getAttributes());
+            try {
+                demand.setAttributes(OBJECT_MAPPER.writeValueAsString(request.getAttributes()));
+            } catch (IOException e) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "属性数据格式错误");
+            }
+        }
 
         if (demand.getRewardAmount() < 0) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "悬赏金额不能为负数");
@@ -245,6 +257,22 @@ public class DemandServiceImpl implements DemandService {
                         userMap.get(d.getPublisherId()),
                         userMap.get(d.getAcceptorId())))
                 .toList();
+    }
+
+    private void validateAttributes(String type, Map<String, Object> attrs) {
+        if ("errand".equals(type)) {
+            if (!(attrs.get("pickup_location") instanceof String s) || s.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "跑腿代取需要填写取件地点");
+            }
+        } else if ("lost_found".equals(type)) {
+            if (!(attrs.get("lf_type") instanceof String s) || s.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "失物招领需要选择类型（寻物/招领）");
+            }
+            String lfType = (String) attrs.get("lf_type");
+            if (!"LOST".equals(lfType) && !"FOUND".equals(lfType)) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "失物招领类型必须为 LOST 或 FOUND");
+            }
+        }
     }
 
     private Demand findDemandOrFail(Long demandId) {

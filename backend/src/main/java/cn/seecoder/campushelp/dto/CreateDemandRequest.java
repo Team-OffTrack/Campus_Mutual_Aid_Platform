@@ -2,6 +2,7 @@ package cn.seecoder.campushelp.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Request body for publishing a new demand.
@@ -24,6 +25,7 @@ public class CreateDemandRequest {
     private Integer rewardAmount;
     private Boolean isAnonymous;
     private String images;
+    private Map<String, Object> attributes;
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
@@ -51,4 +53,7 @@ public class CreateDemandRequest {
 
     public String getImages() { return images; }
     public void setImages(String images) { this.images = images; }
+
+    public Map<String, Object> getAttributes() { return attributes; }
+    public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
 }

@@ -46,10 +46,10 @@
               <span class="meta-val">{{ demand.location }}</span>
             </div>
           </div>
-          <div class="meta-item">
+          <div class="meta-item" v-if="demand.type !== 'lost_found' || (demand.rewardAmount && demand.rewardAmount > 0)">
             <van-icon name="gold-coin-o" size="20" />
             <div>
-              <span class="meta-label">报酬</span>
+              <span class="meta-label">{{ rewardLabel(demand) }}</span>
               <span class="meta-val reward">{{ rewardText(demand) }}</span>
             </div>
           </div>
@@ -60,6 +60,35 @@
               <span class="meta-val">{{ formatTime(demand.deadline) }}</span>
             </div>
           </div>
+        </div>
+
+        <!-- Type-specific attributes -->
+        <div v-if="demand.attributes && Object.keys(demand.attributes).length > 0" class="d-attrs-section">
+          <div class="attrs-divider"></div>
+          <!-- errand -->
+          <template v-if="demand.type === 'errand'">
+            <div class="attr-row"><span class="attr-label">取件地点</span><span class="attr-val">{{ demand.attributes.pickup_location || '未指定' }}</span></div>
+            <div class="attr-row"><span class="attr-label">物品类别</span><span class="attr-val">{{ demand.attributes.item_category || '未指定' }}</span></div>
+            <div class="attr-row"><span class="attr-label">紧急程度</span><span class="attr-val" :class="demand.attributes.urgency === 'urgent' ? 'urgency-urgent' : ''">{{ demand.attributes.urgency === 'urgent' ? '🏃 加急' : '普通' }}</span></div>
+          </template>
+          <!-- trade -->
+          <template v-if="demand.type === 'trade'">
+            <div class="attr-row"><span class="attr-label">商品成色</span><span class="attr-val">{{ demand.attributes.item_condition || '未指定' }}</span></div>
+            <div class="attr-row"><span class="attr-label">商品类别</span><span class="attr-val">{{ demand.attributes.trade_category || '未指定' }}</span></div>
+          </template>
+          <!-- lost_found -->
+          <template v-if="demand.type === 'lost_found'">
+            <div class="attr-row"><span class="attr-label">类型</span><span class="attr-val lf-badge" :class="demand.attributes.lf_type === 'LOST' ? 'lf-lost' : 'lf-found'">{{ demand.attributes.lf_type === 'LOST' ? '🔍 寻物' : '📦 招领' }}</span></div>
+            <div class="attr-row"><span class="attr-label">物品类别</span><span class="attr-val">{{ demand.attributes.item_category || '未指定' }}</span></div>
+            <div class="attr-row" v-if="demand.attributes.lost_found_date"><span class="attr-label">日期</span><span class="attr-val">{{ demand.attributes.lost_found_date }}</span></div>
+          </template>
+          <!-- study -->
+          <template v-if="demand.type === 'study'">
+            <div class="attr-row"><span class="attr-label">科目</span><span class="attr-val">{{ demand.attributes.subject || '未指定' }}</span></div>
+            <div class="attr-row"><span class="attr-label">方式</span><span class="attr-val">{{ demand.attributes.study_mode || '未指定' }}</span></div>
+            <div class="attr-row"><span class="attr-label">难度</span><span class="attr-val">{{ demand.attributes.difficulty || '未指定' }}</span></div>
+            <div class="attr-row" v-if="demand.attributes.preferred_time"><span class="attr-label">期望时间</span><span class="attr-val">{{ demand.attributes.preferred_time }}</span></div>
+          </template>
         </div>
       </div>
 
@@ -227,6 +256,7 @@ import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvalua
 import { createConversation } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
+import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
 
 const router = useRouter()
 const route = useRoute()
@@ -269,16 +299,6 @@ const demandImages = computed(() => {
 
 function previewImage(index) { previewIndex.value = index; showPreview.value = true }
 
-const TYPE_STYLES = {
-  errand: { background: '#FFF0E5', color: '#E65100' },
-  trade: { background: '#E8F5E9', color: '#2E7D32' },
-  team: { background: '#E3F2FD', color: '#1565C0' },
-  lost_found: { background: '#F3E5F5', color: '#7B1FA2' },
-  study: { background: '#FCE4EC', color: '#C62828' },
-  other: { background: '#F5F5F5', color: '#616161' }
-}
-
-const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
 const STATUS_LABELS = { OPEN: '进行中', IN_PROGRESS: '已接单', COMPLETED: '已完成', CANCELLED: '已取消' }
 
 function typeLabel(v) { return TYPE_LABELS[v] || v }
@@ -292,9 +312,16 @@ function statusClass(v) {
 
 function rewardText(d) {
   if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
+  if (d.type === 'trade') return '¥' + d.rewardAmount
   if (d.rewardType === 'cash') return '¥' + d.rewardAmount
   if (d.rewardType === 'point') return d.rewardAmount + ' 积分'
   return '公益'
+}
+
+function rewardLabel(d) {
+  if (d.type === 'trade') return '价格'
+  if (d.type === 'lost_found') return '感谢金'
+  return '报酬'
 }
 
 function formatTime(t) {
@@ -480,6 +507,26 @@ onMounted(fetchDetail)
 .d-meta-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
+
+/* Type-specific attributes */
+.d-attrs-section {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.attrs-divider {
+  height: 1px; background: var(--c-border); margin: 2px 0;
+}
+.attr-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0;
+}
+.attr-label { font-size: 13px; color: var(--c-text-3); }
+.attr-val { font-size: 14px; font-weight: 600; color: var(--c-text-1); }
+.attr-val.urgency-urgent { color: var(--c-danger); }
+.lf-badge {
+  font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 6px;
+}
+.lf-lost { background: #FFF0E5; color: #E65100; }
+.lf-found { background: #E8F5E9; color: #2E7D32; }
 .meta-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 14px; background: var(--c-surface-variant); border-radius: var(--r-medium);

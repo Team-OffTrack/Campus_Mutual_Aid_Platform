@@ -38,6 +38,128 @@
               @focus="focusedField = 'desc'" @blur="focusedField = null" />
           </div>
 
+          <!-- ═══ Type-specific fields ═══ -->
+
+          <!-- errand -->
+          <template v-if="form.type === 'errand'">
+            <div class="field-wrap" :class="{ focused: focusedField === 'pickupLocation' }">
+              <div class="field-icon-wrap"><van-icon name="location-o" /></div>
+              <van-field v-model="attrs.errand.pickup_location" placeholder="取件地点（必填）"
+                class="bare-field" :rules="[{ required: true, message: '请填写取件地点' }]"
+                @focus="focusedField = 'pickupLocation'" @blur="focusedField = null" />
+            </div>
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <select v-model="attrs.errand.item_category" class="bare-select">
+                  <option value="">物品类别</option>
+                  <option value="快递">快递</option>
+                  <option value="外卖">外卖</option>
+                  <option value="文件">文件</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field">
+                <select v-model="attrs.errand.urgency" class="bare-select">
+                  <option value="normal">普通</option>
+                  <option value="urgent">加急 🏃</option>
+                </select>
+              </div>
+            </div>
+          </template>
+
+          <!-- trade -->
+          <template v-if="form.type === 'trade'">
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <select v-model="attrs.trade.item_condition" class="bare-select">
+                  <option value="">物品成色</option>
+                  <option value="全新">全新</option>
+                  <option value="几乎全新">几乎全新</option>
+                  <option value="轻微使用">轻微使用</option>
+                  <option value="明显使用">明显使用</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field">
+                <van-field v-model.number="attrs.trade.item_price" type="number"
+                  placeholder="价格（元）" class="bare-field" />
+              </div>
+            </div>
+            <div class="field-wrap">
+              <select v-model="attrs.trade.trade_category" class="bare-select">
+                <option value="">商品类别</option>
+                <option value="教材">教材</option>
+                <option value="电子">电子</option>
+                <option value="衣物">衣物</option>
+                <option value="生活">生活</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- lost_found -->
+          <template v-if="form.type === 'lost_found'">
+            <div class="lf-type-toggle">
+              <span class="lf-toggle-chip" :class="{ active: attrs.lost_found.lf_type === 'LOST' }"
+                @click="attrs.lost_found.lf_type = 'LOST'">🔍 寻物</span>
+              <span class="lf-toggle-chip" :class="{ active: attrs.lost_found.lf_type === 'FOUND' }"
+                @click="attrs.lost_found.lf_type = 'FOUND'">📦 招领</span>
+            </div>
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <select v-model="attrs.lost_found.item_category" class="bare-select">
+                  <option value="">物品类别</option>
+                  <option value="证件">证件</option>
+                  <option value="电子">电子</option>
+                  <option value="钥匙">钥匙</option>
+                  <option value="衣物">衣物</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field">
+                <van-field v-model="attrs.lost_found.lost_found_date" type="date"
+                  placeholder="日期" class="bare-field" />
+              </div>
+            </div>
+          </template>
+
+          <!-- study -->
+          <template v-if="form.type === 'study'">
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <select v-model="attrs.study.subject" class="bare-select">
+                  <option value="">科目</option>
+                  <option value="数学">数学</option>
+                  <option value="英语">英语</option>
+                  <option value="编程">编程</option>
+                  <option value="物理">物理</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field">
+                <select v-model="attrs.study.study_mode" class="bare-select">
+                  <option value="">方式</option>
+                  <option value="线上">线上</option>
+                  <option value="线下">线下</option>
+                  <option value="均可">均可</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-split">
+              <div class="field-wrap split-field">
+                <select v-model="attrs.study.difficulty" class="bare-select">
+                  <option value="">难度</option>
+                  <option value="入门">入门</option>
+                  <option value="进阶">进阶</option>
+                  <option value="高级">高级</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field">
+                <van-field v-model="attrs.study.preferred_time" placeholder="期望时间（如：周二下午）"
+                  class="bare-field" />
+              </div>
+            </div>
+          </template>
+
           <!-- Image upload -->
           <div class="form-section">
             <label class="section-label">添加图片（选填）</label>
@@ -51,27 +173,35 @@
 
           <div class="field-wrap" :class="{ focused: focusedField === 'location' }">
             <div class="field-icon-wrap"><van-icon name="location-o" /></div>
-            <van-field v-model="form.location" placeholder="地点（选填）"
+            <van-field v-model="form.location" :placeholder="rewardConfig.locationLabel + (rewardConfig.locationRequired ? '' : '（选填）')"
               class="bare-field"
               @focus="focusedField = 'location'" @blur="focusedField = null" />
           </div>
 
-          <!-- Reward -->
-          <div class="form-row-split">
-            <div class="field-wrap split-field" :class="{ focused: focusedField === 'rewardType' }">
-              <div class="field-icon-wrap"><van-icon name="gold-coin-o" /></div>
-              <select v-model="form.rewardType" class="bare-select"
-                @focus="focusedField = 'rewardType'" @blur="focusedField = null">
-                <option value="point">积分</option>
-                <option value="cash">现金</option>
-                <option value="donation">公益</option>
-              </select>
+          <!-- Reward (type-aware) -->
+          <template v-if="rewardConfig.showReward">
+            <div class="form-section" v-if="form.type === 'trade'">
+              <label class="section-label">💡 提示：建议上传实物图片，二手商品信息越详细越容易成交</label>
             </div>
-            <div class="field-wrap split-field" :class="{ focused: focusedField === 'rewardAmount' }">
-              <van-field v-model.number="form.rewardAmount" type="number"
-                placeholder="报酬数量" class="bare-field"
-                @focus="focusedField = 'rewardAmount'" @blur="focusedField = null" />
+            <div class="form-row-split">
+              <div class="field-wrap split-field" :class="{ focused: focusedField === 'rewardType' }">
+                <div class="field-icon-wrap"><van-icon name="gold-coin-o" /></div>
+                <select v-model="form.rewardType" class="bare-select"
+                  @focus="focusedField = 'rewardType'" @blur="focusedField = null">
+                  <option v-if="rewardConfig.rewardTypes.includes('point')" value="point">积分</option>
+                  <option v-if="rewardConfig.rewardTypes.includes('cash')" value="cash">现金</option>
+                  <option v-if="rewardConfig.rewardTypes.includes('donation')" value="donation">公益</option>
+                </select>
+              </div>
+              <div class="field-wrap split-field" :class="{ focused: focusedField === 'rewardAmount' }">
+                <van-field v-model.number="form.rewardAmount" type="number"
+                  :placeholder="rewardConfig.rewardLabel" class="bare-field"
+                  @focus="focusedField = 'rewardAmount'" @blur="focusedField = null" />
+              </div>
             </div>
+          </template>
+          <div v-if="form.type === 'lost_found'" class="form-section">
+            <label class="section-label">💡 提示：上传物品照片能大大提高找回/归还几率</label>
           </div>
 
           <!-- Anonymous toggle -->
@@ -94,10 +224,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { publishDemand, uploadDemandImage } from '@/api/demand'
+import { DEMAND_TYPES, TYPE_CONFIG } from '@/constants/demandTypes'
 
 const router = useRouter()
 const route = useRoute()
@@ -114,14 +245,15 @@ const form = reactive({
   rewardType: 'point', rewardAmount: 0, isAnonymous: false
 })
 
-const demandTypes = [
-  { value: 'errand', label: '跑腿代取', icon: 'logistics', color: '#E65100' },
-  { value: 'trade', label: '二手交易', icon: 'shop', color: '#2E7D32' },
-  { value: 'team', label: '组队匹配', icon: 'friends', color: '#1565C0' },
-  { value: 'lost_found', label: '失物招领', icon: 'search', color: '#7B1FA2' },
-  { value: 'study', label: '学习互助', icon: 'bookmark-o', color: '#C62828' },
-  { value: 'other', label: '其他', icon: 'ellipsis', color: '#9E9E9E' }
-]
+const attrs = reactive({
+  errand: { pickup_location: '', item_category: '', urgency: 'normal' },
+  trade: { item_condition: '', item_price: null, trade_category: '' },
+  lost_found: { lf_type: 'LOST', item_category: '', lost_found_date: '' },
+  study: { subject: '', study_mode: '', difficulty: '', preferred_time: '' }
+})
+
+const demandTypes = Object.values(DEMAND_TYPES)
+const rewardConfig = computed(() => TYPE_CONFIG[form.type] || TYPE_CONFIG.other)
 
 function beforeReadImage(file) {
   if (!file.type.startsWith('image/')) { showToast('只支持图片文件'); return false }
@@ -146,6 +278,22 @@ async function handlePublish() {
     if (!payload.rewardAmount) payload.rewardAmount = 0
     if (uploadedImageUrls.value.length > 0) {
       payload.images = uploadedImageUrls.value.join(',')
+    }
+    // Build type-specific attributes
+    const typeAttrs = attrs[form.type]
+    if (typeAttrs) {
+      const filtered = {}
+      for (const [k, v] of Object.entries(typeAttrs)) {
+        if (v !== '' && v !== null && v !== undefined) filtered[k] = v
+      }
+      if (Object.keys(filtered).length > 0) {
+        payload.attributes = filtered
+      }
+    }
+    // trade: sync item_price to rewardAmount
+    if (form.type === 'trade' && attrs.trade.item_price != null) {
+      payload.rewardAmount = attrs.trade.item_price
+      payload.rewardType = 'cash'
     }
     await publishDemand(payload)
     showToast('发布成功')
@@ -222,6 +370,23 @@ async function handlePublish() {
   font-size: 15px; color: var(--c-text-1); outline: none;
   padding: 14px 0; cursor: pointer;
 }
+
+/* Lost & Found type toggle */
+.lf-type-toggle { display: flex; gap: 12px; }
+.lf-toggle-chip {
+  flex: 1; text-align: center; padding: 12px;
+  border-radius: var(--r-medium);
+  font-size: 15px; font-weight: 600;
+  border: 2px solid var(--c-border);
+  background: var(--c-surface-variant);
+  color: var(--c-text-2);
+  cursor: pointer; transition: all var(--spring-fast-spatial);
+}
+.lf-toggle-chip.active {
+  background: #F3E5F5; border-color: #7B1FA2; color: #7B1FA2;
+  box-shadow: 0 2px 8px rgba(123,31,162,0.15);
+}
+.lf-toggle-chip:active { transform: scale(0.96); }
 
 /* Anonymous */
 .anon-row {

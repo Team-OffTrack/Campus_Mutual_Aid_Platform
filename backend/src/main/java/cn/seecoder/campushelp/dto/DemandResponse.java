@@ -2,8 +2,11 @@ package cn.seecoder.campushelp.dto;
 
 import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.User;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Demand response including publisher and acceptor display info.
@@ -28,7 +31,10 @@ public class DemandResponse {
     private Boolean isAnonymous;
     private String images;
     private String status;
+    private Map<String, Object> attributes;
     private LocalDateTime createTime;
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /** Lightweight constructor used by list queries (only publisher loaded). */
     public static DemandResponse from(Demand demand, User publisher) {
@@ -51,6 +57,7 @@ public class DemandResponse {
         rsp.isAnonymous = demand.isAnonymous();
         rsp.images = demand.getImages();
         rsp.status = demand.getStatus();
+        rsp.attributes = parseAttributes(demand.getAttributes());
         rsp.createTime = demand.getCreateTime();
 
         if (demand.isAnonymous()) {
@@ -67,6 +74,17 @@ public class DemandResponse {
             rsp.acceptorAvatar = acceptor.getAvatar();
         }
         return rsp;
+    }
+
+    private static Map<String, Object> parseAttributes(String attributesJson) {
+        if (attributesJson == null || attributesJson.isBlank()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(attributesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Long getDemandId() { return demandId; }
@@ -86,5 +104,7 @@ public class DemandResponse {
     public Boolean getIsAnonymous() { return isAnonymous; }
     public String getImages() { return images; }
     public String getStatus() { return status; }
+    public Map<String, Object> getAttributes() { return attributes; }
+    public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
     public LocalDateTime getCreateTime() { return createTime; }
 }

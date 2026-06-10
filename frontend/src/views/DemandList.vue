@@ -78,6 +78,7 @@
         @click="router.push('/demands/' + d.demandId)">
         <div class="card-top">
           <span class="card-type" :style="typeStyle(d.type)">{{ typeLabel(d.type) }}</span>
+          <span v-if="typeMeta(d)" class="card-type-meta">{{ typeMeta(d) }}</span>
           <span class="card-reward">{{ rewardText(d) }}</span>
         </div>
         <h3 class="card-title">{{ d.title }}</h3>
@@ -112,6 +113,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listDemands } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
+import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
 
 const router = useRouter()
 const demands = ref([])
@@ -128,19 +130,18 @@ const sortOptions = [
   { value: 'deadline', label: '即将截止', icon: '' }
 ]
 
-const TYPE_STYLES = {
-  errand:     { background: '#FFF0E5', color: '#E65100' },
-  trade:      { background: '#E8F5E9', color: '#2E7D32' },
-  team:       { background: '#E3F2FD', color: '#1565C0' },
-  lost_found: { background: '#F3E5F5', color: '#7B1FA2' },
-  study:      { background: '#FCE4EC', color: '#C62828' },
-  other:      { background: '#F5F5F5', color: '#616161' }
-}
-
-const TYPE_LABELS = { errand: '跑腿代取', trade: '二手交易', team: '组队匹配', lost_found: '失物招领', study: '学习互助', other: '其他' }
-
 function typeLabel(v) { return TYPE_LABELS[v] || v }
 function typeStyle(v) { return TYPE_STYLES[v] || TYPE_STYLES.other }
+
+function typeMeta(d) {
+  if (!d.attributes) return ''
+  const a = d.attributes
+  if (d.type === 'errand') return a.pickup_location || ''
+  if (d.type === 'trade' && a.item_price) return '¥' + a.item_price
+  if (d.type === 'lost_found') return a.lf_type === 'LOST' ? '寻物' : a.lf_type === 'FOUND' ? '招领' : ''
+  if (d.type === 'study') return a.subject || ''
+  return ''
+}
 
 function rewardText(d) {
   if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
@@ -270,7 +271,11 @@ onMounted(() => fetchDemands())
   font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;
   letter-spacing: 0.3px;
 }
-.card-reward { font-size: 14px; font-weight: 700; color: var(--c-warning); }
+.card-type-meta {
+  font-size: 11px; color: var(--c-text-3);
+  flex: 1; margin-left: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card-reward { font-size: 14px; font-weight: 700; color: var(--c-warning); flex-shrink: 0; }
 
 .card-title { font-size: 16px; font-weight: 700; color: var(--c-text-1); line-height: 1.3; }
 .card-desc {

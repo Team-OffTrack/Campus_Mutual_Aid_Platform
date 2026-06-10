@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS demand (
     title         VARCHAR(128) NOT NULL,
     description   TEXT,
     images        TEXT,
+    attributes    TEXT,
     location      VARCHAR(255),
     deadline      TIMESTAMP,
     reward_type   VARCHAR(32)  DEFAULT 'point',
