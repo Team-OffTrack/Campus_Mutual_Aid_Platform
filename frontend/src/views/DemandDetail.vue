@@ -401,7 +401,6 @@ const chatLabel = computed(() => {
   return '私信接单人'
 })
 
-const isTeamLeader = computed(() => myMembership.value && myMembership.value.role === 'LEADER')
 const isTeamMember = computed(() => myMembership.value && myMembership.value.status === 'JOINED')
 const teamSize = computed(() => {
   if (!demand.value || demand.value.type !== 'team') return 0
@@ -483,9 +482,9 @@ async function fetchDetail() {
     // Fetch team data for team-type demands
     if (demand.value.type === 'team' && demand.value.teamMembers) {
       teamMembers.value = demand.value.teamMembers
-      try { myMembership.value = await getMyMembership(id) } catch {}
+      try { myMembership.value = await getMyMembership(id) } catch { /* ignore - membership fetch is best-effort */ }
       if (isOwner.value) {
-        try { teamApplicants.value = await getTeamApplicants(id) } catch {}
+        try { teamApplicants.value = await getTeamApplicants(id) } catch { /* ignore - applicants fetch is publisher-only */ }
       }
     }
     await fetchEvaluations()
@@ -590,10 +589,10 @@ async function handleComplete() {
 
 async function refreshTeamData() {
   const id = demand.value.demandId
-  try { teamMembers.value = await getTeamMembers(id) } catch {}
-  try { myMembership.value = await getMyMembership(id) } catch {}
+  try { teamMembers.value = await getTeamMembers(id) } catch { /* ignore - best-effort refresh */ }
+  try { myMembership.value = await getMyMembership(id) } catch { /* ignore - best-effort refresh */ }
   if (isOwner.value) {
-    try { teamApplicants.value = await getTeamApplicants(id) } catch {}
+    try { teamApplicants.value = await getTeamApplicants(id) } catch { /* ignore - best-effort refresh */ }
   }
 }
 
