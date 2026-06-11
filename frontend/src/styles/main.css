@@ -404,7 +404,7 @@ a:focus-visible {
   overflow: hidden;
   transition: box-shadow var(--spring-default-spatial), transform var(--spring-fast-spatial);
 }
-.card:active { transform: scale(0.985); }
+.card:active { box-shadow: var(--s-xs); }
 .card-elevated { box-shadow: var(--s-md); }
 .card-flat { box-shadow: var(--s-xs); }
 

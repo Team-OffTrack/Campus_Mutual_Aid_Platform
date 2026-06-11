@@ -362,7 +362,7 @@ async function handlePublish() {
   cursor: pointer;
   transition: all var(--spring-fast-spatial);
 }
-.type-chip:active { transform: scale(0.96); }
+.type-chip:active { opacity: 0.72; }
 .chip-active { box-shadow: 0 2px 8px rgba(0,0,0,0.15); border-color: transparent !important; }
 
 /* Field wraps */
