@@ -10,6 +10,7 @@ import cn.seecoder.campushelp.mapper.PrivacyProfileMapper;
 import cn.seecoder.campushelp.mapper.UserAccountMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.security.JwtTokenProvider;
+import cn.seecoder.campushelp.service.PointsService;
 import cn.seecoder.campushelp.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -34,17 +35,20 @@ public class UserServiceImpl implements UserService {
     private final UserAccountMapper userAccountMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PointsService pointsService;
 
     public UserServiceImpl(UserMapper userMapper,
                            PrivacyProfileMapper privacyProfileMapper,
                            UserAccountMapper userAccountMapper,
                            PasswordEncoder passwordEncoder,
-                           JwtTokenProvider jwtTokenProvider) {
+                           JwtTokenProvider jwtTokenProvider,
+                           PointsService pointsService) {
         this.userMapper = userMapper;
         this.privacyProfileMapper = privacyProfileMapper;
         this.userAccountMapper = userAccountMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.pointsService = pointsService;
     }
 
     @Override
@@ -72,6 +76,9 @@ public class UserServiceImpl implements UserService {
         UserAccount account = new UserAccount();
         account.setUserId(user.getUserId());
         userAccountMapper.insert(account);
+
+        // Award signup bonus points to new users
+        pointsService.awardSignupBonus(user.getUserId());
     }
 
     @Override

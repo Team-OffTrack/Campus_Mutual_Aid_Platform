@@ -113,7 +113,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listDemands } from '@/api/demand'
 import NavActions from '@/components/NavActions.vue'
-import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
+import { TYPE_LABELS, TYPE_STYLES, rewardText } from '@/constants/demandTypes'
 
 const router = useRouter()
 const demands = ref([])
@@ -147,13 +147,6 @@ function typeMeta(d) {
   return ''
 }
 
-function rewardText(d) {
-  if (d.type === 'team') return '组队'
-  if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
-  if (d.rewardType === 'cash') return '¥' + d.rewardAmount
-  if (d.rewardType === 'point') return d.rewardAmount + ' 积分'
-  return '公益'
-}
 
 function timeAgo(t) {
   if (!t) return ''

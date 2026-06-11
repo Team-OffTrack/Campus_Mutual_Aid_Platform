@@ -116,7 +116,7 @@ class UserServiceTest {
 
         UserInfoResponse profile = userService.getProfile(user.getUserId());
         assertEquals("张三", profile.getName());
-        assertEquals(0, profile.getAvailablePoints());
+        assertEquals(100, profile.getAvailablePoints());
         assertEquals(5.0, profile.getReputationScore());
     }
 

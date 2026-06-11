@@ -358,7 +358,7 @@ import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvalua
 import { createConversation } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
-import { TYPE_LABELS, TYPE_STYLES } from '@/constants/demandTypes'
+import { TYPE_LABELS, TYPE_STYLES, rewardText } from '@/constants/demandTypes'
 
 const router = useRouter()
 const route = useRoute()
@@ -438,13 +438,6 @@ function statusClass(v) {
   return 's-cancelled'
 }
 
-function rewardText(d) {
-  if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
-  if (d.type === 'trade') return '¥' + d.rewardAmount
-  if (d.rewardType === 'cash') return '¥' + d.rewardAmount
-  if (d.rewardType === 'point') return d.rewardAmount + ' 积分'
-  return '公益'
-}
 
 function rewardLabel(d) {
   if (d.type === 'trade') return '价格'

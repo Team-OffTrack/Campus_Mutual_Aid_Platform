@@ -69,6 +69,9 @@
 
           <!-- trade -->
           <template v-if="form.type === 'trade'">
+            <div class="form-section">
+              <label class="section-label">💡 建议上传实物图片，二手商品信息越详细越容易成交</label>
+            </div>
             <div class="form-row-split">
               <div class="field-wrap split-field">
                 <select v-model="attrs.trade.item_condition" class="bare-select">
@@ -81,7 +84,7 @@
               </div>
               <div class="field-wrap split-field">
                 <van-field v-model.number="attrs.trade.item_price" type="number"
-                  placeholder="价格（元）" class="bare-field" />
+                  placeholder="价格（积分）" class="bare-field" />
               </div>
             </div>
             <div class="field-wrap">
@@ -208,16 +211,12 @@
 
           <!-- Reward (type-aware) -->
           <template v-if="rewardConfig.showReward">
-            <div class="form-section" v-if="form.type === 'trade'">
-              <label class="section-label">💡 提示：建议上传实物图片，二手商品信息越详细越容易成交</label>
-            </div>
             <div class="form-row-split">
               <div class="field-wrap split-field" :class="{ focused: focusedField === 'rewardType' }">
                 <div class="field-icon-wrap"><van-icon name="gold-coin-o" /></div>
                 <select v-model="form.rewardType" class="bare-select"
                   @focus="focusedField = 'rewardType'" @blur="focusedField = null">
                   <option v-if="rewardConfig.rewardTypes.includes('point')" value="point">积分</option>
-                  <option v-if="rewardConfig.rewardTypes.includes('cash')" value="cash">现金</option>
                   <option v-if="rewardConfig.rewardTypes.includes('donation')" value="donation">公益</option>
                 </select>
               </div>
@@ -325,10 +324,10 @@ async function handlePublish() {
       loading.value = false
       return
     }
-    // trade: sync item_price to rewardAmount
+    // trade: sync item_price to rewardAmount (point-based)
     if (form.type === 'trade' && attrs.trade.item_price != null) {
       payload.rewardAmount = attrs.trade.item_price
-      payload.rewardType = 'cash'
+      payload.rewardType = 'point'
     }
     await publishDemand(payload)
     showToast('发布成功')

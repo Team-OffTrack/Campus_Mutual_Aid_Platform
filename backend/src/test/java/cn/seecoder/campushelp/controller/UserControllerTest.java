@@ -123,7 +123,7 @@ class UserControllerTest {
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value("测试用户"))
-                .andExpect(jsonPath("$.data.availablePoints").value(0));
+                .andExpect(jsonPath("$.data.availablePoints").value(100));
     }
 
     @Test

@@ -28,7 +28,8 @@
     <div class="content-wrap">
       <!-- ═══ Stats bar (glass morphism) ═══ -->
       <div class="stats-row glass">
-        <div class="stat-chip" role="button" tabindex="0">
+        <div class="stat-chip points-chip" role="button" tabindex="0"
+             @click="router.push('/points/history')">
           <div class="stat-icon-wrap" style="background:var(--c-primary-container)">
             <van-icon name="gold-coin-o" color="#6750A4" size="16" />
           </div>
@@ -50,11 +51,46 @@
         <div class="stat-divider"></div>
         <div class="stat-chip">
           <div class="stat-icon-wrap" style="background:#FFF3E0">
-            <van-icon name="lock-o" color="#E65100" size="16" />
+            <van-icon name="lock" color="#E65100" size="16" />
           </div>
           <div class="stat-text">
             <span class="stat-val">{{ stats.frozenPoints != null ? stats.frozenPoints : '—' }}</span>
             <span class="stat-label">冻结积分</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Check-in card ═══ -->
+      <div class="checkin-card glass" :class="{ 'checked-in': checkinStatus.checkedIn }" v-if="!checkinLoading">
+        <div class="checkin-left">
+          <div class="checkin-icon-wrap">
+            <van-icon :name="checkinStatus.checkedIn ? 'success' : 'gift-o'"
+              :color="checkinStatus.checkedIn ? '#2E7D32' : '#6750A4'" size="22" />
+          </div>
+          <div class="checkin-text">
+            <span class="checkin-title">
+              {{ checkinStatus.checkedIn ? '今日已签到' : '每日签到' }}
+            </span>
+            <span class="checkin-sub">
+              <template v-if="checkinStatus.checkedIn">
+                已连续签到 {{ checkinStatus.currentStreak }} 天
+              </template>
+              <template v-else>
+                签到领积分
+                <span v-if="checkinStatus.currentStreak > 0"> · 已连续 {{ checkinStatus.currentStreak }} 天</span>
+              </template>
+            </span>
+          </div>
+        </div>
+        <div class="checkin-right">
+          <van-button v-if="!checkinStatus.checkedIn"
+            size="small" round type="primary"
+            :loading="checkinLoading" @click="handleCheckin"
+            class="checkin-btn">
+            签到
+          </van-button>
+          <div v-else class="checkin-done">
+            <van-icon name="success" color="#2E7D32" size="22" />
           </div>
         </div>
       </div>
@@ -136,12 +172,15 @@ import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { useAuthStore } from '@/stores/auth'
 import { getProfile } from '@/api/user'
+import { checkin, getCheckinStatus } from '@/api/points'
 import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const stats = ref({ availablePoints: null, reputationScore: null, frozenPoints: null })
+const checkinStatus = ref({ checkedIn: false, currentStreak: 0, lastCheckinDate: null })
+const checkinLoading = ref(false)
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -172,6 +211,24 @@ async function handleLogout() {
   router.push('/login')
 }
 
+async function handleCheckin() {
+  checkinLoading.value = true
+  try {
+    const result = await checkin()
+    checkinStatus.value = {
+      checkedIn: true,
+      currentStreak: result.streak,
+      lastCheckinDate: result.checkinDate
+    }
+    stats.value.availablePoints += result.pointsAwarded
+    showToast(`签到成功 +${result.pointsAwarded} 积分`)
+  } catch (e) {
+    showToast(e.message || '签到失败')
+  } finally {
+    checkinLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const data = await getProfile()
@@ -181,6 +238,11 @@ onMounted(async () => {
       frozenPoints: data.frozenPoints ?? 0,
     }
   } catch { /* use fallback placeholders */ }
+
+  try {
+    const status = await getCheckinStatus()
+    checkinStatus.value = status
+  } catch { /* ignore — check-in will show default unchecked state */ }
 })
 </script>
 
@@ -340,6 +402,83 @@ onMounted(async () => {
   height: 32px;
   background: var(--c-border);
   flex-shrink: 0;
+}
+
+.points-chip {
+  cursor: pointer;
+  transition: opacity var(--ease);
+}
+.points-chip:hover { opacity: 0.78; }
+.points-chip:active { opacity: 0.6; }
+
+/* ═══════════════════════════════════════
+   Check-in card
+   ═══════════════════════════════════════ */
+.checkin-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--s-md), var(--s-glow);
+  transition: border-color var(--ease), background var(--ease);
+  border: 1.5px solid transparent;
+}
+.checkin-card.checked-in {
+  border-color: #A5D6A7;
+  background: linear-gradient(135deg, rgba(232,245,233,0.6), rgba(255,255,255,0.92));
+}
+
+.checkin-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.checkin-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--c-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.checked-in .checkin-icon-wrap {
+  background: #E8F5E9;
+}
+
+.checkin-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkin-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-1);
+}
+
+.checkin-sub {
+  font-size: 12px;
+  color: var(--c-text-3);
+}
+
+.checkin-btn {
+  height: 36px !important;
+  padding: 0 20px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.checkin-done {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ═══════════════════════════════════════

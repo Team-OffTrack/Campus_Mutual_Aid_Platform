@@ -20,20 +20,20 @@ export const TYPE_STYLES = Object.fromEntries(
 )
 
 /**
- * Per-type UI configuration for forms and detail pages.
+ * Shared reward-type display configurations, extending per-type config.
  * team is included for forward compatibility but not fully implemented yet.
  */
 export const TYPE_CONFIG = {
   errand: {
     showReward: true, showLocation: true, locationRequired: true,
-    rewardTypes: ['point', 'cash', 'donation'],
+    rewardTypes: ['point', 'donation'],
     rewardTypeDefault: 'point',
     rewardLabel: '报酬', locationLabel: '送达地点'
   },
   trade: {
-    showReward: true, showLocation: true, locationRequired: false,
-    rewardTypes: ['cash'],
-    rewardTypeDefault: 'cash',
+    showReward: false, showLocation: true, locationRequired: false,
+    rewardTypes: ['point'],
+    rewardTypeDefault: 'point',
     rewardLabel: '价格', locationLabel: '交易地点'
   },
   team: {
@@ -56,8 +56,21 @@ export const TYPE_CONFIG = {
   },
   other: {
     showReward: true, showLocation: true, locationRequired: false,
-    rewardTypes: ['point', 'cash', 'donation'],
+    rewardTypes: ['point', 'donation'],
     rewardTypeDefault: 'point',
     rewardLabel: '报酬', locationLabel: '地点'
   }
+}
+
+/**
+ * Shared reward text display — single source of truth.
+ * Handles legacy cash rewardType for historical data.
+ */
+export function rewardText(d) {
+  if (d.type === 'team') return '组队'
+  if (!d.rewardAmount || d.rewardAmount === 0) return '免费'
+  if (d.rewardType === 'point') return d.rewardAmount + ' 积分'
+  if (d.rewardType === 'cash') return '¥' + d.rewardAmount  // legacy
+  if (d.rewardType === 'donation') return '公益'
+  return ''
 }

@@ -12,6 +12,7 @@ import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.dto.TeamMemberResponse;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.NotificationService;
+import cn.seecoder.campushelp.service.PointsService;
 import cn.seecoder.campushelp.service.TeamMemberService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -35,15 +36,18 @@ public class DemandServiceImpl implements DemandService {
     private final UserMapper userMapper;
     private final NotificationService notificationService;
     private final TeamMemberService teamMemberService;
+    private final PointsService pointsService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
                              NotificationService notificationService,
-                             TeamMemberService teamMemberService) {
+                             TeamMemberService teamMemberService,
+                             PointsService pointsService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
         this.notificationService = notificationService;
         this.teamMemberService = teamMemberService;
+        this.pointsService = pointsService;
     }
 
     @Override
@@ -84,6 +88,11 @@ public class DemandServiceImpl implements DemandService {
         // Auto-join publisher as leader for team demands
         if ("team".equals(request.getType())) {
             teamMemberService.autoJoinLeader(demand.getDemandId(), publisherId);
+        }
+
+        // Freeze points if this is a point-reward demand
+        if ("point".equals(demand.getRewardType()) && demand.getRewardAmount() > 0) {
+            pointsService.freezeOnPublish(publisherId, demand.getRewardAmount(), demand.getDemandId());
         }
 
         User publisher = userMapper.selectById(publisherId);
@@ -194,6 +203,11 @@ public class DemandServiceImpl implements DemandService {
         if (DemandStatus.COMPLETED.equals(demand.getStatus()) || DemandStatus.CANCELLED.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已结束，无法取消");
         }
+        // Unfreeze points if this was a point-reward demand
+        if ("point".equals(demand.getRewardType()) && demand.getRewardAmount() > 0) {
+            pointsService.unfreezeOnCancel(demand.getPublisherId(), demand.getRewardAmount(), demandId);
+        }
+
         // Notify acceptor if there is one
         if (demand.getAcceptorId() != null) {
             notificationService.notifyDemandCancelled(
@@ -249,6 +263,11 @@ public class DemandServiceImpl implements DemandService {
         }
         if (!DemandStatus.IN_PROGRESS.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "只能完成进行中的需求");
+        }
+        // Transfer points from publisher to acceptor
+        if ("point".equals(demand.getRewardType()) && demand.getRewardAmount() > 0 && demand.getAcceptorId() != null) {
+            pointsService.transferOnComplete(demand.getPublisherId(), demand.getAcceptorId(),
+                    demand.getRewardAmount(), demandId);
         }
         demand.setStatus(DemandStatus.COMPLETED);
         demandMapper.updateById(demand);

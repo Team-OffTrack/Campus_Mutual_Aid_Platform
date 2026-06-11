@@ -128,3 +128,28 @@ CREATE TABLE IF NOT EXISTS team_member (
     FOREIGN KEY (demand_id) REFERENCES demand(demand_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS points_transaction (
+    transaction_id  BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id         BIGINT       NOT NULL,
+    amount          INT          NOT NULL,
+    balance_after   INT          NOT NULL,
+    type            VARCHAR(32)  NOT NULL,
+    reference_id    BIGINT       DEFAULT NULL,
+    description     VARCHAR(255) DEFAULT NULL,
+    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (transaction_id),
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS daily_checkin (
+    checkin_id     BIGINT    NOT NULL AUTO_INCREMENT,
+    user_id        BIGINT    NOT NULL,
+    checkin_date   DATE      NOT NULL,
+    points_awarded INT       NOT NULL DEFAULT 0,
+    streak         INT       NOT NULL DEFAULT 0,
+    create_time    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (checkin_id),
+    UNIQUE (user_id, checkin_date),
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);

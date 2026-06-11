@@ -36,8 +36,12 @@
     <div class="content-wrap">
       <!-- ═══ Stats bar ═══ -->
       <div class="stats-bar glass">
-        <div class="stat-item">
-          <span class="stat-num" style="color:var(--c-primary)">{{ profile.availablePoints ?? '—' }}</span>
+        <div class="stat-item points-stat" role="button" tabindex="0"
+             @click="router.push('/points/history')">
+          <span class="stat-num" style="color:var(--c-primary)">
+            {{ profile.availablePoints ?? '—' }}
+            <van-icon name="arrow" class="points-arrow" />
+          </span>
           <span class="stat-lbl">可用积分</span>
         </div>
         <div class="stat-sep"></div>
@@ -324,6 +328,9 @@ async function handleLogout() {
 .stat-num { font-size: 22px; font-weight: 700; }
 .stat-lbl { font-size: 11px; color: var(--c-text-3); font-weight: 500; }
 .stat-sep { width: 1px; height: 32px; background: var(--c-border); }
+.points-stat { cursor: pointer; border-radius: var(--r-md); transition: background var(--ease); }
+.points-stat:hover { background: rgba(103,80,164,0.06); }
+.points-arrow { font-size: 14px; margin-left: 4px; opacity: 0.45; vertical-align: middle; }
 
 /* ═══════════════════════════════════════
    Sections
