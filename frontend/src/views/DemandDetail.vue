@@ -168,7 +168,7 @@
         <template v-if="demand.status === 'OPEN'">
           <!-- Team actions -->
           <template v-if="demand.type === 'team'">
-            <template v-if="isOwner">
+            <div v-if="isOwner" class="action-row">
               <van-button block round type="primary" class="action-btn"
                 @click="router.push(`/demands/${demand.demandId}/edit`)">
                 编辑需求
@@ -177,7 +177,7 @@
                 :loading="acting" class="action-btn" @click="handleCancel">
                 解散队伍
               </van-button>
-            </template>
+            </div>
             <van-button v-else-if="isTeamMember" block round type="default"
               :loading="teamActionLoading" class="action-btn" @click="handleLeaveTeam">
               退出队伍
@@ -197,7 +197,7 @@
           </template>
           <!-- Non-team actions -->
           <template v-else>
-            <template v-if="isOwner">
+            <div v-if="isOwner" class="action-row">
               <van-button block round type="primary" class="action-btn"
                 @click="router.push(`/demands/${demand.demandId}/edit`)">
                 编辑需求
@@ -206,7 +206,7 @@
                 :loading="acting" class="action-btn" @click="handleCancel">
                 取消需求
               </van-button>
-            </template>
+            </div>
             <van-button v-else block round type="primary"
               :loading="acting" class="action-btn" @click="handleAccept">
               我要接单
