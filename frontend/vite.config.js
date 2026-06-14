@@ -34,6 +34,18 @@ export default defineConfig({
         target: 'https://localhost:8080',
         changeOrigin: true,
         secure: false
+      },
+      '/ws': {
+        target: 'https://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        ws: true
+      },
+      '/ws-raw': {
+        target: 'https://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        ws: true
       }
     }
   },

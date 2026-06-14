@@ -80,12 +80,14 @@ import { showToast } from 'vant'
 import { getMessages, sendMessage, uploadChatImage } from '@/api/chat'
 import { getProfile } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
 import ImageViewer from '@/components/ImageViewer.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
 
 const conversationId = computed(() => Number(route.params.conversationId))
 const userId = computed(() => Number(authStore.userId))
@@ -104,7 +106,7 @@ const emojiShow = ref(false)
 const viewerShow = ref(false)
 const viewerImages = ref([])
 
-let pollTimer = null
+let unsubChat = null
 
 const AVATAR_COLORS = ['#6750A4','#0097A7','#2E7D32','#D32F2F','#7B1FA2','#C62828','#ED6C02','#E65100']
 function avatarColor(n) { return AVATAR_COLORS[(n || '?').charCodeAt(0) % AVATAR_COLORS.length] }
@@ -192,25 +194,25 @@ async function handleSend() {
   finally { sending.value = false }
 }
 
-function startPolling() {
-  stopPolling()
-  pollTimer = setInterval(async () => {
-    try {
-      const msgs = await getMessages(conversationId.value)
-      if (msgs.length !== messages.value.length) {
-        messages.value = msgs
-        scrollToBottom()
-      }
-    } catch { /* skip */ }
-  }, 10000)
+// ── WebSocket real-time reception ──
+function startWebSocket() {
+  stopWebSocket()
+  unsubChat = wsStore.onChatMessage(msg => {
+    // Only append messages belonging to this conversation
+    if (msg.conversationId !== conversationId.value) return
+    // Avoid duplicating messages we sent ourselves (already in the array)
+    if (msg.senderId === userId.value) return
+    messages.value = [...messages.value, msg]
+    scrollToBottom()
+  })
 }
 
-function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null } }
+function stopWebSocket() { if (unsubChat) { unsubChat(); unsubChat = null } }
 
 watch(conversationId, () => {
   loading.value = true
   fetchMessages().finally(() => { loading.value = false })
-  startPolling()
+  startWebSocket()
 })
 
 onMounted(async () => {
@@ -218,10 +220,10 @@ onMounted(async () => {
   await loadProfileInfo()
   await fetchMessages()
   loading.value = false
-  startPolling()
+  startWebSocket()
 })
 
-onBeforeUnmount(stopPolling)
+onBeforeUnmount(stopWebSocket)
 </script>
 
 <style scoped>

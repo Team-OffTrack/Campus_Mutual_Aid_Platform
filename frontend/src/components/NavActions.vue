@@ -14,21 +14,27 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
 import { unreadCount } from '@/api/notification'
 import { unreadChatCount } from '@/api/chat'
 
 defineProps({ light: Boolean })
 
 const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
 const nameInitial = computed(() => (authStore.name || '?').charAt(0).toUpperCase())
-const unreadNum = ref(0)
+
+// Reactive sum of notification + chat unread counters pushed via WebSocket
+const unreadNum = computed(() => wsStore.notifUnread + wsStore.chatUnread)
 
 async function fetchUnread() {
   const [notif, chat] = await Promise.all([
     unreadCount().catch(() => ({ count: 0 })),
     unreadChatCount().catch(() => ({ count: 0 }))
   ])
-  unreadNum.value = (notif.count || 0) + (chat.count || 0)
+  // Set baseline counts; WebSocket pushes will increment from here
+  wsStore.notifUnread = notif.count || 0
+  wsStore.chatUnread = chat.count || 0
 }
 
 onMounted(fetchUnread)

@@ -86,19 +86,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { listNotifications, markRead } from '@/api/notification'
 import { getConversations } from '@/api/chat'
+import { useWebSocketStore } from '@/stores/websocket'
 import NavActions from '@/components/NavActions.vue'
 
 const router = useRouter()
+const wsStore = useWebSocketStore()
 const activeTab = ref('system')
 const notifications = ref([])
 const loadingNotif = ref(false)
 const conversations = ref([])
 const loadingConvs = ref(false)
+
+let unsubNotif = null
 
 function timeAgo(t) {
   if (!t) return ''
@@ -141,7 +145,25 @@ async function switchToChat() {
   if (conversations.value.length === 0) { await fetchConversations() }
 }
 
-onMounted(fetchNotifications)
+// ── WebSocket real-time reception ──
+function startWebSocket() {
+  stopWebSocket()
+  unsubNotif = wsStore.onNotification(notif => {
+    // Prepend to list and mark as unread
+    notifications.value = [notif, ...notifications.value]
+  })
+}
+
+function stopWebSocket() { if (unsubNotif) { unsubNotif(); unsubNotif = null } }
+
+onMounted(async () => {
+  await fetchNotifications()
+  // Reset unread counter since user is viewing the notification list
+  wsStore.resetNotifUnread()
+  startWebSocket()
+})
+
+onBeforeUnmount(stopWebSocket)
 </script>
 
 <style scoped>

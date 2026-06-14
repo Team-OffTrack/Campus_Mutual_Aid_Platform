@@ -7,6 +7,7 @@ import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.NotificationMapper;
 import cn.seecoder.campushelp.service.NotificationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +17,12 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public NotificationServiceImpl(NotificationMapper notificationMapper) {
+    public NotificationServiceImpl(NotificationMapper notificationMapper,
+                                   SimpMessagingTemplate messagingTemplate) {
         this.notificationMapper = notificationMapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -32,6 +36,11 @@ public class NotificationServiceImpl implements NotificationService {
         n.setIsRead(0);
         n.setRelatedDemandId(relatedDemandId);
         notificationMapper.insert(n);
+
+        // Push to recipient via WebSocket (best-effort, dropped if recipient is offline)
+        messagingTemplate.convertAndSendToUser(
+                userId.toString(), "/queue/notifications", n);
+
         return n;
     }
 

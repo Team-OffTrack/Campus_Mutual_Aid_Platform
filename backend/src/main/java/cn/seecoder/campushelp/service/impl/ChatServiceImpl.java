@@ -8,6 +8,7 @@ import cn.seecoder.campushelp.mapper.*;
 import cn.seecoder.campushelp.service.ChatService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,15 +39,18 @@ public class ChatServiceImpl implements ChatService {
     private final MessageMapper messageMapper;
     private final DemandMapper demandMapper;
     private final UserMapper userMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatServiceImpl(ConversationMapper conversationMapper,
                            MessageMapper messageMapper,
                            DemandMapper demandMapper,
-                           UserMapper userMapper) {
+                           UserMapper userMapper,
+                           SimpMessagingTemplate messagingTemplate) {
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -183,6 +187,11 @@ public class ChatServiceImpl implements ChatService {
         conv.setLastMessage(snapshot.length() > MAX_MESSAGE_PREVIEW ? snapshot.substring(0, MAX_MESSAGE_PREVIEW) : snapshot);
         conv.setLastMessageAt(LocalDateTime.now());
         conversationMapper.updateById(conv);
+
+        // Push to recipient via WebSocket (best-effort, dropped if recipient is offline)
+        Long recipientId = conv.otherUserId(userId);
+        messagingTemplate.convertAndSendToUser(
+                recipientId.toString(), "/queue/chat", msg);
 
         return msg;
     }
