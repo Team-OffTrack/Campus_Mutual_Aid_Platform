@@ -56,6 +56,11 @@ const routes = [
     component: () => import('@/views/DemandPublish.vue')
   },
   {
+    path: '/favorites',
+    name: 'MyFavorites',
+    component: () => import('@/views/MyFavorites.vue')
+  },
+  {
     path: '/orders',
     name: 'MyOrders',
     component: () => import('@/views/MyOrders.vue')

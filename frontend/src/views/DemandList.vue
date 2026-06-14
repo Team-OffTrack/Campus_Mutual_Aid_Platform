@@ -42,6 +42,7 @@
             <th class="col-reward">报酬</th>
             <th class="col-loc">地点</th>
             <th class="col-time">时间</th>
+            <th class="col-fav">收藏</th>
           </tr>
         </thead>
         <tbody>
@@ -56,6 +57,12 @@
             <td class="td-reward">{{ rewardText(d) }}</td>
             <td class="td-loc">{{ d.location || '—' }}</td>
             <td class="td-time">{{ timeAgo(d.createTime) }}</td>
+            <td class="td-fav">
+              <van-icon
+                :name="favoritesStore.isFavorited(d.demandId) ? 'star' : 'star-o'"
+                :color="favoritesStore.isFavorited(d.demandId) ? '#EAB308' : '#C4C0CA'"
+                size="18" class="fav-icon" @click.stop="handleFavToggle(d)" />
+            </td>
           </tr>
         </tbody>
       </table>
@@ -96,7 +103,13 @@
             <van-icon v-if="d.isAnonymous" name="eye-o" size="13" />
             {{ d.publisherName }}
           </span>
-          <span class="footer-time">{{ timeAgo(d.createTime) }}</span>
+          <div class="footer-right">
+            <span class="footer-time">{{ timeAgo(d.createTime) }}</span>
+            <van-icon
+              :name="favoritesStore.isFavorited(d.demandId) ? 'star' : 'star-o'"
+              :color="favoritesStore.isFavorited(d.demandId) ? '#EAB308' : '#C4C0CA'"
+              size="18" class="fav-icon" @click.stop="handleFavToggle(d)" />
+          </div>
         </div>
       </div>
     </van-list>
@@ -111,9 +124,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { listDemands } from '@/api/demand'
+import { showToast } from 'vant'
+import { listDemands, favoriteDemand, unfavoriteDemand } from '@/api/demand'
+import { useFavoritesStore } from '@/stores/favorites'
 import NavActions from '@/components/NavActions.vue'
 import { TYPE_LABELS, TYPE_STYLES, rewardText } from '@/constants/demandTypes'
+
+const favoritesStore = useFavoritesStore()
 
 const router = useRouter()
 const demands = ref([])
@@ -178,6 +195,22 @@ function onSearch() {
 
 const fetchError = ref(false)
 const loadError = ref(false)
+
+async function handleFavToggle(d) {
+  try {
+    if (favoritesStore.isFavorited(d.demandId)) {
+      await unfavoriteDemand(d.demandId)
+      favoritesStore.removeOptimistic(d.demandId)
+      showToast('已取消收藏')
+    } else {
+      await favoriteDemand(d.demandId)
+      favoritesStore.addOptimistic(d.demandId)
+      showToast('已收藏')
+    }
+  } catch (e) {
+    showToast(e.message || '操作失败')
+  }
+}
 
 async function fetchDemands() {
   loading.value = true
@@ -290,7 +323,10 @@ onMounted(() => fetchDemands())
   padding-top: 6px; border-top: 1px solid var(--c-border);
 }
 .footer-pub { font-size: 12px; color: var(--c-text-2); display: flex; align-items: center; gap: 4px; font-weight: 500; }
+.footer-right { display: flex; align-items: center; gap: 8px; }
 .footer-time { font-size: 11px; color: var(--c-text-4); }
+.fav-icon { cursor: pointer; flex-shrink: 0; }
+.fav-icon:hover { transform: scale(1.15); transition: transform 0.15s; }
 
 /* ═══════════════════════════════════════
    FAB
@@ -344,6 +380,8 @@ onMounted(() => fetchDemands())
   .td-reward { font-size: 13px; font-weight: 600; color: var(--c-warning); }
   .td-loc { font-size: 13px; color: var(--c-text-3); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .td-time { font-size: 12px; color: var(--c-text-3); white-space: nowrap; }
+  .col-fav { width: 60px; text-align: center; }
+  .td-fav { text-align: center; }
   .table-loading, .table-finished, .table-empty { text-align: center; padding: 24px; font-size: 13px; color: var(--c-text-3); }
 }
 

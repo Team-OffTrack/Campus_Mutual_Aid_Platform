@@ -13,6 +13,7 @@ import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.service.DemandService;
+import cn.seecoder.campushelp.service.FavoriteService;
 import cn.seecoder.campushelp.service.NotificationService;
 import cn.seecoder.campushelp.service.PointsService;
 import cn.seecoder.campushelp.service.TeamMemberService;
@@ -29,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,17 +41,20 @@ public class DemandServiceImpl implements DemandService {
     private final NotificationService notificationService;
     private final TeamMemberService teamMemberService;
     private final PointsService pointsService;
+    private final FavoriteService favoriteService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
                              NotificationService notificationService,
                              TeamMemberService teamMemberService,
-                             PointsService pointsService) {
+                             PointsService pointsService,
+                             FavoriteService favoriteService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
         this.notificationService = notificationService;
         this.teamMemberService = teamMemberService;
         this.pointsService = pointsService;
+        this.favoriteService = favoriteService;
     }
 
     @Override
@@ -125,6 +130,11 @@ public class DemandServiceImpl implements DemandService {
 
     @Override
     public Page<DemandResponse> list(int pageNum, int pageSize, String type, String keyword, String sortBy) {
+        return list(null, pageNum, pageSize, type, keyword, sortBy);
+    }
+
+    @Override
+    public Page<DemandResponse> list(Long userId, int pageNum, int pageSize, String type, String keyword, String sortBy) {
         LambdaQueryWrapper<Demand> wrapper = new LambdaQueryWrapper<>();
         if (type != null && !type.isBlank()) {
             wrapper.eq(Demand::getType, type);
@@ -167,11 +177,19 @@ public class DemandServiceImpl implements DemandService {
             }
         }
 
+        // Load favorited status for the current user
+        final Set<Long> favoritedIds;
+        if (userId != null) {
+            favoritedIds = favoriteService.getFavoritedDemandIds(userId);
+        } else {
+            favoritedIds = null;
+        }
+
         Page<DemandResponse> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         final Map<Long, User> finalMap = userMap;
         resultPage.setRecords(demands.stream()
                 .map(d -> {
-                    DemandResponse rsp = DemandResponse.from(d, finalMap.get(d.getPublisherId()));
+                    DemandResponse rsp = DemandResponse.from(d, finalMap.get(d.getPublisherId()), null, null, favoritedIds);
                     if ("team".equals(d.getType())) {
                         rsp.setJoinedCount(teamCounts.getOrDefault(d.getDemandId(), 0));
                     }
@@ -183,6 +201,11 @@ public class DemandServiceImpl implements DemandService {
 
     @Override
     public DemandResponse getById(Long demandId) {
+        return getById(demandId, null);
+    }
+
+    @Override
+    public DemandResponse getById(Long demandId, Long userId) {
         Demand demand = findDemandOrFail(demandId);
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;
@@ -192,7 +215,11 @@ public class DemandServiceImpl implements DemandService {
             teamMembers = teamMemberService.getJoinedMembers(demandId);
         }
 
-        return DemandResponse.from(demand, publisher, acceptor, teamMembers);
+        DemandResponse rsp = DemandResponse.from(demand, publisher, acceptor, teamMembers);
+        if (userId != null) {
+            rsp.setFavorited(favoriteService.isFavorited(userId, demandId));
+        }
+        return rsp;
     }
 
     @Override

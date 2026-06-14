@@ -77,3 +77,17 @@ export function getMyMembership(demandId) {
 export function myTeamOrders() {
   return client.get('/demands/my/team')
 }
+
+// ── Favorite APIs ──
+
+export function favoriteDemand(demandId) {
+  return client.post(`/demands/${demandId}/favorite`)
+}
+
+export function unfavoriteDemand(demandId) {
+  return client.delete(`/demands/${demandId}/favorite`)
+}
+
+export function myFavorites(params) {
+  return client.get('/demands/my/favorites', { params })
+}

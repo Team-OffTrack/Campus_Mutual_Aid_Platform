@@ -5,6 +5,7 @@ import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.service.DemandService;
+import cn.seecoder.campushelp.service.FavoriteService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -24,9 +25,11 @@ import java.util.List;
 public class DemandController {
 
     private final DemandService demandService;
+    private final FavoriteService favoriteService;
 
-    public DemandController(DemandService demandService) {
+    public DemandController(DemandService demandService, FavoriteService favoriteService) {
         this.demandService = demandService;
+        this.favoriteService = favoriteService;
     }
 
     /** Publish a new demand. */
@@ -48,12 +51,14 @@ public class DemandController {
     /** Paginated demand list with optional type, keyword filters and sort order. */
     @GetMapping
     public ApiResult<Page<DemandResponse>> list(
+            Authentication auth,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sortBy) {
-        return ApiResult.success(demandService.list(pageNum, pageSize, type, keyword, sortBy));
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(demandService.list(userId, pageNum, pageSize, type, keyword, sortBy));
     }
 
     /** List demands where the current user is publisher or acceptor. */
@@ -64,10 +69,36 @@ public class DemandController {
         return ApiResult.success(demandService.myOrders(userId, role));
     }
 
+    /** Paginated list of the current user's favorited demands. */
+    @GetMapping("/my/favorites")
+    public ApiResult<Page<DemandResponse>> myFavorites(Authentication auth,
+                                                        @RequestParam(defaultValue = "1") int pageNum,
+                                                        @RequestParam(defaultValue = "10") int pageSize) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(favoriteService.listFavorites(userId, pageNum, pageSize));
+    }
+
     /** Get a single demand with full detail including acceptor info. */
     @GetMapping("/{demandId}")
-    public ApiResult<DemandResponse> getById(@PathVariable Long demandId) {
-        return ApiResult.success(demandService.getById(demandId));
+    public ApiResult<DemandResponse> getById(Authentication auth, @PathVariable Long demandId) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(demandService.getById(demandId, userId));
+    }
+
+    /** Add a demand to favorites. */
+    @PostMapping("/{demandId}/favorite")
+    public ApiResult<Void> favorite(Authentication auth, @PathVariable Long demandId) {
+        Long userId = (Long) auth.getPrincipal();
+        favoriteService.favorite(userId, demandId);
+        return ApiResult.success();
+    }
+
+    /** Remove a demand from favorites. */
+    @DeleteMapping("/{demandId}/favorite")
+    public ApiResult<Void> unfavorite(Authentication auth, @PathVariable Long demandId) {
+        Long userId = (Long) auth.getPrincipal();
+        favoriteService.unfavorite(userId, demandId);
+        return ApiResult.success();
     }
 
     /** Accept an OPEN demand. Cannot accept your own. */

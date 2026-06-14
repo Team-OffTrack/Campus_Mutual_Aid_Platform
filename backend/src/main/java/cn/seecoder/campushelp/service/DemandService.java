@@ -25,8 +25,14 @@ public interface DemandService {
     /** Paginated list with optional type, keyword filters and sort order. */
     Page<DemandResponse> list(int pageNum, int pageSize, String type, String keyword, String sortBy);
 
+    /** Paginated list with favorited status for the current user. */
+    Page<DemandResponse> list(Long userId, int pageNum, int pageSize, String type, String keyword, String sortBy);
+
     /** Get a single demand with full publisher and acceptor info. */
     DemandResponse getById(Long demandId);
+
+    /** Get a single demand with favorited status for the current user. */
+    DemandResponse getById(Long demandId, Long userId);
 
     /** Cancel an OPEN or IN_PROGRESS demand. Only the publisher may cancel. */
     void cancel(Long demandId, Long userId);

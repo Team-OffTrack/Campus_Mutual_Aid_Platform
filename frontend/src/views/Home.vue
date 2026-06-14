@@ -138,6 +138,19 @@
             <van-icon name="arrow" class="action-arrow" />
           </div>
 
+          <div class="action-card card" @click="router.push('/favorites')" role="button">
+            <div class="action-left">
+              <div class="action-icon-wrap" style="background:#FFF8E1">
+                <van-icon name="star-o" color="#EAB308" size="20" />
+              </div>
+              <div>
+                <p class="action-title">我的收藏</p>
+                <p class="action-sub">查看收藏的需求</p>
+              </div>
+            </div>
+            <van-icon name="arrow" class="action-arrow" />
+          </div>
+
           <div v-if="authStore.isAdmin" class="action-card card admin-entry" @click="router.push('/admin/users')" role="button">
             <div class="action-left">
               <div class="action-icon-wrap" style="background:#FFF8E1">

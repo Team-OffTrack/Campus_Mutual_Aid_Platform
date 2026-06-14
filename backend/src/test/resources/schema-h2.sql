@@ -153,3 +153,13 @@ CREATE TABLE IF NOT EXISTS daily_checkin (
     UNIQUE (user_id, checkin_date),
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS user_favorite (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    demand_id   BIGINT NOT NULL,
+    user_id     BIGINT NOT NULL,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (demand_id, user_id),
+    FOREIGN KEY (demand_id) REFERENCES demand(demand_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);

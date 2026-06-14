@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Demand response including publisher and acceptor display info.
@@ -35,23 +36,31 @@ public class DemandResponse {
     private Map<String, Object> attributes;
     private List<TeamMemberResponse> teamMembers;
     private Integer joinedCount;
+    private Boolean favorited;
     private LocalDateTime createTime;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /** Lightweight constructor used by list queries (only publisher loaded). */
     public static DemandResponse from(Demand demand, User publisher) {
-        return from(demand, publisher, null);
+        return from(demand, publisher, null, null, null);
     }
 
     /** Full constructor with optional acceptor info for detail views. */
     public static DemandResponse from(Demand demand, User publisher, User acceptor) {
-        return from(demand, publisher, acceptor, null);
+        return from(demand, publisher, acceptor, null, null);
     }
 
     /** Full constructor with optional team member info for team-type demands. */
     public static DemandResponse from(Demand demand, User publisher, User acceptor,
                                        List<TeamMemberResponse> teamMembers) {
+        return from(demand, publisher, acceptor, teamMembers, null);
+    }
+
+    /** Master constructor with optional favoritedIds for batch favorited status. */
+    public static DemandResponse from(Demand demand, User publisher, User acceptor,
+                                       List<TeamMemberResponse> teamMembers,
+                                       Set<Long> favoritedIds) {
         DemandResponse rsp = new DemandResponse();
         rsp.demandId = demand.getDemandId();
         rsp.publisherId = demand.getPublisherId();
@@ -68,6 +77,7 @@ public class DemandResponse {
         rsp.status = demand.getStatus();
         rsp.attributes = parseAttributes(demand.getAttributes());
         rsp.teamMembers = teamMembers;
+        rsp.favorited = favoritedIds != null && favoritedIds.contains(demand.getDemandId());
         rsp.createTime = demand.getCreateTime();
 
         if (demand.isAnonymous()) {
@@ -120,5 +130,7 @@ public class DemandResponse {
     public void setTeamMembers(List<TeamMemberResponse> teamMembers) { this.teamMembers = teamMembers; }
     public Integer getJoinedCount() { return joinedCount; }
     public void setJoinedCount(Integer joinedCount) { this.joinedCount = joinedCount; }
+    public Boolean getFavorited() { return favorited; }
+    public void setFavorited(Boolean favorited) { this.favorited = favorited; }
     public LocalDateTime getCreateTime() { return createTime; }
 }

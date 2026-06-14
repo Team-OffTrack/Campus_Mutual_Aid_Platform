@@ -165,6 +165,15 @@
 
       <!-- ═══ Action area ═══ -->
       <div class="action-section">
+        <!-- Favorite button — always visible -->
+        <van-button v-if="demand" block round plain class="action-btn fav-btn"
+          :class="{ 'fav-on': favorited }"
+          :icon="favorited ? 'star' : 'star-o'"
+          :loading="favLoading"
+          @click="handleToggleFavorite">
+          {{ favorited ? '已收藏' : '收藏' }}
+        </van-button>
+
         <template v-if="demand.status === 'OPEN'">
           <!-- Team actions -->
           <template v-if="demand.type === 'team'">
@@ -365,11 +374,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import ImageViewer from '@/components/ImageViewer.vue'
-import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leaveTeam, getTeamApplicants, getMyMembership, approveApplicant, rejectApplicant, getTeamMembers } from '@/api/demand'
+import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leaveTeam, getTeamApplicants, getMyMembership, approveApplicant, rejectApplicant, getTeamMembers, favoriteDemand, unfavoriteDemand } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useFavoritesStore } from '@/stores/favorites'
 import { TYPE_LABELS, TYPE_STYLES, rewardText } from '@/constants/demandTypes'
 
 const router = useRouter()
@@ -379,6 +389,9 @@ const authStore = useAuthStore()
 const demand = ref(null)
 const error = ref(null)
 const acting = ref(false)
+const favorited = ref(false)
+const favLoading = ref(false)
+const favoritesStore = useFavoritesStore()
 const evaluations = ref([])
 const myEval = ref(null)
 const ratingValue = ref(5)
@@ -483,6 +496,7 @@ async function fetchDetail() {
   try {
     const id = route.params.demandId
     demand.value = await getDemand(id)
+    favorited.value = demand.value.favorited || false
     error.value = null
     // Fetch team data for team-type demands
     if (demand.value.type === 'team' && demand.value.teamMembers) {
@@ -549,6 +563,28 @@ async function submitUpdateEvaluation() {
     fetchEvaluations()
   } catch (e) { showToast(e.message || '修改失败，请重试') }
   finally { submittingEval.value = false }
+}
+
+async function handleToggleFavorite() {
+  if (favLoading.value || !demand.value) return
+  favLoading.value = true
+  try {
+    if (favorited.value) {
+      await unfavoriteDemand(demand.value.demandId)
+      favoritesStore.removeOptimistic(demand.value.demandId)
+      favorited.value = false
+      showToast('已取消收藏')
+    } else {
+      await favoriteDemand(demand.value.demandId)
+      favoritesStore.addOptimistic(demand.value.demandId)
+      favorited.value = true
+      showToast('已收藏')
+    }
+  } catch (e) {
+    showToast(e.message || '操作失败')
+  } finally {
+    favLoading.value = false
+  }
 }
 
 async function handleStartChat() {
@@ -738,6 +774,8 @@ onMounted(fetchDetail)
 .action-btn { height: 50px !important; font-size: 16px !important; font-weight: 600 !important; }
 
 .action-row { display: flex; flex-direction: column; gap: 10px; }
+.fav-btn { transition: all 0.2s; margin-bottom: 12px; }
+.fav-on { color: #EAB308 !important; border-color: #EAB308 !important; }
 .cancel-btn-secondary {
   color: var(--c-text-2) !important; border-color: var(--c-border) !important;
   box-shadow: none !important;
