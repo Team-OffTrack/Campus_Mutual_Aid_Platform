@@ -12,4 +12,5 @@ public final class PointsTransactionType {
     public static final String CANCEL_REFUND = "CANCEL_REFUND";
     public static final String COMPLETE_EARN = "COMPLETE_EARN";
     public static final String ADMIN_ADJUST = "ADMIN_ADJUST";
+    public static final String EDIT_ADJUST = "EDIT_ADJUST";
 }

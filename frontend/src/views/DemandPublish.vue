@@ -1,7 +1,7 @@
 <template>
   <div class="page publish-page">
     <van-nav-bar left-arrow fixed placeholder class="publish-nav" @click-left="router.back()">
-      <template #title><span class="nav-title">发布需求</span></template>
+      <template #title><span class="nav-title">{{ pageTitle }}</span></template>
     </van-nav-bar>
 
     <div class="content-wrap">
@@ -10,7 +10,7 @@
           <!-- Type selector -->
           <div class="form-section">
             <label class="section-label">需求类型</label>
-            <div class="type-grid">
+            <div class="type-grid" :class="{ 'type-grid-disabled': isEditMode }">
               <div v-for="t in demandTypes" :key="t.value"
                 class="type-chip" :class="{ 'chip-active': form.type === t.value }"
                 :style="form.type === t.value ? { background: t.color, borderColor: t.color, color: '#fff' } : {}"
@@ -199,6 +199,7 @@
               accept="image/*"
               :before-read="beforeReadImage"
               :after-read="afterReadImage"
+              @delete="handleImageDelete"
               @oversize="showToast('图片不能超过5MB')" />
           </div>
 
@@ -242,7 +243,7 @@
           </div>
 
           <van-button block native-type="submit" :loading="loading" class="submit-btn" round>
-            发布需求
+            {{ isEditMode ? '保存修改' : '发布需求' }}
           </van-button>
         </van-form>
       </div>
@@ -251,10 +252,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
-import { publishDemand, uploadDemandImage } from '@/api/demand'
+import { publishDemand, getDemand, updateDemand, uploadDemandImage } from '@/api/demand'
 import { DEMAND_TYPES, TYPE_CONFIG } from '@/constants/demandTypes'
 
 const router = useRouter()
@@ -264,12 +265,16 @@ const focusedField = ref(null)
 const imageFiles = ref([])
 const uploadedImageUrls = ref([])
 
+const isEditMode = computed(() => !!route.params.id)
+const pageTitle = computed(() => isEditMode.value ? '编辑需求' : '发布需求')
+
 const initialType = route.query.type
 const validTypes = ['errand', 'trade', 'team', 'lost_found', 'study', 'other']
 const form = reactive({
   type: validTypes.includes(initialType) ? initialType : 'errand',
   title: '', description: '', location: '',
-  rewardType: 'point', rewardAmount: 0, isAnonymous: false
+  rewardType: 'point', rewardAmount: 0, isAnonymous: false,
+  deadline: null
 })
 
 const attrs = reactive({
@@ -298,25 +303,70 @@ async function afterReadImage(item) {
   }
 }
 
+async function handleImageDelete(item) {
+  if (item.url && uploadedImageUrls.value.includes(item.url)) {
+    uploadedImageUrls.value = uploadedImageUrls.value.filter(u => u !== item.url)
+  }
+}
+
+function buildAttributes() {
+  const typeAttrs = attrs[form.type]
+  if (!typeAttrs) return undefined
+  const filtered = {}
+  for (const [k, v] of Object.entries(typeAttrs)) {
+    if (v !== '' && v !== null && v !== undefined) filtered[k] = v
+  }
+  return Object.keys(filtered).length > 0 ? filtered : undefined
+}
+
+async function loadDemand(id) {
+  try {
+    const data = await getDemand(id)
+    form.type = data.type
+    form.title = data.title
+    form.description = data.description
+    form.location = data.location || ''
+    form.rewardAmount = data.rewardAmount || 0
+    form.isAnonymous = data.isAnonymous || false
+    form.deadline = data.deadline || null
+    form.rewardType = data.rewardType || 'point'
+
+    if (data.images) {
+      const urls = data.images.split(',').filter(Boolean)
+      imageFiles.value = urls.map(url => ({ url, status: 'done' }))
+      uploadedImageUrls.value = [...urls]
+    }
+
+    if (data.attributes && attrs[data.type]) {
+      Object.keys(attrs[data.type]).forEach(key => {
+        if (data.attributes[key] !== undefined) {
+          attrs[data.type][key] = data.attributes[key]
+        }
+      })
+    }
+  } catch (e) {
+    showToast('加载失败')
+    router.back()
+  }
+}
+
 async function handlePublish() {
   loading.value = true
   try {
-    const payload = { ...form }
-    if (!payload.location) payload.location = null
-    if (!payload.rewardAmount) payload.rewardAmount = 0
-    if (uploadedImageUrls.value.length > 0) {
-      payload.images = uploadedImageUrls.value.join(',')
+    const payload = {
+      type: form.type,
+      title: form.title,
+      description: form.description,
+      location: form.location || null,
+      deadline: form.deadline || null,
+      rewardAmount: form.rewardAmount || 0,
+      isAnonymous: form.isAnonymous,
+      images: uploadedImageUrls.value.length > 0 ? uploadedImageUrls.value.join(',') : null,
+      attributes: buildAttributes()
     }
-    // Build type-specific attributes
-    const typeAttrs = attrs[form.type]
-    if (typeAttrs) {
-      const filtered = {}
-      for (const [k, v] of Object.entries(typeAttrs)) {
-        if (v !== '' && v !== null && v !== undefined) filtered[k] = v
-      }
-      if (Object.keys(filtered).length > 0) {
-        payload.attributes = filtered
-      }
+    // rewardType is only sent on publish (not editable on update)
+    if (!isEditMode.value) {
+      payload.rewardType = form.rewardType
     }
     // team: validate team_size
     if (form.type === 'team' && attrs.team.team_size < 2) {
@@ -327,14 +377,26 @@ async function handlePublish() {
     // trade: sync item_price to rewardAmount (point-based)
     if (form.type === 'trade' && attrs.trade.item_price != null) {
       payload.rewardAmount = attrs.trade.item_price
-      payload.rewardType = 'point'
     }
-    await publishDemand(payload)
-    showToast('发布成功')
-    router.push('/demands')
-  } catch (e) { showToast(e.message || '发布失败，请重试') }
+
+    if (isEditMode.value) {
+      await updateDemand(route.params.id, payload)
+      showToast('保存成功')
+      router.push(`/demands/${route.params.id}`)
+    } else {
+      await publishDemand(payload)
+      showToast('发布成功')
+      router.push('/demands')
+    }
+  } catch (e) { showToast(e.message || '操作失败，请重试') }
   finally { loading.value = false }
 }
+
+onMounted(async () => {
+  if (isEditMode.value) {
+    await loadDemand(route.params.id)
+  }
+})
 </script>
 
 <style scoped>
@@ -363,6 +425,7 @@ async function handlePublish() {
 }
 .type-chip:active { opacity: 0.72; }
 .chip-active { box-shadow: 0 2px 8px rgba(0,0,0,0.15); border-color: transparent !important; }
+.type-grid-disabled { opacity: 0.6; pointer-events: none; }
 
 /* Field wraps */
 .field-wrap {

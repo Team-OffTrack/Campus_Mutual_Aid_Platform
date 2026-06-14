@@ -4,13 +4,14 @@ import cn.seecoder.campushelp.common.BusinessException;
 import cn.seecoder.campushelp.common.ResultCode;
 import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
+import cn.seecoder.campushelp.dto.TeamMemberResponse;
+import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
-import cn.seecoder.campushelp.dto.TeamMemberResponse;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.NotificationService;
 import cn.seecoder.campushelp.service.PointsService;
@@ -392,6 +393,74 @@ public class DemandServiceImpl implements DemandService {
         return demands.stream()
                 .map(d -> DemandResponse.from(d, userMap.get(d.getPublisherId())))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public DemandResponse updateDemand(Long demandId, Long userId, UpdateDemandRequest request) {
+        Demand demand = findDemandOrFail(demandId);
+
+        // 1. Ownership check
+        if (!demand.getPublisherId().equals(userId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只能编辑自己的需求");
+        }
+
+        // 2. Status check — only OPEN
+        if (!DemandStatus.OPEN.equals(demand.getStatus())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "只能编辑已发布状态的需求");
+        }
+
+        // 3. Type match validation
+        if (!demand.getType().equals(request.getType())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "需求类型不可更改");
+        }
+
+        // 4. Validate deadline
+        if (request.getDeadline() != null && request.getDeadline().isBefore(java.time.LocalDateTime.now())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "截止时间不能是过去的时间");
+        }
+
+        // 5. Validate rewardAmount
+        int newAmount = request.getRewardAmount() != null ? request.getRewardAmount() : 0;
+        if (newAmount < 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "悬赏金额不能为负数");
+        }
+
+        // 6. Validate type-specific attributes
+        if (request.getAttributes() != null && !request.getAttributes().isEmpty()) {
+            validateAttributes(demand.getType(), request.getAttributes());
+        }
+
+        // 7. Handle points adjustment for point-reward demands
+        int oldAmount = demand.getRewardAmount() != null ? demand.getRewardAmount() : 0;
+        if ("point".equals(demand.getRewardType()) && newAmount != oldAmount) {
+            pointsService.adjustFrozenPoints(userId, oldAmount, newAmount, demandId);
+        }
+
+        // 8. Serialize attributes to JSON
+        if (request.getAttributes() != null && !request.getAttributes().isEmpty()) {
+            try {
+                demand.setAttributes(OBJECT_MAPPER.writeValueAsString(request.getAttributes()));
+            } catch (IOException e) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "属性数据格式错误");
+            }
+        } else {
+            demand.setAttributes(null);
+        }
+
+        // 9. Update all editable fields
+        demand.setTitle(request.getTitle());
+        demand.setDescription(request.getDescription());
+        demand.setLocation(request.getLocation());
+        demand.setDeadline(request.getDeadline());
+        demand.setRewardAmount(newAmount);
+        demand.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous() ? 1 : 0);
+        demand.setImages(request.getImages());
+
+        demandMapper.updateById(demand);
+
+        User publisher = userMapper.selectById(userId);
+        return DemandResponse.from(demand, publisher);
     }
 
     private void validateAttributes(String type, Map<String, Object> attrs) {

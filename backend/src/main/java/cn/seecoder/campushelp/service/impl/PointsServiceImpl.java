@@ -177,6 +177,38 @@ public class PointsServiceImpl implements PointsService {
 
     @Override
     @Transactional
+    public void adjustFrozenPoints(Long userId, int oldAmount, int newAmount, Long demandId) {
+        if (oldAmount == newAmount) return;
+
+        UserAccount account = getUserAccountForUpdate(userId);
+        int diff = newAmount - oldAmount;
+
+        if (diff > 0) {
+            // Increasing reward: freeze extra points
+            if (account.getAvailablePoints() < diff) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "可用积分不足，需要 " + diff + " 积分");
+            }
+            account.setAvailablePoints(account.getAvailablePoints() - diff);
+            account.setFrozenPoints(account.getFrozenPoints() + diff);
+            userAccountMapper.updateById(account);
+            insertTransaction(userId, -diff, account.getAvailablePoints(),
+                    PointsTransactionType.EDIT_ADJUST, demandId, "编辑需求增加冻结积分");
+        } else {
+            // Decreasing reward: unfreeze points
+            int unfreezeAmount = -diff;
+            if (account.getFrozenPoints() < unfreezeAmount) {
+                throw new BusinessException(ResultCode.INTERNAL_ERROR, "冻结积分不足，数据异常");
+            }
+            account.setFrozenPoints(account.getFrozenPoints() - unfreezeAmount);
+            account.setAvailablePoints(account.getAvailablePoints() + unfreezeAmount);
+            userAccountMapper.updateById(account);
+            insertTransaction(userId, unfreezeAmount, account.getAvailablePoints(),
+                    PointsTransactionType.EDIT_ADJUST, demandId, "编辑需求减少冻结积分");
+        }
+    }
+
+    @Override
+    @Transactional
     public void awardSignupBonus(Long userId) {
         UserAccount account = getUserAccountForUpdate(userId);
         account.setAvailablePoints(account.getAvailablePoints() + SIGNUP_BONUS_POINTS);

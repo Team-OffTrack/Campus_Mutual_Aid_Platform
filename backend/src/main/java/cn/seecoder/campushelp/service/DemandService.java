@@ -2,6 +2,7 @@ package cn.seecoder.campushelp.service;
 
 import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
+import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,4 +45,7 @@ public interface DemandService {
 
     /** List demands where the user is a joined team member. */
     List<DemandResponse> myTeamOrders(Long userId);
+
+    /** Update an OPEN demand's editable fields. Only the publisher may edit. */
+    DemandResponse updateDemand(Long demandId, Long userId, UpdateDemandRequest request);
 }

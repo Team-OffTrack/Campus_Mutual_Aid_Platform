@@ -3,6 +3,7 @@ package cn.seecoder.campushelp.controller;
 import cn.seecoder.campushelp.common.ApiResult;
 import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.DemandResponse;
+import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.service.DemandService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
@@ -81,6 +82,15 @@ public class DemandController {
     public ApiResult<DemandResponse> complete(Authentication auth, @PathVariable Long demandId) {
         Long userId = (Long) auth.getPrincipal();
         return ApiResult.success(demandService.complete(demandId, userId));
+    }
+
+    /** Update an OPEN demand's editable fields. Only the publisher may edit. */
+    @PutMapping("/{demandId}")
+    public ApiResult<DemandResponse> updateDemand(Authentication auth,
+                                                   @PathVariable Long demandId,
+                                                   @Valid @RequestBody UpdateDemandRequest request) {
+        Long userId = (Long) auth.getPrincipal();
+        return ApiResult.success(demandService.updateDemand(demandId, userId, request));
     }
 
     /** Cancel an OPEN or IN_PROGRESS demand (publisher only). */

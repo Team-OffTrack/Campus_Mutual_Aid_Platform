@@ -3,7 +3,9 @@ package cn.seecoder.campushelp.controller;
 import cn.seecoder.campushelp.dto.CreateDemandRequest;
 import cn.seecoder.campushelp.dto.LoginRequest;
 import cn.seecoder.campushelp.dto.RegisterRequest;
+import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.mapper.DemandMapper;
+import cn.seecoder.campushelp.mapper.UserAccountMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,6 +40,9 @@ class DemandControllerTest {
 
     @Autowired
     private DemandMapper demandMapper;
+
+    @Autowired
+    private UserAccountMapper userAccountMapper;
 
     private String authToken;
 
@@ -391,5 +397,309 @@ class DemandControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].title").value("我的发布项"));
+    }
+
+    // ── Update demand tests ──
+
+    @Test
+    @DisplayName("PUT /demands/{id} updates demand fields successfully")
+    void updateDemand_valid_shouldReturnUpdated() throws Exception {
+        // Publish a demand
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("原始标题");
+        req.setDescription("原始描述");
+        req.setLocation("原始地点");
+        req.setRewardAmount(30);
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Update
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("修改后的标题");
+        upd.setDescription("修改后的描述");
+        upd.setLocation("新地点");
+        upd.setRewardAmount(30);
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("修改后的标题"))
+                .andExpect(jsonPath("$.data.description").value("修改后的描述"))
+                .andExpect(jsonPath("$.data.location").value("新地点"));
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} by non-publisher returns 403")
+    void updateDemand_byNonPublisher_shouldReturn403() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("我的需求");
+        req.setDescription("测试");
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Another user tries to edit
+        String otherToken = registerAndLogin("other999", "其他人");
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("非法修改");
+        upd.setDescription("尝试修改别人的需求");
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + otherToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} on non-OPEN status returns 400")
+    void updateDemand_nonOpenStatus_shouldReturn400() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("待接单");
+        req.setDescription("测试");
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Accept it first (status becomes IN_PROGRESS)
+        String otherToken = registerAndLogin("acc999", "接单人");
+        mockMvc.perform(put("/api/v1/demands/" + demandId + "/accept")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk());
+
+        // Try to edit IN_PROGRESS demand
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("尝试修改进行中的需求");
+        upd.setDescription("描述");
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} with type mismatch returns 400")
+    void updateDemand_typeMismatch_shouldReturn400() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("跑腿需求");
+        req.setDescription("测试");
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("trade"); // different type!
+        upd.setTitle("标题");
+        upd.setDescription("描述");
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} with missing title returns 400")
+    void updateDemand_missingTitle_shouldReturn400() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("标题");
+        req.setDescription("描述");
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle(""); // empty title
+        upd.setDescription("描述");
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} increasing reward freezes extra points")
+    void updateDemand_increaseReward_shouldFreezePoints() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("悬赏需求");
+        req.setDescription("测试积分");
+        req.setRewardType("point");
+        req.setRewardAmount(30);
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+
+        // Get publisher ID from the demand response
+        Long publisherId = objectMapper.readTree(body).path("data").path("publisherId").asLong();
+
+        // Get user account before update
+        var account1 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        int frozenBefore = account1.getFrozenPoints();
+        int availableBefore = account1.getAvailablePoints();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("悬赏增加");
+        upd.setDescription("描述");
+        upd.setRewardAmount(50); // increase from 30 to 50
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isOk());
+
+        // Verify frozen increased by 20
+        var account2 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        assertTrue(account2.getFrozenPoints() == frozenBefore + 20);
+        assertTrue(account2.getAvailablePoints() == availableBefore - 20);
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} decreasing reward refunds points")
+    void updateDemand_decreaseReward_shouldUnfreezePoints() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("悬赏需求");
+        req.setDescription("测试积分");
+        req.setRewardType("point");
+        req.setRewardAmount(50);
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+        Long publisherId = objectMapper.readTree(body).path("data").path("publisherId").asLong();
+
+        var account1 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        int frozenBefore = account1.getFrozenPoints();
+        int availableBefore = account1.getAvailablePoints();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("悬赏减少");
+        upd.setDescription("描述");
+        upd.setRewardAmount(20); // decrease from 50 to 20
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isOk());
+
+        // Verify frozen decreased by 30
+        var account2 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        assertTrue(account2.getFrozenPoints() == frozenBefore - 30);
+        assertTrue(account2.getAvailablePoints() == availableBefore + 30);
+    }
+
+    @Test
+    @DisplayName("PUT /demands/{id} with reward unchanged does not change points")
+    void updateDemand_rewardUnchanged_shouldNotChangePoints() throws Exception {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("悬赏不变");
+        req.setDescription("测试");
+        req.setRewardType("point");
+        req.setRewardAmount(30);
+
+        String body = mockMvc.perform(post("/api/v1/demands")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int demandId = objectMapper.readTree(body).path("data").path("demandId").asInt();
+        Long publisherId = objectMapper.readTree(body).path("data").path("publisherId").asLong();
+
+        var account1 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        int frozenBefore = account1.getFrozenPoints();
+        int availableBefore = account1.getAvailablePoints();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("悬赏不变");
+        upd.setDescription("修改了描述但不改悬赏");
+        upd.setRewardAmount(30); // same amount
+
+        mockMvc.perform(put("/api/v1/demands/" + demandId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(upd)))
+                .andExpect(status().isOk());
+
+        var account2 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        assertTrue(account2.getFrozenPoints() == frozenBefore);
+        assertTrue(account2.getAvailablePoints() == availableBefore);
     }
 }

@@ -24,6 +24,10 @@ export function completeDemand(demandId) {
   return client.put(`/demands/${demandId}/complete`)
 }
 
+export function updateDemand(demandId, data) {
+  return client.put(`/demands/${demandId}`, data)
+}
+
 export function myOrders(role) {
   return client.get('/demands/my', { params: { role } })
 }

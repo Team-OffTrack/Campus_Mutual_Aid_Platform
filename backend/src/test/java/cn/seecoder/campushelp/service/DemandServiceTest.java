@@ -4,6 +4,7 @@ import cn.seecoder.campushelp.common.BusinessException;
 import cn.seecoder.campushelp.dto.*;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.mapper.DemandMapper;
+import cn.seecoder.campushelp.mapper.UserAccountMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ class DemandServiceTest {
 
     @Autowired
     private DemandMapper demandMapper;
+
+    @Autowired
+    private UserAccountMapper userAccountMapper;
 
     private Long publisherId;
 
@@ -489,5 +493,172 @@ class DemandServiceTest {
         var orders = demandService.myOrders(acceptor.getUserId(), "acceptor");
         assertEquals(1, orders.size());
         assertEquals("可接需求", orders.get(0).getTitle());
+    }
+
+    // ── Update demand tests ──
+
+    @Test
+    @DisplayName("Update demand should change all editable fields")
+    void updateDemand_shouldUpdateAllFields() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("原始标题");
+        req.setDescription("原始描述");
+        req.setLocation("原始地点");
+        req.setRewardAmount(30);
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("新标题");
+        upd.setDescription("新描述");
+        upd.setLocation("新地点");
+        upd.setRewardAmount(40);
+        upd.setIsAnonymous(true);
+
+        DemandResponse updated = demandService.updateDemand(created.getDemandId(), publisherId, upd);
+
+        assertEquals("新标题", updated.getTitle());
+        assertEquals("新描述", updated.getDescription());
+        assertEquals("新地点", updated.getLocation());
+        assertEquals(40, updated.getRewardAmount());
+        assertTrue(updated.getIsAnonymous());
+        assertEquals("OPEN", updated.getStatus());
+    }
+
+    @Test
+    @DisplayName("Update by non-publisher throws forbidden")
+    void updateDemand_byNonPublisher_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("我的需求");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("other777"); reg.setPassword("pass"); reg.setName("其他人");
+        userService.register(reg);
+        User other = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "other777"));
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("非法修改");
+        upd.setDescription("尝试修改别人的需求");
+
+        assertThrows(BusinessException.class,
+                () -> demandService.updateDemand(created.getDemandId(), other.getUserId(), upd));
+    }
+
+    @Test
+    @DisplayName("Update non-OPEN demand throws")
+    void updateDemand_nonOpenStatus_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("待接单");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        // Accept it (IN_PROGRESS)
+        RegisterRequest reg = new RegisterRequest();
+        reg.setStudentId("acc777"); reg.setPassword("pass"); reg.setName("接单者");
+        userService.register(reg);
+        User acceptor = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getStudentId, "acc777"));
+        demandService.accept(created.getDemandId(), acceptor.getUserId());
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("尝试修改");
+        upd.setDescription("描述");
+
+        assertThrows(BusinessException.class,
+                () -> demandService.updateDemand(created.getDemandId(), publisherId, upd));
+    }
+
+    @Test
+    @DisplayName("Update with type mismatch throws")
+    void updateDemand_typeMismatch_shouldThrow() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("跑腿");
+        req.setDescription("测试");
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("trade"); // mismatch
+        upd.setTitle("标题");
+        upd.setDescription("描述");
+
+        assertThrows(BusinessException.class,
+                () -> demandService.updateDemand(created.getDemandId(), publisherId, upd));
+    }
+
+    @Test
+    @DisplayName("Update increase reward freezes extra points")
+    void updateDemand_increaseReward_shouldFreezeExtraPoints() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("悬赏增加");
+        req.setDescription("测试积分");
+        req.setRewardType("point");
+        req.setRewardAmount(30);
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        var account1 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        int frozenBefore = account1.getFrozenPoints();
+        int availableBefore = account1.getAvailablePoints();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("悬赏增加");
+        upd.setDescription("描述");
+        upd.setRewardAmount(60); // +30
+
+        demandService.updateDemand(created.getDemandId(), publisherId, upd);
+
+        var account2 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        assertTrue(account2.getFrozenPoints() == frozenBefore + 30);
+        assertTrue(account2.getAvailablePoints() == availableBefore - 30);
+    }
+
+    @Test
+    @DisplayName("Update decrease reward refunds points")
+    void updateDemand_decreaseReward_shouldRefundPoints() {
+        CreateDemandRequest req = new CreateDemandRequest();
+        req.setType("errand");
+        req.setTitle("悬赏减少");
+        req.setDescription("测试积分");
+        req.setRewardType("point");
+        req.setRewardAmount(60);
+        DemandResponse created = demandService.publish(publisherId, req);
+
+        var account1 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        int frozenBefore = account1.getFrozenPoints();
+        int availableBefore = account1.getAvailablePoints();
+
+        UpdateDemandRequest upd = new UpdateDemandRequest();
+        upd.setType("errand");
+        upd.setTitle("悬赏减少");
+        upd.setDescription("描述");
+        upd.setRewardAmount(20); // -40
+
+        demandService.updateDemand(created.getDemandId(), publisherId, upd);
+
+        var account2 = userAccountMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<
+                        cn.seecoder.campushelp.entity.UserAccount>()
+                        .eq(cn.seecoder.campushelp.entity.UserAccount::getUserId, publisherId));
+        assertTrue(account2.getFrozenPoints() == frozenBefore - 40);
+        assertTrue(account2.getAvailablePoints() == availableBefore + 40);
     }
 }

@@ -25,6 +25,15 @@ public interface PointsService {
     /** Paginated transaction history for a user, with optional type filter. */
     Page<PointsTransaction> getTransactions(Long userId, int pageNum, int pageSize, String type);
 
+    /**
+     * Adjust frozen points when the rewardAmount of an existing demand changes.
+     * If newAmount > oldAmount: freeze the difference (checks available balance).
+     * If newAmount < oldAmount: unfreeze the difference.
+     * If equal: no-op.
+     * Creates an EDIT_ADJUST transaction record.
+     */
+    void adjustFrozenPoints(Long userId, int oldAmount, int newAmount, Long demandId);
+
     /** Award signup bonus points to a newly registered user. */
     void awardSignupBonus(Long userId);
 }
