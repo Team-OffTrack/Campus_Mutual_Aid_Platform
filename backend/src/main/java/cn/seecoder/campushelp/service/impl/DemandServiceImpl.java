@@ -7,6 +7,7 @@ import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
+import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.dto.TeamMemberResponse;
@@ -203,10 +204,6 @@ public class DemandServiceImpl implements DemandService {
         if (DemandStatus.COMPLETED.equals(demand.getStatus()) || DemandStatus.CANCELLED.equals(demand.getStatus())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "该需求已结束，无法取消");
         }
-        // Unfreeze points if this was a point-reward demand
-        if ("point".equals(demand.getRewardType()) && demand.getRewardAmount() > 0) {
-            pointsService.unfreezeOnCancel(demand.getPublisherId(), demand.getRewardAmount(), demandId);
-        }
 
         // Notify acceptor if there is one
         if (demand.getAcceptorId() != null) {
@@ -219,10 +216,59 @@ public class DemandServiceImpl implements DemandService {
             for (TeamMemberResponse m : members) {
                 if (!m.getUserId().equals(userId)) {
                     notificationService.create(m.getUserId(),
-                            cn.seecoder.campushelp.entity.enums.NotificationType.CANCEL,
+                            NotificationType.CANCEL,
                             "队伍已解散", "队伍「" + demand.getTitle() + "」已被队长解散", demandId);
                 }
             }
+        }
+
+        executeCancel(demand);
+    }
+
+    @Override
+    @Transactional
+    public void autoCancelExpired(Long demandId) {
+        Demand demand = findDemandOrFail(demandId);
+        if (DemandStatus.COMPLETED.equals(demand.getStatus()) || DemandStatus.CANCELLED.equals(demand.getStatus())) {
+            return; // Already ended, nothing to do
+        }
+
+        // Notify publisher that their demand expired
+        notificationService.create(demand.getPublisherId(),
+                NotificationType.CANCEL,
+                "需求已过期",
+                "您的需求「" + demand.getTitle() + "」已超过截止时间，系统自动取消",
+                demandId);
+
+        // Notify acceptor if there is one
+        if (demand.getAcceptorId() != null) {
+            notificationService.notifyDemandCancelled(
+                    demand.getAcceptorId(), demand.getTitle(), demand.getDemandId());
+        }
+
+        // Notify all team members for team demands (including publisher)
+        if ("team".equals(demand.getType())) {
+            List<TeamMemberResponse> members = teamMemberService.getJoinedMembers(demandId);
+            for (TeamMemberResponse m : members) {
+                notificationService.create(m.getUserId(),
+                        NotificationType.CANCEL,
+                        "队伍已解散",
+                        "队伍「" + demand.getTitle() + "」因需求过期已自动解散",
+                        demandId);
+            }
+        }
+
+        executeCancel(demand);
+    }
+
+    /**
+     * Execute the actual cancellation: unfreeze points and update status.
+     * Callers are responsible for permission checks and notifications.
+     */
+    private void executeCancel(Demand demand) {
+        // Unfreeze points if this was a point-reward demand
+        if ("point".equals(demand.getRewardType()) && demand.getRewardAmount() > 0) {
+            pointsService.unfreezeOnCancel(demand.getPublisherId(), demand.getRewardAmount(), demand.getDemandId());
         }
         demand.setStatus(DemandStatus.CANCELLED);
         demandMapper.updateById(demand);

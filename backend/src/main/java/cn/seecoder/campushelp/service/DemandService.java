@@ -30,6 +30,9 @@ public interface DemandService {
     /** Cancel an OPEN or IN_PROGRESS demand. Only the publisher may cancel. */
     void cancel(Long demandId, Long userId);
 
+    /** Auto-cancel an expired demand (called by scheduler, skips publisher permission check). */
+    void autoCancelExpired(Long demandId);
+
     /** Accept an OPEN demand. Cannot accept your own demand. */
     DemandResponse accept(Long demandId, Long acceptorId);
 
