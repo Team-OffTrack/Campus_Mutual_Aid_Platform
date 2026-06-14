@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import { unreadCount } from '@/api/notification'
