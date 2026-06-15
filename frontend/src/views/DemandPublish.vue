@@ -257,9 +257,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { publishDemand, getDemand, updateDemand, uploadDemandImage } from '@/api/demand'
 import { DEMAND_TYPES, TYPE_CONFIG } from '@/constants/demandTypes'
+import { useBadgeToastStore } from '@/stores/badgeToast'
 
 const router = useRouter()
 const route = useRoute()
+const badgeToastStore = useBadgeToastStore()
 const loading = ref(false)
 const focusedField = ref(null)
 const imageFiles = ref([])
@@ -386,6 +388,7 @@ async function handlePublish() {
     } else {
       await publishDemand(payload)
       showToast('发布成功')
+      badgeToastStore.checkNewBadges()
       router.push('/demands')
     }
   } catch (e) { showToast(e.message || '操作失败，请重试') }

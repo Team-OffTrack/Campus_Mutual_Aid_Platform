@@ -4,10 +4,11 @@
       <component :is="Component" :key="route.path" />
     </transition>
   </router-view>
+  <BadgeEarnedToast />
 </template>
 
 <script setup>
-// Root component with animated route transitions
+import BadgeEarnedToast from '@/components/BadgeEarnedToast.vue'
 </script>
 
 <style>

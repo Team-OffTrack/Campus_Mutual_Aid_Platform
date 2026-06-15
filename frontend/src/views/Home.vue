@@ -203,9 +203,11 @@ import { useAuthStore } from '@/stores/auth'
 import { getProfile } from '@/api/user'
 import { checkin, getCheckinStatus } from '@/api/points'
 import NavActions from '@/components/NavActions.vue'
+import { useBadgeToastStore } from '@/stores/badgeToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const badgeToastStore = useBadgeToastStore()
 
 const stats = ref({ availablePoints: null, reputationScore: null, frozenPoints: null })
 const checkinStatus = ref({ checkedIn: false, currentStreak: 0, lastCheckinDate: null })
@@ -252,6 +254,7 @@ async function handleCheckin() {
     }
     stats.value.availablePoints += result.pointsAwarded
     showToast(`签到成功 +${result.pointsAwarded} 积分`)
+    badgeToastStore.checkNewBadges()
   } catch (e) {
     showToast(e.message || '签到失败')
   } finally {

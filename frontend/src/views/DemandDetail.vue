@@ -394,6 +394,7 @@ import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvalua
 import { createConversation } from '@/api/chat'
 import { createReport } from '@/api/report'
 import { triggerEasterEgg } from '@/api/badge'
+import { useBadgeToastStore } from '@/stores/badgeToast'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFavoritesStore } from '@/stores/favorites'
@@ -402,6 +403,7 @@ import { TYPE_LABELS, TYPE_STYLES, rewardText } from '@/constants/demandTypes'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const badgeToastStore = useBadgeToastStore()
 
 const demand = ref(null)
 const error = ref(null)
@@ -567,6 +569,7 @@ async function submitEvaluation() {
     myEval.value = result
     evaluations.value = [...evaluations.value, result]
     ratingValue.value = 5; ratingComment.value = ''
+    badgeToastStore.checkNewBadges()
     fetchEvaluations()
   } catch (e) { showToast(e.message || '提交评价失败，请重试') }
   finally { submittingEval.value = false }
@@ -619,7 +622,8 @@ async function handleReport(action) {
 
   // Easter egg: reporting own demand triggers a surprise
   if (isOwner.value) {
-    triggerEasterEgg().catch(() => { /* best-effort */ })
+    try { await triggerEasterEgg() } catch { /* best-effort */ }
+    await badgeToastStore.checkNewBadges()
     showToast('你举报了自己的帖子！彩蛋触发 🐱')
     router.push('/game/cat-runner')
     return
@@ -661,7 +665,7 @@ async function handleAccept() {
   try { await showConfirmDialog({ title: '确认接单', message: '接单后请按时完成需求，确定要接单吗？' }) }
   catch { return }
   acting.value = true
-  try { demand.value = await acceptDemand(demand.value.demandId); showToast('接单成功') }
+  try { demand.value = await acceptDemand(demand.value.demandId); showToast('接单成功'); badgeToastStore.checkNewBadges() }
   catch (e) { showToast(e.message || '接单失败，请重试') }
   finally { acting.value = false }
 }
@@ -670,7 +674,7 @@ async function handleComplete() {
   try { await showConfirmDialog({ title: '确认完成', message: '确认需求已完成？完成后将不可撤销。' }) }
   catch { return }
   acting.value = true
-  try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); await fetchEvaluations() }
+  try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); badgeToastStore.checkNewBadges(); await fetchEvaluations() }
   catch (e) { showToast(e.message || '操作失败，请重试') }
   finally { acting.value = false }
 }
