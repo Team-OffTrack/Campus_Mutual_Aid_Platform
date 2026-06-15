@@ -32,6 +32,7 @@
                 <van-icon v-if="n.type === 'ACCEPT'" name="user-o" />
                 <van-icon v-else-if="n.type === 'COMPLETE'" name="success" />
                 <van-icon v-else-if="n.type === 'EVALUATION'" name="star-o" />
+                <van-icon v-else-if="n.type === 'REPORT'" name="warning-o" />
                 <van-icon v-else name="info-o" />
               </div>
             </div>
@@ -123,7 +124,8 @@ async function handleClick(n) {
     try { await markRead(n.notificationId); n.read = true }
     catch { /* ignore mark-read failure, still navigate */ }
   }
-  if (n.relatedDemandId) { router.push('/demands/' + n.relatedDemandId) }
+  if (n.type === 'REPORT') { router.push('/admin/reports') }
+  else if (n.relatedDemandId) { router.push('/demands/' + n.relatedDemandId) }
 }
 
 async function fetchNotifications() {
@@ -215,6 +217,7 @@ onBeforeUnmount(stopWebSocket)
 .icon-complete   { background: #2E7D32; }
 .icon-cancel     { background: #D32F2F; }
 .icon-evaluation { background: #ED6C02; }
+.icon-report     { background: #E65100; }
 
 .n-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .n-top { display: flex; align-items: center; gap: 6px; }

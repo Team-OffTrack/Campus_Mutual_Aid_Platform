@@ -174,6 +174,13 @@
           {{ favorited ? '已收藏' : '收藏' }}
         </van-button>
 
+        <!-- Report button — visible for non-owner -->
+        <van-button v-if="demand && !isOwner" block round plain class="action-btn report-btn"
+          :loading="reportLoading"
+          @click="reportSheetVisible = true">
+          举报
+        </van-button>
+
         <template v-if="demand.status === 'OPEN'">
           <!-- Team actions -->
           <template v-if="demand.type === 'team'">
@@ -366,6 +373,10 @@
     </div>
 
     <ImageViewer v-model:show="showPreview" :images="demandImages" :start-position="previewIndex" />
+
+    <!-- Report action sheet -->
+    <van-action-sheet v-model:show="reportSheetVisible" :actions="reportReasons"
+      cancel-text="取消" @select="handleReport" />
   </div>
 </template>
 
@@ -377,6 +388,7 @@ import ImageViewer from '@/components/ImageViewer.vue'
 import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leaveTeam, getTeamApplicants, getMyMembership, approveApplicant, rejectApplicant, getTeamMembers, favoriteDemand, unfavoriteDemand } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
+import { createReport } from '@/api/report'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFavoritesStore } from '@/stores/favorites'
@@ -401,6 +413,15 @@ const editingMyEval = ref(false)
 const showPreview = ref(false)
 const previewIndex = ref(0)
 const startingChat = ref(false)
+const reportLoading = ref(false)
+const reportSheetVisible = ref(false)
+const reportReasons = [
+  { name: '虚假/误导信息', value: 'MISLEADING' },
+  { name: '骚扰/不当言论', value: 'HARASSMENT' },
+  { name: '违禁品/违规内容', value: 'ILLEGAL' },
+  { name: '垃圾广告', value: 'SPAM' },
+  { name: '其他问题', value: 'OTHER' }
+]
 
 // Team state
 const teamMembers = ref([])
@@ -587,6 +608,20 @@ async function handleToggleFavorite() {
   }
 }
 
+async function handleReport(action) {
+  reportSheetVisible.value = false
+  if (reportLoading.value || !demand.value) return
+  reportLoading.value = true
+  try {
+    await createReport({ targetType: 'DEMAND', targetId: demand.value.demandId, reason: action.value })
+    showToast('举报已提交，管理员将尽快处理')
+  } catch (e) {
+    showToast(e.message || '举报失败')
+  } finally {
+    reportLoading.value = false
+  }
+}
+
 async function handleStartChat() {
   if (startingChat.value || !chatTargetId.value) return
   startingChat.value = true
@@ -594,7 +629,7 @@ async function handleStartChat() {
     const conv = await createConversation(demand.value.demandId, chatTargetId.value)
     const targetName = isOwner.value ? demand.value.acceptorName : demand.value.publisherName
     const targetAvatar = isOwner.value ? demand.value.acceptorAvatar : demand.value.publisherAvatar
-    router.push('/chat/' + conv.conversationId + '?name=' + encodeURIComponent(targetName || '') + '&avatar=' + encodeURIComponent(targetAvatar || ''))
+    router.push('/chat/' + conv.conversationId + '?name=' + encodeURIComponent(targetName || '') + '&avatar=' + encodeURIComponent(targetAvatar || '') + '&uid=' + chatTargetId.value)
   } catch (e) { showToast(e.message || '创建会话失败，请重试') }
   finally { startingChat.value = false }
 }
@@ -776,6 +811,7 @@ onMounted(fetchDetail)
 .action-row { display: flex; flex-direction: column; gap: 10px; }
 .fav-btn { transition: all 0.2s; margin-bottom: 12px; }
 .fav-on { color: #EAB308 !important; border-color: #EAB308 !important; }
+.report-btn { margin-bottom: 12px; color: var(--c-text-2) !important; }
 .cancel-btn-secondary {
   color: var(--c-text-2) !important; border-color: var(--c-border) !important;
   box-shadow: none !important;

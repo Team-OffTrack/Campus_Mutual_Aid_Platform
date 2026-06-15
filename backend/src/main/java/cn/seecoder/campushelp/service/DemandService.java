@@ -40,6 +40,9 @@ public interface DemandService {
     /** Auto-cancel an expired demand (called by scheduler, skips publisher permission check). */
     void autoCancelExpired(Long demandId);
 
+    /** Admin cancels a demand (skips ownership check, for moderation). */
+    void adminCancelDemand(Long demandId, Long adminId);
+
     /** Accept an OPEN demand. Cannot accept your own demand. */
     DemandResponse accept(Long demandId, Long acceptorId);
 

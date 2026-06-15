@@ -2,7 +2,11 @@
   <div class="page chat-page">
     <!-- Header -->
     <van-nav-bar :title="otherUserName || '聊天'" left-arrow fixed placeholder
-      class="chat-nav" @click-left="router.back()" />
+      class="chat-nav" @click-left="router.back()">
+      <template #right>
+        <van-icon name="ellipsis" size="20" @click="chatActionSheetVisible = true" />
+      </template>
+    </van-nav-bar>
 
     <!-- Hidden file input -->
     <input ref="fileInputRef" type="file" accept="image/*" style="display:none"
@@ -70,6 +74,15 @@
 
     <!-- Emoji picker -->
     <EmojiPicker v-model:show="emojiShow" @select="insertEmoji" />
+
+    <!-- Chat actions (report user) -->
+    <van-action-sheet v-model:show="chatActionSheetVisible"
+      :actions="[{ name: '举报该用户', color: '#ee0a24' }]"
+      cancel-text="取消" @select="onChatAction" />
+
+    <!-- Report reason selection -->
+    <van-action-sheet v-model:show="reportSheetVisible" :actions="reportReasons"
+      cancel-text="取消" @select="handleReport" />
   </div>
 </template>
 
@@ -79,6 +92,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { getMessages, sendMessage, uploadChatImage } from '@/api/chat'
 import { getProfile } from '@/api/user'
+import { createReport } from '@/api/report'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import ImageViewer from '@/components/ImageViewer.vue'
@@ -95,6 +109,7 @@ const myName = ref('')
 const myAvatar = computed(() => authStore.avatar)
 const otherUserName = ref(route.query.name || '')
 const otherUserAvatar = ref(route.query.avatar || '')
+const otherUserId = ref(Number(route.query.uid) || 0)
 const messages = ref([])
 const inputText = ref('')
 const loading = ref(false)
@@ -105,6 +120,16 @@ const fileInputRef = ref(null)
 const emojiShow = ref(false)
 const viewerShow = ref(false)
 const viewerImages = ref([])
+const chatActionSheetVisible = ref(false)
+const reportSheetVisible = ref(false)
+const reportLoading = ref(false)
+const reportReasons = [
+  { name: '虚假/误导信息', value: 'MISLEADING' },
+  { name: '骚扰/不当言论', value: 'HARASSMENT' },
+  { name: '违禁品/违规内容', value: 'ILLEGAL' },
+  { name: '垃圾广告', value: 'SPAM' },
+  { name: '其他问题', value: 'OTHER' }
+]
 
 let unsubChat = null
 
@@ -192,6 +217,27 @@ async function handleSend() {
     scrollToBottom()
   } catch (e) { showToast(e.message || '发送失败，请重试') }
   finally { sending.value = false }
+}
+
+// ── Report ──
+
+function onChatAction() {
+  chatActionSheetVisible.value = false
+  reportSheetVisible.value = true
+}
+
+async function handleReport(action) {
+  reportSheetVisible.value = false
+  if (reportLoading.value || !otherUserId.value) return
+  reportLoading.value = true
+  try {
+    await createReport({ targetType: 'USER', targetId: otherUserId.value, reason: action.value })
+    showToast('举报已提交，管理员将尽快处理')
+  } catch (e) {
+    showToast(e.message || '举报失败')
+  } finally {
+    reportLoading.value = false
+  }
 }
 
 // ── WebSocket real-time reception ──

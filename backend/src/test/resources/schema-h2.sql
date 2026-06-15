@@ -163,3 +163,23 @@ CREATE TABLE IF NOT EXISTS user_favorite (
     FOREIGN KEY (demand_id) REFERENCES demand(demand_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS report (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reporter_id BIGINT NOT NULL,
+    target_type VARCHAR(16) NOT NULL,
+    target_id   BIGINT NOT NULL,
+    reason      VARCHAR(32) NOT NULL,
+    description VARCHAR(512),
+    status      VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+    admin_note  VARCHAR(512),
+    admin_id    BIGINT,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolve_time TIMESTAMP,
+    FOREIGN KEY (reporter_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES user(user_id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_report_target ON report(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_report_reporter ON report(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_report_status ON report(status);

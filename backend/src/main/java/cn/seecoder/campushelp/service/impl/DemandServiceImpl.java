@@ -289,6 +289,42 @@ public class DemandServiceImpl implements DemandService {
         executeCancel(demand);
     }
 
+    @Override
+    @Transactional
+    public void adminCancelDemand(Long demandId, Long adminId) {
+        Demand demand = findDemandOrFail(demandId);
+        if (DemandStatus.COMPLETED.equals(demand.getStatus()) || DemandStatus.CANCELLED.equals(demand.getStatus())) {
+            return; // Already ended
+        }
+
+        // Notify publisher
+        notificationService.create(demand.getPublisherId(),
+                NotificationType.CANCEL,
+                "需求已下架",
+                "您的需求「" + demand.getTitle() + "」因违规被管理员下架",
+                demandId);
+
+        // Notify acceptor if any
+        if (demand.getAcceptorId() != null) {
+            notificationService.notifyDemandCancelled(
+                    demand.getAcceptorId(), demand.getTitle(), demand.getDemandId());
+        }
+
+        // Notify team members
+        if ("team".equals(demand.getType())) {
+            List<TeamMemberResponse> members = teamMemberService.getJoinedMembers(demandId);
+            for (TeamMemberResponse m : members) {
+                notificationService.create(m.getUserId(),
+                        NotificationType.CANCEL,
+                        "队伍已解散",
+                        "队伍「" + demand.getTitle() + "」因需求违规已被管理员解散",
+                        demandId);
+            }
+        }
+
+        executeCancel(demand);
+    }
+
     /**
      * Execute the actual cancellation: unfreeze points and update status.
      * Callers are responsible for permission checks and notifications.

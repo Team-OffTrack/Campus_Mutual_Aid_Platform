@@ -163,6 +163,22 @@
             </div>
             <van-icon name="arrow" class="action-arrow" />
           </div>
+
+          <div v-if="authStore.isAdmin" class="action-card card" @click="router.push('/admin/reports')" role="button">
+            <div class="action-left">
+              <div class="action-icon-wrap" style="background:#FFEBEE">
+                <van-icon name="warning-o" color="#D32F2F" size="20" />
+              </div>
+              <div>
+                <p class="action-title">
+                  举报管理
+                  <span v-if="pendingReportCount > 0" class="report-badge">{{ pendingReportCount > 99 ? '99+' : pendingReportCount }}</span>
+                </p>
+                <p class="action-sub">查看和处理用户举报</p>
+              </div>
+            </div>
+            <van-icon name="arrow" class="action-arrow" />
+          </div>
         </div>
       </div>
 
@@ -194,6 +210,7 @@ const authStore = useAuthStore()
 const stats = ref({ availablePoints: null, reputationScore: null, frozenPoints: null })
 const checkinStatus = ref({ checkedIn: false, currentStreak: 0, lastCheckinDate: null })
 const checkinLoading = ref(false)
+const pendingReportCount = ref(0)
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -242,6 +259,15 @@ async function handleCheckin() {
   }
 }
 
+async function fetchPendingReportCount() {
+  if (!authStore.isAdmin) return
+  try {
+    const { listReports } = await import('@/api/report')
+    const page = await listReports({ pageNum: 1, pageSize: 1, status: 'PENDING' })
+    pendingReportCount.value = page.total || 0
+  } catch { /* non-critical */ }
+}
+
 onMounted(async () => {
   try {
     const data = await getProfile()
@@ -256,6 +282,8 @@ onMounted(async () => {
     const status = await getCheckinStatus()
     checkinStatus.value = status
   } catch { /* ignore — check-in will show default unchecked state */ }
+
+  fetchPendingReportCount()
 })
 </script>
 
@@ -632,6 +660,22 @@ onMounted(async () => {
 
 .admin-entry {
   border: 1.5px solid #FFE082;
+}
+
+.report-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  padding: 0 6px;
+  vertical-align: middle;
 }
 
 /* ═══════════════════════════════════════
