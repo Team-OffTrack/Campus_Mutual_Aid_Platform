@@ -10,6 +10,7 @@ import cn.seecoder.campushelp.mapper.PrivacyProfileMapper;
 import cn.seecoder.campushelp.mapper.UserAccountMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.security.JwtTokenProvider;
+import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.PointsService;
 import cn.seecoder.campushelp.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -36,19 +37,22 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final PointsService pointsService;
+    private final BadgeService badgeService;
 
     public UserServiceImpl(UserMapper userMapper,
                            PrivacyProfileMapper privacyProfileMapper,
                            UserAccountMapper userAccountMapper,
                            PasswordEncoder passwordEncoder,
                            JwtTokenProvider jwtTokenProvider,
-                           PointsService pointsService) {
+                           PointsService pointsService,
+                           BadgeService badgeService) {
         this.userMapper = userMapper;
         this.privacyProfileMapper = privacyProfileMapper;
         this.userAccountMapper = userAccountMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.pointsService = pointsService;
+        this.badgeService = badgeService;
     }
 
     @Override
@@ -107,7 +111,9 @@ public class UserServiceImpl implements UserService {
                 new LambdaQueryWrapper<PrivacyProfile>().eq(PrivacyProfile::getUserId, userId));
         UserAccount account = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getUserId, userId));
-        return UserInfoResponse.from(user, profile, account);
+        UserInfoResponse rsp = UserInfoResponse.from(user, profile, account);
+        rsp.setWornBadgeKey(badgeService.getWornBadgeKey(userId));
+        return rsp;
     }
 
     @Override

@@ -8,11 +8,13 @@ import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.Evaluation;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.UserAccount;
+import cn.seecoder.campushelp.entity.enums.BadgeDefinition;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.EvaluationMapper;
 import cn.seecoder.campushelp.mapper.UserAccountMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
+import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.EvaluationService;
 import cn.seecoder.campushelp.service.NotificationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -29,15 +31,18 @@ public class EvaluationServiceImpl implements EvaluationService {
     private final UserMapper userMapper;
     private final UserAccountMapper userAccountMapper;
     private final NotificationService notificationService;
+    private final BadgeService badgeService;
 
     public EvaluationServiceImpl(EvaluationMapper evaluationMapper, DemandMapper demandMapper,
                                   UserMapper userMapper, UserAccountMapper userAccountMapper,
-                                  NotificationService notificationService) {
+                                  NotificationService notificationService,
+                                  BadgeService badgeService) {
         this.evaluationMapper = evaluationMapper;
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
         this.userAccountMapper = userAccountMapper;
         this.notificationService = notificationService;
+        this.badgeService = badgeService;
     }
 
     @Override
@@ -78,6 +83,13 @@ public class EvaluationServiceImpl implements EvaluationService {
         e.setRating(request.getRating());
         e.setComment(request.getComment());
         evaluationMapper.insert(e);
+
+        // Badge: FIRST_FIVE_STAR — target received a 5-star rating
+        if (request.getRating() == 5) {
+            badgeService.checkAndAward(targetId, BadgeDefinition.FIRST_FIVE_STAR.getKey());
+        }
+        // Badge: HUNDRED_STARS — accumulate total star ratings
+        badgeService.checkAndAward(targetId, BadgeDefinition.HUNDRED_STARS.getKey());
 
         User evaluator = userMapper.selectById(evaluatorId);
         if (evaluator == null) {

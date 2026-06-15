@@ -7,11 +7,13 @@ import cn.seecoder.campushelp.dto.ReportResponse;
 import cn.seecoder.campushelp.dto.ResolveReportRequest;
 import cn.seecoder.campushelp.entity.Report;
 import cn.seecoder.campushelp.entity.User;
+import cn.seecoder.campushelp.entity.enums.BadgeDefinition;
 import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.MessageMapper;
 import cn.seecoder.campushelp.mapper.ReportMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
+import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.NotificationService;
 import cn.seecoder.campushelp.service.ReportService;
@@ -44,12 +46,14 @@ public class ReportServiceImpl implements ReportService {
     private final NotificationService notificationService;
     private final DemandService demandService;
     private final UserService userService;
+    private final BadgeService badgeService;
 
     public ReportServiceImpl(ReportMapper reportMapper, DemandMapper demandMapper,
                               UserMapper userMapper, MessageMapper messageMapper,
                               NotificationService notificationService,
                               DemandService demandService,
-                              UserService userService) {
+                              UserService userService,
+                              BadgeService badgeService) {
         this.reportMapper = reportMapper;
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
@@ -57,6 +61,7 @@ public class ReportServiceImpl implements ReportService {
         this.notificationService = notificationService;
         this.demandService = demandService;
         this.userService = userService;
+        this.badgeService = badgeService;
     }
 
     @Override
@@ -176,6 +181,11 @@ public class ReportServiceImpl implements ReportService {
         report.setAdminId(adminId);
         report.setResolveTime(LocalDateTime.now());
         reportMapper.updateById(report);
+
+        // Badge: FIRST_REPORT_SUCCESS — reporter's first resolved report
+        if ("RESOLVED".equals(request.getStatus())) {
+            badgeService.checkAndAward(report.getReporterId(), BadgeDefinition.FIRST_REPORT_SUCCESS.getKey());
+        }
     }
 
     /**

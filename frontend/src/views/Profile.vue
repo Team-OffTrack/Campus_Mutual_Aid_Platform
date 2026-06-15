@@ -19,6 +19,9 @@
         <div class="avatar-circle" :class="{ uploading: uploadingAvatar }">
           <img v-if="profile.avatar" :src="profile.avatar" class="avatar-img" />
           <span v-else class="avatar-letter">{{ nameInitial }}</span>
+          <span v-if="authStore.wornBadgeKey" class="avatar-worn-badge">
+            {{ getBadgeEmoji(authStore.wornBadgeKey) }}
+          </span>
           <div v-if="uploadingAvatar" class="avatar-overlay">
             <van-loading color="#fff" size="22" />
           </div>
@@ -53,6 +56,24 @@
         <div class="stat-item">
           <span class="stat-num" style="color:var(--c-success)">{{ profile.reputationScore ?? '—' }}</span>
           <span class="stat-lbl">信誉评分</span>
+        </div>
+      </div>
+
+      <!-- ═══ Badges section ═══ -->
+      <div class="badge-section">
+        <h3 class="section-title">成就徽章</h3>
+        <div class="badge-grid glass">
+          <div v-for="badge in badges" :key="badge.badgeKey"
+            class="badge-item"
+            :class="{ earned: badge.earned, wearing: badge.wearing }"
+            @click="handleBadgeClick(badge)">
+            <div class="badge-icon" :class="{ unearned: !badge.earned }">
+              {{ badge.emoji }}
+            </div>
+            <span class="badge-name">{{ badge.displayName }}</span>
+            <span v-if="!badge.earned && badge.progress" class="badge-progress">{{ badge.progress }}</span>
+            <span v-if="badge.wearing" class="badge-worn-indicator">佩戴中</span>
+          </div>
         </div>
       </div>
 
@@ -141,6 +162,35 @@
         </van-button>
       </div>
     </div>
+
+    <!-- ═══ Badge detail popup ═══ -->
+    <van-dialog v-model:show="showBadgePopup"
+      :title="selectedBadge?.displayName"
+      show-cancel-button
+      @confirm="showBadgePopup = false">
+      <div class="badge-detail">
+        <div class="badge-detail-emoji">{{ selectedBadge?.emoji }}</div>
+        <p v-if="selectedBadge?.hiddenRequirement && !selectedBadge?.earned" class="badge-detail-desc">
+          触发一个神秘的隐藏彩蛋
+        </p>
+        <p v-else class="badge-detail-desc">{{ selectedBadge?.description }}</p>
+        <p v-if="selectedBadge && !selectedBadge.earned && selectedBadge.progress"
+          class="badge-detail-progress">
+          进度: {{ selectedBadge.progress }}
+        </p>
+        <p v-if="selectedBadge?.earned" class="badge-detail-earned">✅ 已获得</p>
+        <div class="badge-detail-actions">
+          <van-button v-if="selectedBadge?.earned && !selectedBadge?.wearing"
+            size="small" round type="primary" @click="handleWear(selectedBadge.badgeKey)">
+            佩戴
+          </van-button>
+          <van-button v-if="selectedBadge?.wearing"
+            size="small" round plain type="danger" @click="handleUnwear()">
+            取消佩戴
+          </van-button>
+        </div>
+      </div>
+    </van-dialog>
   </div>
 </template>
 
@@ -149,6 +199,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { getProfile, updateProfile, changePassword, uploadAvatar } from '@/api/user'
+import { getUserBadges, wearBadge, unwearBadge } from '@/api/badge'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -164,6 +215,51 @@ const passwordForm = reactive({ oldPassword: '', newPassword: '' })
 
 const avatarInput = ref(null)
 const uploadingAvatar = ref(false)
+
+// ── Badges ──
+const badges = ref([])
+const badgeLoading = ref(false)
+const selectedBadge = ref(null)
+const showBadgePopup = ref(false)
+
+const badgeEmojiMap = {
+  FIRST_PUBLISH: '🎉', FIRST_ACCEPT: '🤝', TEN_COMPLETES: '🏆',
+  FIRST_FIVE_STAR: '⭐', HUNDRED_STARS: '💯', CHECKIN_30: '🔥',
+  HELPER: '💝', FIRST_REPORT_SUCCESS: '🦸', EASTER_EGG: '🐱'
+}
+function getBadgeEmoji(key) { return badgeEmojiMap[key] || '🏅' }
+
+async function fetchBadges() {
+  badgeLoading.value = true
+  try { badges.value = await getUserBadges() }
+  catch { /* silently fail — badges are non-critical */ }
+  finally { badgeLoading.value = false }
+}
+
+function handleBadgeClick(badge) {
+  selectedBadge.value = badge
+  showBadgePopup.value = true
+}
+
+async function handleWear(badgeKey) {
+  try {
+    await wearBadge(badgeKey)
+    badges.value.forEach(b => { b.wearing = b.badgeKey === badgeKey })
+    showBadgePopup.value = false
+    authStore.setWornBadgeKey(badgeKey)
+    showToast('已佩戴徽章')
+  } catch (e) { showToast(e.message || '佩戴失败') }
+}
+
+async function handleUnwear() {
+  try {
+    await unwearBadge()
+    badges.value.forEach(b => { b.wearing = false })
+    showBadgePopup.value = false
+    authStore.setWornBadgeKey('')
+    showToast('已取消佩戴')
+  } catch (e) { showToast(e.message || '取消佩戴失败') }
+}
 
 function triggerAvatar() { avatarInput.value?.click() }
 
@@ -192,7 +288,12 @@ onMounted(async () => {
     form.name = data.name || ''
     form.isAnonymous = data.isAnonymous || false
     form.maskName = data.maskName || ''
+    // Sync worn badge key from profile
+    if (data.wornBadgeKey !== undefined) {
+      authStore.setWornBadgeKey(data.wornBadgeKey)
+    }
   } catch (e) { showToast(e.message || '个人资料加载失败') }
+  fetchBadges()
 })
 
 async function handleSave() {
@@ -305,6 +406,13 @@ async function handleLogout() {
 }
 .avatar-badge:active { transform: scale(0.9); }
 
+.avatar-worn-badge {
+  position: absolute; bottom: -2px; right: -2px;
+  font-size: 18px; line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  z-index: 2;
+}
+
 .profile-name {
   font-size: 22px; font-weight: 700; color: #fff;
   margin-bottom: 4px; position: relative; z-index: 1;
@@ -331,6 +439,47 @@ async function handleLogout() {
 .points-stat { cursor: pointer; border-radius: var(--r-md); transition: background var(--ease); }
 .points-stat:hover { background: rgba(103,80,164,0.06); }
 .points-arrow { font-size: 14px; margin-left: 4px; opacity: 0.45; vertical-align: middle; }
+
+/* ═══════════════════════════════════════
+   Badges
+   ═══════════════════════════════════════ */
+.badge-section { padding-top: 24px; }
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 14px;
+}
+.badge-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 12px 6px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--ease), transform var(--ease);
+}
+.badge-item:active { transform: scale(0.96); }
+.badge-item.wearing {
+  background: rgba(103,80,164,0.08);
+  box-shadow: inset 0 0 0 1.5px var(--c-primary-container);
+}
+.badge-icon { font-size: 30px; line-height: 1; transition: filter var(--ease); }
+.badge-icon.unearned { filter: grayscale(1); opacity: 0.4; }
+.badge-name { font-size: 11px; font-weight: 600; color: var(--c-text-1); text-align: center; }
+.badge-progress { font-size: 10px; color: var(--c-text-3); }
+.badge-worn-indicator {
+  font-size: 9px; color: var(--c-primary); font-weight: 700;
+}
+
+/* Badge detail popup */
+.badge-detail {
+  padding: 16px 24px 20px;
+  text-align: center;
+}
+.badge-detail-emoji { font-size: 48px; margin-bottom: 10px; }
+.badge-detail-desc { font-size: 14px; color: var(--c-text-2); margin-bottom: 8px; line-height: 1.5; }
+.badge-detail-progress { font-size: 13px; color: var(--c-primary); font-weight: 600; margin-bottom: 8px; }
+.badge-detail-earned { font-size: 13px; color: var(--c-success); font-weight: 600; margin-bottom: 8px; }
+.badge-detail-actions { margin-top: 8px; display: flex; gap: 10px; justify-content: center; }
 
 /* ═══════════════════════════════════════
    Sections
@@ -391,6 +540,9 @@ async function handleLogout() {
     margin-left: auto; margin-right: auto;
     margin-top: -44px;
   }
+
+  .badge-section { max-width: 640px; margin-left: auto; margin-right: auto; }
+  .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px; }
 
   .profile-columns {
     display: grid;

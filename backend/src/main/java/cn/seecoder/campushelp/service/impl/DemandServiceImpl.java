@@ -8,10 +8,13 @@ import cn.seecoder.campushelp.dto.TeamMemberResponse;
 import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.entity.Demand;
 import cn.seecoder.campushelp.entity.User;
+import cn.seecoder.campushelp.entity.enums.BadgeDefinition;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.entity.enums.NotificationType;
+import cn.seecoder.campushelp.entity.enums.RewardType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
+import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.FavoriteService;
 import cn.seecoder.campushelp.service.NotificationService;
@@ -42,19 +45,22 @@ public class DemandServiceImpl implements DemandService {
     private final TeamMemberService teamMemberService;
     private final PointsService pointsService;
     private final FavoriteService favoriteService;
+    private final BadgeService badgeService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
                              NotificationService notificationService,
                              TeamMemberService teamMemberService,
                              PointsService pointsService,
-                             FavoriteService favoriteService) {
+                             FavoriteService favoriteService,
+                             BadgeService badgeService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
         this.notificationService = notificationService;
         this.teamMemberService = teamMemberService;
         this.pointsService = pointsService;
         this.favoriteService = favoriteService;
+        this.badgeService = badgeService;
     }
 
     @Override
@@ -91,6 +97,9 @@ public class DemandServiceImpl implements DemandService {
         }
 
         demandMapper.insert(demand);
+
+        // Badge: FIRST_PUBLISH
+        badgeService.checkAndAward(publisherId, BadgeDefinition.FIRST_PUBLISH.getKey());
 
         // Auto-join publisher as leader for team demands
         if ("team".equals(request.getType())) {
@@ -355,6 +364,9 @@ public class DemandServiceImpl implements DemandService {
         demand.setStatus(DemandStatus.IN_PROGRESS);
         demandMapper.updateById(demand);
 
+        // Badge: FIRST_ACCEPT
+        badgeService.checkAndAward(acceptorId, BadgeDefinition.FIRST_ACCEPT.getKey());
+
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = userMapper.selectById(acceptorId);
 
@@ -381,6 +393,19 @@ public class DemandServiceImpl implements DemandService {
         }
         demand.setStatus(DemandStatus.COMPLETED);
         demandMapper.updateById(demand);
+
+        // Badge: TEN_COMPLETES for both publisher and acceptor
+        badgeService.checkAndAward(demand.getPublisherId(), BadgeDefinition.TEN_COMPLETES.getKey());
+        if (demand.getAcceptorId() != null) {
+            badgeService.checkAndAward(demand.getAcceptorId(), BadgeDefinition.TEN_COMPLETES.getKey());
+        }
+        // Badge: HELPER for donation-type demands
+        if (RewardType.DONATION.equals(demand.getRewardType())) {
+            badgeService.checkAndAward(demand.getPublisherId(), BadgeDefinition.HELPER.getKey());
+            if (demand.getAcceptorId() != null) {
+                badgeService.checkAndAward(demand.getAcceptorId(), BadgeDefinition.HELPER.getKey());
+            }
+        }
 
         User publisher = userMapper.selectById(demand.getPublisherId());
         User acceptor = demand.getAcceptorId() != null ? userMapper.selectById(demand.getAcceptorId()) : null;

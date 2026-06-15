@@ -17,6 +17,7 @@ public class UserInfoResponse {
     private Integer availablePoints;
     private Integer frozenPoints;
     private Double reputationScore;
+    private String wornBadgeKey;
 
     public static UserInfoResponse from(User user, PrivacyProfile profile, UserAccount account) {
         UserInfoResponse rsp = new UserInfoResponse();
@@ -49,4 +50,6 @@ public class UserInfoResponse {
     public Integer getAvailablePoints() { return availablePoints; }
     public Integer getFrozenPoints() { return frozenPoints; }
     public Double getReputationScore() { return reputationScore; }
+    public String getWornBadgeKey() { return wornBadgeKey; }
+    public void setWornBadgeKey(String wornBadgeKey) { this.wornBadgeKey = wornBadgeKey; }
 }

@@ -7,10 +7,12 @@ import cn.seecoder.campushelp.dto.DailyCheckinStatus;
 import cn.seecoder.campushelp.entity.DailyCheckin;
 import cn.seecoder.campushelp.entity.PointsTransaction;
 import cn.seecoder.campushelp.entity.UserAccount;
+import cn.seecoder.campushelp.entity.enums.BadgeDefinition;
 import cn.seecoder.campushelp.entity.enums.PointsTransactionType;
 import cn.seecoder.campushelp.mapper.DailyCheckinMapper;
 import cn.seecoder.campushelp.mapper.PointsTransactionMapper;
 import cn.seecoder.campushelp.mapper.UserAccountMapper;
+import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.PointsService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -29,13 +31,16 @@ public class PointsServiceImpl implements PointsService {
     private final UserAccountMapper userAccountMapper;
     private final PointsTransactionMapper pointsTransactionMapper;
     private final DailyCheckinMapper dailyCheckinMapper;
+    private final BadgeService badgeService;
 
     public PointsServiceImpl(UserAccountMapper userAccountMapper,
                              PointsTransactionMapper pointsTransactionMapper,
-                             DailyCheckinMapper dailyCheckinMapper) {
+                             DailyCheckinMapper dailyCheckinMapper,
+                             BadgeService badgeService) {
         this.userAccountMapper = userAccountMapper;
         this.pointsTransactionMapper = pointsTransactionMapper;
         this.dailyCheckinMapper = dailyCheckinMapper;
+        this.badgeService = badgeService;
     }
 
     @Override
@@ -74,6 +79,11 @@ public class PointsServiceImpl implements PointsService {
         checkin.setPointsAwarded(points);
         checkin.setStreak(streak);
         dailyCheckinMapper.insert(checkin);
+
+        // Badge: CHECKIN_30
+        if (streak >= 30) {
+            badgeService.checkAndAward(userId, BadgeDefinition.CHECKIN_30.getKey());
+        }
 
         // 5. Update user_account: add points to available
         UserAccount account = getUserAccountForUpdate(userId);

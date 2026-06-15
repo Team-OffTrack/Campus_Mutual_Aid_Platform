@@ -19,11 +19,12 @@ export const useAuthStore = defineStore('auth', () => {
   const name = ref(localStorage.getItem('name') || '')
   const role = ref(localStorage.getItem('role') || '')
   const avatar = ref(localStorage.getItem('avatar') || '')
+  const wornBadgeKey = ref(localStorage.getItem('wornBadgeKey') || '')
 
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => role.value === 'ADMIN')
 
-  const AUTH_KEYS = ['token', 'userId', 'name', 'role', 'avatar']
+  const AUTH_KEYS = ['token', 'userId', 'name', 'role', 'avatar', 'wornBadgeKey']
 
   /** Persist the login response into the store and localStorage. */
   function setAuth(data) {
@@ -33,11 +34,19 @@ export const useAuthStore = defineStore('auth', () => {
     name.value = data.name || ''
     role.value = data.role || ''
     avatar.value = data.avatar || ''
+    wornBadgeKey.value = data.wornBadgeKey || ''
     localStorage.setItem('token', token.value)
     localStorage.setItem('userId', userId.value)
     localStorage.setItem('name', name.value)
     localStorage.setItem('role', role.value)
     localStorage.setItem('avatar', avatar.value)
+    localStorage.setItem('wornBadgeKey', wornBadgeKey.value)
+  }
+
+  /** Set the worn badge key. Called from Profile.vue when wear/unwear. */
+  function setWornBadgeKey(key) {
+    wornBadgeKey.value = key || ''
+    localStorage.setItem('wornBadgeKey', wornBadgeKey.value)
   }
 
   /** Clear all auth state from memory and localStorage. */
@@ -47,8 +56,9 @@ export const useAuthStore = defineStore('auth', () => {
     name.value = ''
     role.value = ''
     avatar.value = ''
+    wornBadgeKey.value = ''
     AUTH_KEYS.forEach(k => localStorage.removeItem(k))
   }
 
-  return { token, userId, name, role, avatar, isLoggedIn, isAdmin, setAuth, logout }
+  return { token, userId, name, role, avatar, wornBadgeKey, isLoggedIn, isAdmin, setAuth, setWornBadgeKey, logout }
 })

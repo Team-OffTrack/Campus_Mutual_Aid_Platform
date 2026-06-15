@@ -7,6 +7,9 @@
     <div class="nav-avatar" @click="$router.push('/profile')" role="button" aria-label="个人资料">
       <img v-if="authStore.avatar" :src="authStore.avatar" class="avatar-img" />
       <span v-else class="avatar-letter">{{ nameInitial }}</span>
+      <span v-if="authStore.wornBadgeKey" class="avatar-badge-overlay">
+        {{ getBadgeEmoji(authStore.wornBadgeKey) }}
+      </span>
     </div>
   </div>
 </template>
@@ -23,6 +26,13 @@ defineProps({ light: Boolean })
 const authStore = useAuthStore()
 const wsStore = useWebSocketStore()
 const nameInitial = computed(() => (authStore.name || '?').charAt(0).toUpperCase())
+
+const badgeEmojiMap = {
+  FIRST_PUBLISH: '🎉', FIRST_ACCEPT: '🤝', TEN_COMPLETES: '🏆',
+  FIRST_FIVE_STAR: '⭐', HUNDRED_STARS: '💯', CHECKIN_30: '🔥',
+  HELPER: '💝', FIRST_REPORT_SUCCESS: '🦸', EASTER_EGG: '🐱'
+}
+function getBadgeEmoji(key) { return badgeEmojiMap[key] || '🏅' }
 
 // Reactive sum of notification + chat unread counters pushed via WebSocket
 const unreadNum = computed(() => wsStore.notifUnread + wsStore.chatUnread)
@@ -121,4 +131,15 @@ onMounted(fetchUnread)
   color: var(--c-primary);
 }
 .avatar-letter { line-height: 1; }
+
+.nav-avatar { position: relative; }
+.avatar-badge-overlay {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  font-size: 12px;
+  line-height: 1;
+  filter: drop-shadow(0 1.5px 3px rgba(0,0,0,0.35));
+  z-index: 2;
+}
 </style>

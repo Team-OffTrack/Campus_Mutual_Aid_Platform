@@ -183,3 +183,25 @@ CREATE TABLE IF NOT EXISTS report (
 CREATE INDEX IF NOT EXISTS idx_report_target ON report(target_type, target_id);
 CREATE INDEX IF NOT EXISTS idx_report_reporter ON report(reporter_id);
 CREATE INDEX IF NOT EXISTS idx_report_status ON report(status);
+
+-- V14: Badge tables (H2-compatible)
+CREATE TABLE user_badge (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT NOT NULL,
+    badge_key   VARCHAR(32) NOT NULL,
+    earned_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, badge_key),
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ub_user ON user_badge(user_id);
+
+CREATE TABLE worn_badge (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT NOT NULL UNIQUE,
+    badge_key   VARCHAR(32) NOT NULL,
+    worn_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_wb_user ON worn_badge(user_id);

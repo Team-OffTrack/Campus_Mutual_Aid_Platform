@@ -389,6 +389,7 @@ import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leave
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
 import { createReport } from '@/api/report'
+import { triggerEasterEgg } from '@/api/badge'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFavoritesStore } from '@/stores/favorites'
@@ -614,6 +615,7 @@ async function handleReport(action) {
 
   // Easter egg: reporting own demand triggers a surprise
   if (isOwner.value) {
+    triggerEasterEgg().catch(() => { /* best-effort */ })
     showToast('你举报了自己的帖子！彩蛋触发 🐱')
     router.push('/game/cat-runner')
     return
