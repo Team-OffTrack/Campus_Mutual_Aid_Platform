@@ -185,7 +185,7 @@ CREATE INDEX IF NOT EXISTS idx_report_reporter ON report(reporter_id);
 CREATE INDEX IF NOT EXISTS idx_report_status ON report(status);
 
 -- V14: Badge tables (H2-compatible)
-CREATE TABLE user_badge (
+CREATE TABLE IF NOT EXISTS user_badge (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id     BIGINT NOT NULL,
     badge_key   VARCHAR(32) NOT NULL,
@@ -196,7 +196,7 @@ CREATE TABLE user_badge (
 
 CREATE INDEX IF NOT EXISTS idx_ub_user ON user_badge(user_id);
 
-CREATE TABLE worn_badge (
+CREATE TABLE IF NOT EXISTS worn_badge (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id     BIGINT NOT NULL UNIQUE,
     badge_key   VARCHAR(32) NOT NULL,
