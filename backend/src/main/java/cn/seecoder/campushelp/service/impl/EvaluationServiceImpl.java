@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EvaluationServiceImpl implements EvaluationService {
@@ -141,12 +142,16 @@ public class EvaluationServiceImpl implements EvaluationService {
                 new LambdaQueryWrapper<Evaluation>()
                         .eq(Evaluation::getDemandId, demandId)
                         .orderByAsc(Evaluation::getCreateTime));
+        List<Long> evaluatorIds = evals.stream().map(Evaluation::getEvaluatorId).distinct().toList();
+        Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(evaluatorIds);
         return evals.stream()
                 .map(e -> {
                     User evaluator = userMapper.selectById(e.getEvaluatorId());
-                    return EvaluationResponse.from(e,
+                    EvaluationResponse rsp = EvaluationResponse.from(e,
                             evaluator != null ? evaluator.getName() : "未知用户",
                             evaluator != null ? evaluator.getAvatar() : null);
+                    rsp.setEvaluatorWornBadgeKey(wornBadgeMap.get(e.getEvaluatorId()));
+                    return rsp;
                 })
                 .toList();
     }
@@ -170,12 +175,16 @@ public class EvaluationServiceImpl implements EvaluationService {
                 new LambdaQueryWrapper<Evaluation>()
                         .eq(Evaluation::getTargetUserId, userId)
                         .orderByDesc(Evaluation::getCreateTime));
+        List<Long> evaluatorIds = evals.stream().map(Evaluation::getEvaluatorId).distinct().toList();
+        Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(evaluatorIds);
         return evals.stream()
                 .map(e -> {
                     User evaluator = userMapper.selectById(e.getEvaluatorId());
-                    return EvaluationResponse.from(e,
+                    EvaluationResponse rsp = EvaluationResponse.from(e,
                             evaluator != null ? evaluator.getName() : "未知用户",
                             evaluator != null ? evaluator.getAvatar() : null);
+                    rsp.setEvaluatorWornBadgeKey(wornBadgeMap.get(e.getEvaluatorId()));
+                    return rsp;
                 })
                 .toList();
     }

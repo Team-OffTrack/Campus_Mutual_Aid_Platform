@@ -20,9 +20,11 @@ public class DemandResponse {
     private Long publisherId;
     private String publisherName;
     private String publisherAvatar;
+    private String publisherWornBadgeKey;
     private Long acceptorId;
     private String acceptorName;
     private String acceptorAvatar;
+    private String acceptorWornBadgeKey;
     private String type;
     private String title;
     private String description;
@@ -111,9 +113,13 @@ public class DemandResponse {
     public Long getPublisherId() { return publisherId; }
     public String getPublisherName() { return publisherName; }
     public String getPublisherAvatar() { return publisherAvatar; }
+    public String getPublisherWornBadgeKey() { return publisherWornBadgeKey; }
+    public void setPublisherWornBadgeKey(String key) { this.publisherWornBadgeKey = key; }
     public Long getAcceptorId() { return acceptorId; }
     public String getAcceptorName() { return acceptorName; }
     public String getAcceptorAvatar() { return acceptorAvatar; }
+    public String getAcceptorWornBadgeKey() { return acceptorWornBadgeKey; }
+    public void setAcceptorWornBadgeKey(String key) { this.acceptorWornBadgeKey = key; }
     public String getType() { return type; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }

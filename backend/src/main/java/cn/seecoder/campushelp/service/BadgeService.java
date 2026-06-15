@@ -36,6 +36,9 @@ public interface BadgeService {
     /** Get the badge key currently worn by this user, or null. */
     String getWornBadgeKey(Long userId);
 
+    /** Batch-load worn badge keys for a set of user IDs. Returns userId → badgeKey map. */
+    java.util.Map<Long, String> getWornBadgeMap(java.util.Collection<Long> userIds);
+
     /** Award EASTER_EGG badge (idempotent). Called from the frontend easter egg trigger. */
     void awardEasterEgg(Long userId);
 }

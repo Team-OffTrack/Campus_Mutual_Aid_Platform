@@ -150,6 +150,14 @@ public class BadgeServiceImpl implements BadgeService {
     }
 
     @Override
+    public Map<Long, String> getWornBadgeMap(java.util.Collection<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) return Map.of();
+        List<WornBadge> list = wornBadgeMapper.selectList(
+                new LambdaQueryWrapper<WornBadge>().in(WornBadge::getUserId, userIds));
+        return list.stream().collect(Collectors.toMap(WornBadge::getUserId, WornBadge::getBadgeKey));
+    }
+
+    @Override
     @Transactional
     public void awardEasterEgg(Long userId) {
         if (hasBadge(userId, "EASTER_EGG")) return;

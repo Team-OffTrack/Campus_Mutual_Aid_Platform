@@ -34,6 +34,7 @@
               <div class="td-avatar" :style="{ background: user.avatar ? 'transparent' : avatarColor(user.name) }">
                 <img v-if="user.avatar" :src="user.avatar" class="avatar-img" />
                 <span v-else>{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
+                <BadgeOverlay :badge-key="user.wornBadgeKey" />
               </div>
             </td>
             <td class="td-name">{{ user.name }}</td>
@@ -70,6 +71,7 @@
         <div class="user-avatar" :style="{ background: user.avatar ? 'transparent' : avatarColor(user.name) }">
           <img v-if="user.avatar" :src="user.avatar" class="avatar-img" />
           <span v-else>{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
+          <BadgeOverlay :badge-key="user.wornBadgeKey" />
         </div>
         <div class="user-info">
           <span class="user-name">{{ user.name }}</span>
@@ -97,6 +99,7 @@ import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { listUsers, updateUserStatus } from '@/api/admin'
 import { useAuthStore } from '@/stores/auth'
+import BadgeOverlay from '@/components/BadgeOverlay.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -188,7 +191,7 @@ async function onActionSelect() {
   width: 46px; height: 46px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible; position: relative;
 }
 .user-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .user-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -219,7 +222,7 @@ async function onActionSelect() {
   .table-row { border-bottom: 1px solid var(--c-border); transition: background var(--ease); }
   .table-row:hover { background: var(--c-bg); }
   .table-row td { padding: 12px 10px; vertical-align: middle; }
-  .td-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; overflow: hidden; }
+  .td-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; overflow: visible; position: relative; }
   .td-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
   .td-name { font-weight: 600; color: var(--c-text-1); }
   .td-id { color: var(--c-text-2); font-size: 13px; }

@@ -177,9 +177,15 @@ public class UserServiceImpl implements UserService {
                         new LambdaQueryWrapper<UserAccount>().in(UserAccount::getUserId, userIds))
                 .stream().collect(Collectors.toMap(UserAccount::getUserId, a -> a));
 
+        Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(userIds);
+
         Page<UserInfoResponse> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         resultPage.setRecords(users.stream()
-                .map(u -> UserInfoResponse.from(u, profileMap.get(u.getUserId()), accountMap.get(u.getUserId())))
+                .map(u -> {
+                    UserInfoResponse rsp = UserInfoResponse.from(u, profileMap.get(u.getUserId()), accountMap.get(u.getUserId()));
+                    rsp.setWornBadgeKey(wornBadgeMap.get(u.getUserId()));
+                    return rsp;
+                })
                 .toList());
         return resultPage;
     }

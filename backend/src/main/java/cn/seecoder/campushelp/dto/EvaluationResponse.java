@@ -14,6 +14,7 @@ public class EvaluationResponse {
     private Long evaluatorId;
     private String evaluatorName;
     private String evaluatorAvatar;
+    private String evaluatorWornBadgeKey;
     private Long targetUserId;
     private Integer rating;
     private String comment;
@@ -40,6 +41,8 @@ public class EvaluationResponse {
     public Long getEvaluatorId() { return evaluatorId; }
     public String getEvaluatorName() { return evaluatorName; }
     public String getEvaluatorAvatar() { return evaluatorAvatar; }
+    public String getEvaluatorWornBadgeKey() { return evaluatorWornBadgeKey; }
+    public void setEvaluatorWornBadgeKey(String key) { this.evaluatorWornBadgeKey = key; }
     public Long getTargetUserId() { return targetUserId; }
     public Integer getRating() { return rating; }
     public String getComment() { return comment; }

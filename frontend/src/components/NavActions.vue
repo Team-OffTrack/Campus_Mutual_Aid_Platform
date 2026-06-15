@@ -112,7 +112,7 @@ onMounted(fetchUnread)
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  overflow: hidden;
+  overflow: visible;
   transition: transform var(--spring-fast-spatial), box-shadow var(--spring-fast-spatial);
   box-shadow: var(--s-primary);
 }
@@ -135,9 +135,9 @@ onMounted(fetchUnread)
 .nav-avatar { position: relative; }
 .avatar-badge-overlay {
   position: absolute;
-  bottom: -6px;
-  right: -6px;
-  font-size: 12px;
+  bottom: -5px;
+  right: -5px;
+  font-size: 13px;
   line-height: 1;
   filter: drop-shadow(0 1.5px 3px rgba(0,0,0,0.35));
   z-index: 2;

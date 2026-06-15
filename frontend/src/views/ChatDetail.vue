@@ -39,6 +39,7 @@
             :style="{ background: myAvatar ? 'transparent' : avatarColor(myName) }">
             <img v-if="myAvatar" :src="myAvatar" class="avatar-img" />
             <span v-else>{{ (myName || '?').charAt(0).toUpperCase() }}</span>
+            <BadgeOverlay :badge-key="authStore.wornBadgeKey" />
           </div>
         </div>
 
@@ -97,6 +98,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import ImageViewer from '@/components/ImageViewer.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
+import BadgeOverlay from '@/components/BadgeOverlay.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -299,8 +301,8 @@ onBeforeUnmount(stopWebSocket)
 .msg-avatar {
   width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700; color: #fff; overflow: hidden;
-  box-shadow: var(--s-xs);
+  font-size: 14px; font-weight: 700; color: #fff; overflow: visible;
+  position: relative; box-shadow: var(--s-xs);
 }
 .msg-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .my-avatar { align-self: flex-end; }

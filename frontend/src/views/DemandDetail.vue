@@ -19,6 +19,7 @@
           <div class="pub-avatar" :style="{ background: demand.publisherAvatar ? 'transparent' : avatarColor(demand.publisherName) }">
             <img v-if="demand.publisherAvatar" :src="demand.publisherAvatar" class="avatar-img" />
             <span v-else>{{ demand.publisherName.charAt(0).toUpperCase() }}</span>
+            <BadgeOverlay :badge-key="demand.publisherWornBadgeKey" />
           </div>
           <div class="pub-info">
             <span class="pub-name">
@@ -155,6 +156,7 @@
           <div class="pub-avatar" :style="{ background: demand.acceptorAvatar ? 'transparent' : avatarColor(demand.acceptorName || '?') }">
             <img v-if="demand.acceptorAvatar" :src="demand.acceptorAvatar" class="avatar-img" />
             <span v-else>{{ (demand.acceptorName || '?').charAt(0).toUpperCase() }}</span>
+            <BadgeOverlay :badge-key="demand.acceptorWornBadgeKey" />
           </div>
           <div class="pub-info">
             <span class="pub-name">{{ demand.acceptorName }}</span>
@@ -295,6 +297,7 @@
             <div class="eval-comment-avatar" :style="{ background: e.evaluatorAvatar ? 'transparent' : avatarColor(e.evaluatorName) }">
               <img v-if="e.evaluatorAvatar" :src="e.evaluatorAvatar" class="avatar-img" />
               <span v-else>{{ e.evaluatorName.charAt(0).toUpperCase() }}</span>
+              <BadgeOverlay :badge-key="e.evaluatorWornBadgeKey" />
             </div>
             <div class="eval-comment-body">
               <div class="eval-comment-header">
@@ -385,6 +388,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import ImageViewer from '@/components/ImageViewer.vue'
+import BadgeOverlay from '@/components/BadgeOverlay.vue'
 import { getDemand, cancelDemand, acceptDemand, completeDemand, applyTeam, leaveTeam, getTeamApplicants, getMyMembership, approveApplicant, rejectApplicant, getTeamMembers, favoriteDemand, unfavoriteDemand } from '@/api/demand'
 import { getEvaluationsByDemand, getMyEvaluation, createEvaluation, updateEvaluation } from '@/api/evaluation'
 import { createConversation } from '@/api/chat'
@@ -762,7 +766,7 @@ onMounted(fetchDetail)
   width: 42px; height: 42px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible; position: relative;
 }
 .pub-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .pub-info { display: flex; flex-direction: column; gap: 2px; }
@@ -853,7 +857,7 @@ onMounted(fetchDetail)
   width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible; position: relative;
 }
 .eval-comment-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .eval-comment-body {

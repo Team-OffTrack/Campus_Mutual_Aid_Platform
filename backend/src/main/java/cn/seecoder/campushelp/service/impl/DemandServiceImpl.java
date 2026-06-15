@@ -196,11 +196,23 @@ public class DemandServiceImpl implements DemandService {
 
         Page<DemandResponse> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         final Map<Long, User> finalMap = userMap;
+
+        // Batch-load worn badges for all publisher/acceptor IDs
+        java.util.Set<Long> allUserIds = new java.util.HashSet<>(publisherIds);
+        for (Demand d : demands) {
+            if (d.getAcceptorId() != null) allUserIds.add(d.getAcceptorId());
+        }
+        final Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(allUserIds);
+
         resultPage.setRecords(demands.stream()
                 .map(d -> {
                     DemandResponse rsp = DemandResponse.from(d, finalMap.get(d.getPublisherId()), null, null, favoritedIds);
                     if ("team".equals(d.getType())) {
                         rsp.setJoinedCount(teamCounts.getOrDefault(d.getDemandId(), 0));
+                    }
+                    rsp.setPublisherWornBadgeKey(wornBadgeMap.get(d.getPublisherId()));
+                    if (d.getAcceptorId() != null) {
+                        rsp.setAcceptorWornBadgeKey(wornBadgeMap.get(d.getAcceptorId()));
                     }
                     return rsp;
                 })
@@ -227,6 +239,15 @@ public class DemandServiceImpl implements DemandService {
         DemandResponse rsp = DemandResponse.from(demand, publisher, acceptor, teamMembers);
         if (userId != null) {
             rsp.setFavorited(favoriteService.isFavorited(userId, demandId));
+        }
+        // Populate worn badge keys
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        ids.add(demand.getPublisherId());
+        if (demand.getAcceptorId() != null) ids.add(demand.getAcceptorId());
+        Map<Long, String> wbMap = badgeService.getWornBadgeMap(ids);
+        rsp.setPublisherWornBadgeKey(wbMap.get(demand.getPublisherId()));
+        if (demand.getAcceptorId() != null) {
+            rsp.setAcceptorWornBadgeKey(wbMap.get(demand.getAcceptorId()));
         }
         return rsp;
     }
@@ -450,10 +471,19 @@ public class DemandServiceImpl implements DemandService {
             userMap = Map.of();
         }
 
+        final Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(userIds);
+
         return demands.stream()
-                .map(d -> DemandResponse.from(d,
-                        userMap.get(d.getPublisherId()),
-                        userMap.get(d.getAcceptorId())))
+                .map(d -> {
+                    DemandResponse rsp = DemandResponse.from(d,
+                            userMap.get(d.getPublisherId()),
+                            userMap.get(d.getAcceptorId()));
+                    rsp.setPublisherWornBadgeKey(wornBadgeMap.get(d.getPublisherId()));
+                    if (d.getAcceptorId() != null) {
+                        rsp.setAcceptorWornBadgeKey(wornBadgeMap.get(d.getAcceptorId()));
+                    }
+                    return rsp;
+                })
                 .toList();
     }
 
@@ -478,8 +508,14 @@ public class DemandServiceImpl implements DemandService {
             userMap = Map.of();
         }
 
+        final Map<Long, String> wornBadgeMap = badgeService.getWornBadgeMap(userIds);
+
         return demands.stream()
-                .map(d -> DemandResponse.from(d, userMap.get(d.getPublisherId())))
+                .map(d -> {
+                    DemandResponse rsp = DemandResponse.from(d, userMap.get(d.getPublisherId()));
+                    rsp.setPublisherWornBadgeKey(wornBadgeMap.get(d.getPublisherId()));
+                    return rsp;
+                })
                 .toList();
     }
 

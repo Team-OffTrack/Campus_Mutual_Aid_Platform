@@ -380,7 +380,7 @@ async function handleLogout() {
   display: flex; align-items: center; justify-content: center;
   font-size: 38px; font-weight: 800; color: #fff;
   backdrop-filter: blur(10px);
-  overflow: hidden; position: relative; cursor: pointer;
+  overflow: visible; position: relative; cursor: pointer;
   transition: transform var(--spring-fast-spatial), box-shadow var(--spring-default-spatial);
   box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
@@ -407,8 +407,8 @@ async function handleLogout() {
 .avatar-badge:active { transform: scale(0.9); }
 
 .avatar-worn-badge {
-  position: absolute; bottom: -2px; right: -2px;
-  font-size: 18px; line-height: 1;
+  position: absolute; bottom: -4px; left: -4px;
+  font-size: 22px; line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
   z-index: 2;
 }
