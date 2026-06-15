@@ -276,6 +276,13 @@ body {
   box-shadow: 0 0 0 2.5px var(--c-primary);
 }
 
+/* Avatar images — inherit container border-radius so uploaded
+   square photos match the round/squircle container shape */
+.avatar-img,
+.conv-avatar-img {
+  border-radius: inherit;
+}
+
 /* Nav items */
 .nav-bell:focus-visible,
 .nav-avatar:focus-visible {
