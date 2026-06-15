@@ -174,8 +174,8 @@
           {{ favorited ? '已收藏' : '收藏' }}
         </van-button>
 
-        <!-- Report button — visible for non-owner -->
-        <van-button v-if="demand && !isOwner" block round plain class="action-btn report-btn"
+        <!-- Report button — always visible -->
+        <van-button v-if="demand" block round plain class="action-btn report-btn"
           :loading="reportLoading"
           @click="reportSheetVisible = true">
           举报
@@ -611,6 +611,14 @@ async function handleToggleFavorite() {
 async function handleReport(action) {
   reportSheetVisible.value = false
   if (reportLoading.value || !demand.value) return
+
+  // Easter egg: reporting own demand triggers a surprise
+  if (isOwner.value) {
+    showToast('你举报了自己的帖子！彩蛋触发 🐱')
+    router.push('/game/cat-runner')
+    return
+  }
+
   reportLoading.value = true
   try {
     await createReport({ targetType: 'DEMAND', targetId: demand.value.demandId, reason: action.value })

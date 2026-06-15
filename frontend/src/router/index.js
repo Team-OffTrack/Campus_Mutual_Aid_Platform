@@ -80,6 +80,11 @@ const routes = [
     path: '/chat/:conversationId',
     name: 'ChatDetail',
     component: () => import('@/views/ChatDetail.vue')
+  },
+  {
+    path: '/game/cat-runner',
+    name: 'GameCatRunner',
+    component: () => import('@/views/GameCatRunner.vue')
   }
 ]
 
