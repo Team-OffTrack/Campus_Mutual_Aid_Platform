@@ -388,7 +388,7 @@ async function handlePublish() {
     } else {
       await publishDemand(payload)
       showToast('发布成功')
-      badgeToastStore.checkNewBadges()
+      await badgeToastStore.checkNewBadges()
       router.push('/demands')
     }
   } catch (e) { showToast(e.message || '操作失败，请重试') }

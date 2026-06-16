@@ -577,7 +577,7 @@ async function submitEvaluation() {
     myEval.value = result
     evaluations.value = [...evaluations.value, result]
     ratingValue.value = 5; ratingComment.value = ''
-    badgeToastStore.checkNewBadges()
+    await badgeToastStore.checkNewBadges()
     fetchEvaluations()
   } catch (e) { showToast(e.message || '提交评价失败，请重试') }
   finally { submittingEval.value = false }
@@ -673,7 +673,7 @@ async function handleAccept() {
   try { await showConfirmDialog({ title: '确认接单', message: '接单后请按时完成需求，确定要接单吗？' }) }
   catch { return }
   acting.value = true
-  try { demand.value = await acceptDemand(demand.value.demandId); showToast('接单成功'); badgeToastStore.checkNewBadges() }
+  try { demand.value = await acceptDemand(demand.value.demandId); showToast('接单成功'); await badgeToastStore.checkNewBadges() }
   catch (e) { showToast(e.message || '接单失败，请重试') }
   finally { acting.value = false }
 }
@@ -682,7 +682,7 @@ async function handleComplete() {
   try { await showConfirmDialog({ title: '确认完成', message: '确认需求已完成？完成后将不可撤销。' }) }
   catch { return }
   acting.value = true
-  try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); badgeToastStore.checkNewBadges(); await fetchEvaluations() }
+  try { demand.value = await completeDemand(demand.value.demandId); showToast('已完成'); await badgeToastStore.checkNewBadges(); await fetchEvaluations() }
   catch (e) { showToast(e.message || '操作失败，请重试') }
   finally { acting.value = false }
 }

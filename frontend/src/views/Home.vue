@@ -241,7 +241,7 @@ async function handleCheckin() {
     }
     stats.value.availablePoints += result.pointsAwarded
     showToast(`签到成功 +${result.pointsAwarded} 积分`)
-    badgeToastStore.checkNewBadges()
+    await badgeToastStore.checkNewBadges()
   } catch (e) {
     showToast(e.message || '签到失败')
   } finally {
