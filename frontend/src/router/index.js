@@ -30,6 +30,12 @@ const routes = [
     component: () => import('@/views/PointsHistory.vue')
   },
   {
+    path: '/admin',
+    name: 'AdminDashboard',
+    component: () => import('@/views/admin/AdminDashboard.vue'),
+    meta: { admin: true }
+  },
+  {
     path: '/admin/users',
     name: 'AdminUserList',
     component: () => import('@/views/admin/UserList.vue'),

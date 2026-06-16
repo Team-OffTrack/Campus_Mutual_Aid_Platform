@@ -1,10 +1,12 @@
 package cn.seecoder.campushelp.controller;
 
 import cn.seecoder.campushelp.common.ApiResult;
+import cn.seecoder.campushelp.dto.AdminDashboardResponse;
 import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.dto.ReportResponse;
 import cn.seecoder.campushelp.dto.ResolveReportRequest;
 import cn.seecoder.campushelp.dto.UserInfoResponse;
+import cn.seecoder.campushelp.service.AdminService;
 import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.ReportService;
 import cn.seecoder.campushelp.service.UserService;
@@ -29,12 +31,14 @@ public class AdminController {
     private final UserService userService;
     private final ReportService reportService;
     private final DemandService demandService;
+    private final AdminService adminService;
 
     public AdminController(UserService userService, ReportService reportService,
-                           DemandService demandService) {
+                           DemandService demandService, AdminService adminService) {
         this.userService = userService;
         this.reportService = reportService;
         this.demandService = demandService;
+        this.adminService = adminService;
     }
 
     /** Paginated user list with optional keyword search. */
@@ -93,5 +97,11 @@ public class AdminController {
         Long adminId = (Long) auth.getPrincipal();
         demandService.adminDeleteDemand(demandId, adminId);
         return ApiResult.success();
+    }
+
+    /** Dashboard statistics. */
+    @GetMapping("/dashboard")
+    public ApiResult<AdminDashboardResponse> getDashboard() {
+        return ApiResult.success(adminService.getDashboard());
     }
 }

@@ -694,7 +694,7 @@ async function handleAdminDelete() {
   try {
     await deleteDemand(demand.value.demandId)
     showToast('已删除')
-    router.replace('/')
+    router.back()
   } catch (e) { showToast(e.message || '删除失败，请重试') }
   finally { acting.value = false }
 }

@@ -1,5 +1,9 @@
 import client from './client'
 
+export function getDashboard() {
+  return client.get('/admin/dashboard')
+}
+
 export function listUsers(params) {
   return client.get('/admin/users', { params })
 }

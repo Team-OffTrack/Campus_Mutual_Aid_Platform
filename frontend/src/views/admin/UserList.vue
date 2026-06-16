@@ -1,6 +1,6 @@
 <template>
   <div class="page admin-page">
-    <van-nav-bar left-arrow fixed placeholder class="admin-nav" @click-left="router.push('/')">
+    <van-nav-bar left-arrow fixed placeholder class="admin-nav" @click-left="router.back()">
       <template #title><span class="nav-title">用户管理</span></template>
     </van-nav-bar>
 

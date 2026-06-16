@@ -151,43 +151,17 @@
             <van-icon name="arrow" class="action-arrow" />
           </div>
 
-          <div v-if="authStore.isAdmin" class="action-card card admin-entry" @click="router.push('/admin/users')" role="button">
+          <div v-if="authStore.isAdmin" class="action-card card admin-entry" @click="router.push('/admin')" role="button">
             <div class="action-left">
               <div class="action-icon-wrap" style="background:#FFF8E1">
                 <van-icon name="setting-o" color="#F9A825" size="20" />
               </div>
               <div>
-                <p class="action-title">管理后台</p>
-                <p class="action-sub">用户管理 · 数据监控</p>
-              </div>
-            </div>
-            <van-icon name="arrow" class="action-arrow" />
-          </div>
-
-          <div v-if="authStore.isAdmin" class="action-card card" @click="router.push('/admin/demands')" role="button">
-            <div class="action-left">
-              <div class="action-icon-wrap" style="background:#E3F2FD">
-                <van-icon name="orders-o" color="#1565C0" size="20" />
-              </div>
-              <div>
-                <p class="action-title">需求管理</p>
-                <p class="action-sub">查看和删除所有需求</p>
-              </div>
-            </div>
-            <van-icon name="arrow" class="action-arrow" />
-          </div>
-
-          <div v-if="authStore.isAdmin" class="action-card card" @click="router.push('/admin/reports')" role="button">
-            <div class="action-left">
-              <div class="action-icon-wrap" style="background:#FFEBEE">
-                <van-icon name="warning-o" color="#D32F2F" size="20" />
-              </div>
-              <div>
                 <p class="action-title">
-                  举报管理
+                  管理后台
                   <span v-if="pendingReportCount > 0" class="report-badge">{{ pendingReportCount > 99 ? '99+' : pendingReportCount }}</span>
                 </p>
-                <p class="action-sub">查看和处理用户举报</p>
+                <p class="action-sub">用户 · 需求 · 举报 · 数据</p>
               </div>
             </div>
             <van-icon name="arrow" class="action-arrow" />
