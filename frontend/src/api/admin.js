@@ -7,3 +7,11 @@ export function listUsers(params) {
 export function updateUserStatus(userId, status) {
   return client.put(`/admin/users/${userId}/status`, { status })
 }
+
+export function listDemands(params) {
+  return client.get('/admin/demands', { params })
+}
+
+export function deleteDemand(demandId) {
+  return client.delete(`/admin/demands/${demandId}`)
+}

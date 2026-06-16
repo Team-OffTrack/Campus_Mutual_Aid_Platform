@@ -164,6 +164,19 @@
             <van-icon name="arrow" class="action-arrow" />
           </div>
 
+          <div v-if="authStore.isAdmin" class="action-card card" @click="router.push('/admin/demands')" role="button">
+            <div class="action-left">
+              <div class="action-icon-wrap" style="background:#E3F2FD">
+                <van-icon name="orders-o" color="#1565C0" size="20" />
+              </div>
+              <div>
+                <p class="action-title">需求管理</p>
+                <p class="action-sub">查看和删除所有需求</p>
+              </div>
+            </div>
+            <van-icon name="arrow" class="action-arrow" />
+          </div>
+
           <div v-if="authStore.isAdmin" class="action-card card" @click="router.push('/admin/reports')" role="button">
             <div class="action-left">
               <div class="action-icon-wrap" style="background:#FFEBEE">

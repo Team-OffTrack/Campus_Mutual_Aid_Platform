@@ -7,12 +7,16 @@ import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.dto.TeamMemberResponse;
 import cn.seecoder.campushelp.dto.UpdateDemandRequest;
 import cn.seecoder.campushelp.entity.Demand;
+import cn.seecoder.campushelp.entity.PointsTransaction;
+import cn.seecoder.campushelp.entity.Report;
 import cn.seecoder.campushelp.entity.User;
 import cn.seecoder.campushelp.entity.enums.BadgeDefinition;
 import cn.seecoder.campushelp.entity.enums.DemandStatus;
 import cn.seecoder.campushelp.entity.enums.NotificationType;
 import cn.seecoder.campushelp.entity.enums.RewardType;
 import cn.seecoder.campushelp.mapper.DemandMapper;
+import cn.seecoder.campushelp.mapper.PointsTransactionMapper;
+import cn.seecoder.campushelp.mapper.ReportMapper;
 import cn.seecoder.campushelp.mapper.UserMapper;
 import cn.seecoder.campushelp.service.BadgeService;
 import cn.seecoder.campushelp.service.DemandService;
@@ -41,6 +45,8 @@ public class DemandServiceImpl implements DemandService {
 
     private final DemandMapper demandMapper;
     private final UserMapper userMapper;
+    private final ReportMapper reportMapper;
+    private final PointsTransactionMapper pointsTransactionMapper;
     private final NotificationService notificationService;
     private final TeamMemberService teamMemberService;
     private final PointsService pointsService;
@@ -49,6 +55,8 @@ public class DemandServiceImpl implements DemandService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DemandServiceImpl(DemandMapper demandMapper, UserMapper userMapper,
+                             ReportMapper reportMapper,
+                             PointsTransactionMapper pointsTransactionMapper,
                              NotificationService notificationService,
                              TeamMemberService teamMemberService,
                              PointsService pointsService,
@@ -56,6 +64,8 @@ public class DemandServiceImpl implements DemandService {
                              BadgeService badgeService) {
         this.demandMapper = demandMapper;
         this.userMapper = userMapper;
+        this.reportMapper = reportMapper;
+        this.pointsTransactionMapper = pointsTransactionMapper;
         this.notificationService = notificationService;
         this.teamMemberService = teamMemberService;
         this.pointsService = pointsService;
@@ -585,6 +595,84 @@ public class DemandServiceImpl implements DemandService {
 
         User publisher = userMapper.selectById(userId);
         return DemandResponse.from(demand, publisher);
+    }
+
+    @Override
+    @Transactional
+    public void adminDeleteDemand(Long demandId, Long adminId) {
+        Demand demand = findDemandOrFail(demandId);
+
+        // 1. Unfreeze points if the demand is still active
+        if (DemandStatus.OPEN.equals(demand.getStatus()) || DemandStatus.IN_PROGRESS.equals(demand.getStatus())) {
+            executeCancel(demand);
+        }
+
+        // 2. Clean up report references (polymorphic target_id, no FK constraint)
+        LambdaQueryWrapper<Report> reportWrapper = new LambdaQueryWrapper<>();
+        reportWrapper.eq(Report::getTargetType, "DEMAND")
+                .eq(Report::getTargetId, demandId);
+        List<Report> reports = reportMapper.selectList(reportWrapper);
+        for (Report r : reports) {
+            r.setTargetId(null);
+            reportMapper.updateById(r);
+        }
+
+        // 3. Clean up points_transaction references (no FK constraint)
+        LambdaQueryWrapper<PointsTransaction> ptWrapper = new LambdaQueryWrapper<>();
+        ptWrapper.eq(PointsTransaction::getReferenceId, demandId);
+        List<PointsTransaction> pts = pointsTransactionMapper.selectList(ptWrapper);
+        for (PointsTransaction pt : pts) {
+            pt.setReferenceId(null);
+            pointsTransactionMapper.updateById(pt);
+        }
+
+        // 4. Hard delete (cascades: evaluation, conversation, team_member, user_favorite;
+        //    notification.demand_id is SET NULL by DB FK)
+        demandMapper.deleteById(demandId);
+    }
+
+    @Override
+    public Page<DemandResponse> adminListDemands(int pageNum, int pageSize, String type, String keyword, String status) {
+        LambdaQueryWrapper<Demand> wrapper = new LambdaQueryWrapper<>();
+        if (type != null && !type.isBlank()) {
+            wrapper.eq(Demand::getType, type);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.like(Demand::getTitle, keyword);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq(Demand::getStatus, status);
+        }
+        wrapper.orderByDesc(Demand::getCreateTime);
+
+        Page<Demand> page = demandMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<Demand> demands = page.getRecords();
+
+        // Batch-load publishers and acceptors
+        Set<Long> userIds = new java.util.HashSet<>();
+        for (Demand d : demands) {
+            userIds.add(d.getPublisherId());
+            if (d.getAcceptorId() != null) userIds.add(d.getAcceptorId());
+        }
+
+        final Map<Long, User> userMap;
+        if (!userIds.isEmpty()) {
+            userMap = userMapper.selectBatchIds(new java.util.ArrayList<>(userIds)).stream()
+                    .collect(Collectors.toMap(User::getUserId, u -> u));
+        } else {
+            userMap = Map.of();
+        }
+
+        Page<DemandResponse> resultPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        resultPage.setRecords(demands.stream()
+                .map(d -> {
+                    DemandResponse rsp = DemandResponse.from(d,
+                            userMap.get(d.getPublisherId()),
+                            userMap.get(d.getAcceptorId()));
+                    return rsp;
+                })
+                .toList());
+        return resultPage;
     }
 
     private void validateAttributes(String type, Map<String, Object> attrs) {

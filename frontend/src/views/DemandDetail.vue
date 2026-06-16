@@ -176,8 +176,15 @@
           {{ favorited ? '已收藏' : '收藏' }}
         </van-button>
 
-        <!-- Report button — always visible -->
-        <van-button v-if="demand" block round plain class="action-btn report-btn"
+        <!-- Admin delete button — replaces report for admins -->
+        <van-button v-if="demand && authStore.isAdmin" block round class="action-btn delete-admin-btn"
+          :loading="acting"
+          @click="handleAdminDelete">
+          删除此需求
+        </van-button>
+
+        <!-- Report button — non-admin only -->
+        <van-button v-if="demand && !authStore.isAdmin" block round plain class="action-btn report-btn"
           :loading="reportLoading"
           @click="reportSheetVisible = true">
           举报
@@ -395,6 +402,7 @@ import { createConversation } from '@/api/chat'
 import { createReport } from '@/api/report'
 import { triggerEasterEgg } from '@/api/badge'
 import { useBadgeToastStore } from '@/stores/badgeToast'
+import { deleteDemand } from '@/api/admin'
 import NavActions from '@/components/NavActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useFavoritesStore } from '@/stores/favorites'
@@ -679,6 +687,18 @@ async function handleComplete() {
   finally { acting.value = false }
 }
 
+async function handleAdminDelete() {
+  try { await showConfirmDialog({ title: '确认删除', message: '确定要删除该需求吗？此操作不可撤销，将同时删除关联的会话、评价等数据。' }) }
+  catch { return }
+  acting.value = true
+  try {
+    await deleteDemand(demand.value.demandId)
+    showToast('已删除')
+    router.replace('/')
+  } catch (e) { showToast(e.message || '删除失败，请重试') }
+  finally { acting.value = false }
+}
+
 // ── Team handlers ──
 
 async function refreshTeamData() {
@@ -830,6 +850,7 @@ onMounted(fetchDetail)
 .fav-btn { transition: all 0.2s; margin-bottom: 12px; }
 .fav-on { color: #EAB308 !important; border-color: #EAB308 !important; }
 .report-btn { margin-bottom: 12px; color: var(--c-text-2) !important; }
+.delete-admin-btn { margin-bottom: 12px; background: #ee0a24 !important; color: #fff !important; border: none !important; }
 .cancel-btn-secondary {
   color: var(--c-text-2) !important; border-color: var(--c-border) !important;
   box-shadow: none !important;

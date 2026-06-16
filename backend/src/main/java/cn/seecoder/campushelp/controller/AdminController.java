@@ -1,9 +1,11 @@
 package cn.seecoder.campushelp.controller;
 
 import cn.seecoder.campushelp.common.ApiResult;
+import cn.seecoder.campushelp.dto.DemandResponse;
 import cn.seecoder.campushelp.dto.ReportResponse;
 import cn.seecoder.campushelp.dto.ResolveReportRequest;
 import cn.seecoder.campushelp.dto.UserInfoResponse;
+import cn.seecoder.campushelp.service.DemandService;
 import cn.seecoder.campushelp.service.ReportService;
 import cn.seecoder.campushelp.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,10 +28,13 @@ public class AdminController {
 
     private final UserService userService;
     private final ReportService reportService;
+    private final DemandService demandService;
 
-    public AdminController(UserService userService, ReportService reportService) {
+    public AdminController(UserService userService, ReportService reportService,
+                           DemandService demandService) {
         this.userService = userService;
         this.reportService = reportService;
+        this.demandService = demandService;
     }
 
     /** Paginated user list with optional keyword search. */
@@ -67,6 +72,26 @@ public class AdminController {
                                           @Valid @RequestBody ResolveReportRequest request) {
         Long adminId = (Long) auth.getPrincipal();
         reportService.resolveReport(id, adminId, request);
+        return ApiResult.success();
+    }
+
+    /** Paginated demand list with optional type, keyword, and status filters. */
+    @GetMapping("/demands")
+    public ApiResult<Page<DemandResponse>> listDemands(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status) {
+        return ApiResult.success(demandService.adminListDemands(pageNum, pageSize, type, keyword, status));
+    }
+
+    /** Hard-delete a demand. */
+    @DeleteMapping("/demands/{demandId}")
+    public ApiResult<Void> deleteDemand(Authentication auth,
+                                        @PathVariable Long demandId) {
+        Long adminId = (Long) auth.getPrincipal();
+        demandService.adminDeleteDemand(demandId, adminId);
         return ApiResult.success();
     }
 }

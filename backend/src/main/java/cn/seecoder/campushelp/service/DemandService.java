@@ -43,6 +43,12 @@ public interface DemandService {
     /** Admin cancels a demand (skips ownership check, for moderation). */
     void adminCancelDemand(Long demandId, Long adminId);
 
+    /** Admin hard-deletes a demand. Unfreezes points, cleans up references, then deletes. */
+    void adminDeleteDemand(Long demandId, Long adminId);
+
+    /** Admin paginated demand list with optional type, keyword, and status filters. */
+    Page<DemandResponse> adminListDemands(int pageNum, int pageSize, String type, String keyword, String status);
+
     /** Accept an OPEN demand. Cannot accept your own demand. */
     DemandResponse accept(Long demandId, Long acceptorId);
 
