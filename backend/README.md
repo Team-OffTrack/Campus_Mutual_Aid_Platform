@@ -15,6 +15,7 @@ Spring Boot 3 项目，提供 RESTful API，使用 JWT 无状态认证。
 | 数据库 | MySQL / MariaDB |
 | 迁移 | Flyway Community |
 | 缓存 | Redis（预留） |
+| 实时通信 | WebSocket (Spring WebSocket + STOMP) |
 | 构建 | Maven |
 | 测试 | JUnit 5 + H2 内存库 |
 
@@ -50,13 +51,18 @@ src/main/java/cn/seecoder/campushelp/
 │   ├── Evaluation.java                 # 评价表
 │   ├── Conversation.java               # 会话表
 │   ├── Message.java                    # 消息表
+│   ├── Favorite.java                   # 需求收藏表（V12）
+│   ├── Report.java                     # 举报表（V13）
+│   ├── UserBadge.java                  # 用户徽章表（V14）
+│   ├── WornBadge.java                  # 佩戴徽章表（V14）
 │   └── enums/
 │       ├── DemandStatus.java           # OPEN / IN_PROGRESS / COMPLETED / CANCELLED
 │       ├── NotificationType.java       # ACCEPT / COMPLETE / CANCEL / EVALUATION / JOIN_REQUEST / …
 │       ├── PointsTransactionType.java  # SIGNUP_BONUS / DAILY_CHECKIN / PUBLISH / CANCEL_REFUND / …
 │       ├── RewardType.java             # POINT / DONATION / @Deprecated CASH
 │       ├── TeamMemberRole.java         # LEADER / MEMBER
-│       └── TeamMemberStatus.java       # PENDING / JOINED / REJECTED
+│       ├── TeamMemberStatus.java       # PENDING / JOINED / REJECTED
+│       └── BadgeDefinition.java        # 9 种成就徽章定义（V14）
 ├── dto/
 │   ├── RegisterRequest.java            # 注册请求体
 │   ├── LoginRequest.java               # 登录请求体
@@ -68,6 +74,10 @@ src/main/java/cn/seecoder/campushelp/
 │   ├── TeamMemberResponse.java         # 队员信息响应体
 │   ├── DailyCheckinResponse.java       # 签到响应体（积分/连续天数）
 │   ├── DailyCheckinStatus.java         # 签到状态（今日是否已签）
+│   ├── AdminDashboardResponse.java      # 管理仪表盘统计（V15+）
+│   ├── BadgeResponse.java               # 徽章状态响应体（V14）
+│   ├── CreateReportRequest.java         # 提交举报请求体（V13）
+│   ├── ReportResponse.java              # 举报列表响应体（V13）
 │   └── …（评价/聊天相关 DTO）
 ├── mapper/
 │   ├── UserMapper.java
@@ -75,21 +85,35 @@ src/main/java/cn/seecoder/campushelp/
 │   ├── DemandMapper.java
 │   ├── PointsTransactionMapper.java    # 积分流水（V11）
 │   ├── DailyCheckinMapper.java         # 签到记录（V11）
-│   └── …（其他 6 个 mapper）
+│   ├── FavoriteMapper.java              # 需求收藏（V12）
+│   ├── ReportMapper.java                # 举报记录（V13）
+│   ├── UserBadgeMapper.java             # 用户徽章（V14）
+│   ├── WornBadgeMapper.java             # 佩戴徽章（V14）
+│   └── …（其他 mapper）
 ├── service/
 │   ├── UserService.java                # 接口
 │   ├── DemandService.java
 │   ├── PointsService.java              # 积分服务接口（签到/冻结/解冻/转账/注册奖金）
+│   ├── BadgeService.java               # 徽章服务（颁发/佩戴/检测/彩蛋，V14）
+│   ├── ReportService.java              # 举报服务（提交/列表/处理，V13）
+│   ├── FavoriteService.java            # 收藏服务（添加/移除/列表，V12）
+│   ├── AdminService.java               # 管理服务（仪表盘统计）
 │   └── impl/
 │       ├── UserServiceImpl.java        # 注册/登录/资料管理（注册送 100 积分）
 │       ├── DemandServiceImpl.java      # 需求生命周期（发布冻结/取消解冻/完成转账）
 │       ├── PointsServiceImpl.java      # 积分核心实现（签到 streak / 悲观锁 / 记账）
+│       ├── BadgeServiceImpl.java       # 徽章颁发与检测（V14）
+│       ├── ReportServiceImpl.java      # 举报处理（V13）
+│       ├── FavoriteServiceImpl.java    # 收藏管理（V12）
+│       ├── AdminServiceImpl.java       # 管理仪表盘聚合查询
 │       └── …（其他 service 实现）
 └── controller/
     ├── UserController.java             # /api/v1/user/*
     ├── DemandController.java           # /api/v1/demands/*
     ├── PointsController.java           # /api/v1/points/checkin, /checkin/status, /transactions
     ├── TeamMemberController.java       # /api/v1/demands/{id}/team/*
+    ├── BadgeController.java            # /api/v1/badges/* （V14）
+    ├── ReportController.java           # /api/v1/reports （V13）
     └── …（Admin / Chat / Evaluation / Notification 控制器）
 ```
 
@@ -189,8 +213,18 @@ spring:
 | PUT | `/user/profile` | JWT | 修改资料（含隐私设置） |
 | PUT | `/user/password` | JWT | 修改密码 |
 | POST | `/user/avatar` | JWT | 上传头像 |
+
+### 管理后台
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/admin/dashboard` | ADMIN | 仪表盘统计概览 |
 | GET | `/admin/users` | ADMIN | 分页用户列表 |
 | PUT | `/admin/users/{id}/status` | ADMIN | 封禁/解封用户 |
+| GET | `/admin/demands` | ADMIN | 需求列表（支持筛选/搜索） |
+| DELETE | `/admin/demands/{id}` | ADMIN | 删除需求（硬删除） |
+| GET | `/admin/reports` | ADMIN | 举报列表（按状态筛选） |
+| PUT | `/admin/reports/{id}/resolve` | ADMIN | 处理举报（已处理/驳回） |
 
 ### 需求（Demand）
 
@@ -205,6 +239,15 @@ spring:
 | GET | `/demands/my/orders` | JWT | 我的订单（publisher/acceptor） |
 | GET | `/demands/my/team` | JWT | 我的队伍 |
 | POST | `/demands/image` | JWT | 上传需求图片 |
+| PUT | `/demands/{id}` | JWT | 编辑需求（仅发布者，OPEN 状态） |
+
+### 收藏（V12 新增）
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/demands/my/favorites` | JWT | 我的收藏列表（分页） |
+| POST | `/demands/{id}/favorite` | JWT | 收藏需求 |
+| DELETE | `/demands/{id}/favorite` | JWT | 取消收藏 |
 
 ### 积分（V11 新增）
 
@@ -227,6 +270,21 @@ spring:
 | GET | `/demands/{id}/team/applicants` | JWT | 待审核申请列表 |
 | GET | `/demands/{id}/team/my-membership` | JWT | 我的成员状态 |
 
+### 举报（V13 新增）
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| POST | `/reports` | JWT | 提交举报（支持举报需求/用户/消息） |
+
+### 成就徽章（V14 新增）
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/badges` | JWT | 获取全部 9 种徽章及进度 |
+| POST | `/badges/wear/{badgeKey}` | JWT | 佩戴已获得的徽章 |
+| DELETE | `/badges/wear` | JWT | 取下当前佩戴的徽章 |
+| POST | `/badges/easter-egg` | JWT | 触发彩蛋徽章 |
+
 ### 评价 / 聊天 / 通知
 
 | 方法 | 路径 | 认证 | 说明 |
@@ -238,6 +296,14 @@ spring:
 | POST | `/chat/messages` | JWT | 发送消息 |
 | GET | `/chat/{id}/messages` | JWT | 消息列表 |
 | GET | `/notifications` | JWT | 通知列表 |
+
+### WebSocket 实时通信
+
+| 端点 | 协议 | 说明 |
+|------|------|------|
+| `/ws` | WebSocket + STOMP | 实时聊天消息推送 |
+| `/topic/messages/{conversationId}` | STOMP 订阅 | 订阅会话新消息 |
+| `/topic/notifications/{userId}` | STOMP 订阅 | 订阅系统通知推送 |
 
 ### 统一响应格式
 
@@ -262,7 +328,10 @@ V7__add_images_to_demand.sql        # 需求图片列
 V8__add_image_to_message.sql        # 消息图片列
 V9__add_attributes_to_demand.sql    # 需求属性 JSON 列
 V10__create_team_member_table.sql   # 组队多人模型
-V11__create_points_tables.sql       # 积分流水 + 每日签到（当前最新）
+V11__create_points_tables.sql       # 积分流水 + 每日签到
+V12__create_favorite_table.sql      # 需求收藏/书签
+V13__create_report_table.sql        # 举报系统
+V14__create_badge_tables.sql        # 成就徽章系统（当前最新）
 ```
 
 ### 新增迁移

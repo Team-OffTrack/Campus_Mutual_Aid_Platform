@@ -1,7 +1,7 @@
 # 校园互助服务平台 — ER 图
 
-> **版本**：2.0 | **最后更新**：2026-06-14
-> 基于实际数据库 schema（Flyway V1–V11）
+> **版本**：2.1 | **最后更新**：2026-06-16
+> 基于实际数据库 schema（Flyway V1–V14）
 
 ---
 
@@ -27,6 +27,12 @@ erDiagram
     demand ||--o{ evaluation : "被评价"
     demand ||--o{ notification : "触发通知"
     conversation ||--o{ message : "包含消息"
+
+    user ||--o{ user_favorite : "收藏"
+    user_favorite }o--|| demand : "被收藏"
+    user ||--o{ report : "举报 (reporter_id)"
+    user ||--o{ user_badge : "获得徽章"
+    user ||--|| worn_badge : "佩戴徽章"
 
     %% ============ 实体定义 ============
     user {
@@ -147,6 +153,41 @@ erDiagram
         int streak "当日连续签到天数"
         datetime create_time "创建时间"
     }
+
+    user_favorite {
+        bigint id PK "收藏ID"
+        bigint demand_id FK "需求ID，级联删除"
+        bigint user_id FK "用户ID，级联删除"
+        datetime create_time "创建时间"
+    }
+
+    report {
+        bigint id PK "举报ID"
+        bigint reporter_id FK "举报人ID"
+        varchar target_type "目标类型：DEMAND/USER/MESSAGE"
+        bigint target_id "目标ID"
+        varchar reason "原因：MISLEADING/HARASSMENT/ILLEGAL/SPAM/OTHER"
+        varchar description "补充说明（可选）"
+        varchar status "状态：PENDING/RESOLVED/DISMISSED"
+        varchar admin_note "管理员处理备注"
+        bigint admin_id FK "处理管理员ID"
+        datetime create_time "创建时间"
+        datetime resolve_time "处理时间"
+    }
+
+    user_badge {
+        bigint id PK "记录ID"
+        bigint user_id FK "用户ID，级联删除"
+        varchar badge_key "徽章标识，如 FIRST_PUBLISH"
+        datetime earned_at "获得时间"
+    }
+
+    worn_badge {
+        bigint id PK "记录ID"
+        bigint user_id UK "用户ID，唯一约束"
+        varchar badge_key "当前佩戴的徽章 key"
+        datetime worn_at "佩戴时间"
+    }
 ```
 
 ---
@@ -169,8 +210,16 @@ erDiagram
 | `evaluation` | `uk_demand_evaluator` | `demand_id, evaluator_id` | UNIQUE | 每人在每个需求下只能评价一次 |
 | `team_member` | `uk_demand_user` | `demand_id, user_id` | UNIQUE | 同一用户在同一需求下只有一条组队记录 |
 | `points_transaction` | `idx_tx_user` | `user_id` | INDEX | "我的积分明细"分页查询 |
-| `points_transaction` | `idx_tx_time` | `create_time` | INDEX | 按时间排序积分流水 |
-| `daily_checkin` | `uk_user_date` | `user_id, checkin_date` | UNIQUE | 每日签到唯一性约束 + 签到状态查询 |
+| `points_transaction` | `idx_tx_time` | `create_time` | INDEX | 积分流水按时间排序 |
+| `daily_checkin` | `uk_user_date` | `user_id, checkin_date` | UNIQUE | 签到唯一性 + 今日状态快速查询 |
+| `user_favorite` | `uk_fav_demand_user` | `demand_id, user_id` | UNIQUE | 同一用户+需求不可重复收藏 |
+| `report` | `idx_report_target` | `target_type, target_id` | 复合 INDEX | 按目标查询关联举报 |
+| `report` | `idx_report_reporter` | `reporter_id` | INDEX | "我的举报"查询 |
+| `report` | `idx_report_status` | `status` | INDEX | 管理端按状态筛选举报 |
+| `user_badge` | `uk_user_badge` | `user_id, badge_key` | UNIQUE | 同一徽章不可重复获得 |
+| `user_badge` | `idx_ub_user` | `user_id` | INDEX | 用户徽章列表查询 |
+| `worn_badge` | `user_id` (UNIQUE) | `user_id` | UNIQUE | 每用户仅可佩戴一枚徽章 |
+| `worn_badge` | `idx_wb_user` | `user_id` | INDEX | 佩戴徽章快速查询 |
 
 ---
 
@@ -212,6 +261,26 @@ erDiagram
 
 `points_transaction` 表作为只追加（append-only）的积分账本，每条记录包含变动后的余额快照（`balance_after`）。所有写操作使用 `SELECT ... FOR UPDATE` 悲观行锁，防止并发修改导致的余额不一致。积分流水不可删除、不可修改，保证审计可追溯。
 
+### 3.5 枚举驱动的徽章系统
+
+徽章系统采用"枚举定义 + 数据库记录"的混合模式：
+
+- **`BadgeDefinition` 枚举**（Java）作为 9 种徽章的单一事实来源（key、名称、emoji、描述、目标值、是否隐藏条件），便于代码中类型安全引用
+- **`user_badge` 表**记录用户已获得的徽章（按 `(user_id, badge_key)` 唯一），每次 `checkNewBadges()` 时遍历枚举检测条件，新达成的插入记录并触发动效
+- **`worn_badge` 表**记录用户当前佩戴的徽章（每用户仅一条，`user_id` 唯一约束），佩戴新徽章时 REPLACE 旧记录，取下一律 DELETE
+
+**选择理由：**
+- 徽章定义在代码中而非配置表，避免运行时查表开销（`BadgeDefinition.values()` 在 JVM 启动时已加载）
+- `user_badge` 的唯一约束保证同一徽章不会重复颁发
+- `worn_badge` 的 UNIQUE `user_id` 约束天然保证一对一佩戴关系
+
+### 3.6 举报系统的软关联设计
+
+`report` 表的 `target_type` + `target_id` 形成多态外键，可指向需求（DEMAND）、用户（USER）或消息（MESSAGE）。`target_id` 不使用真正的外键约束（无 `ON DELETE CASCADE`），因为：
+
+- **需求被管理员硬删除时**：`DemandServiceImpl.adminDeleteDemand()` 主动将关联举报的 `targetId` 置为 null，保留举报记录作为操作审计轨迹
+- **用户被删除时**：举报的 `reporter_id` 级联删除（举报人和举报记录一同消失），但 `admin_id` 设为 `ON DELETE SET NULL`（保留已处理的举报记录）
+
 ---
 
 ## 4. 表清单速览
@@ -229,3 +298,7 @@ erDiagram
 | 9 | `team_member` | 组队成员（含申请审批） | V10 |
 | 10 | `points_transaction` | 积分流水账本（只追加） | V11 |
 | 11 | `daily_checkin` | 每日签到记录 | V11 |
+| 12 | `user_favorite` | 需求收藏/书签，用户按需标记 | V12 |
+| 13 | `report` | 举报记录，支持多态目标 | V13 |
+| 14 | `user_badge` | 用户已获得的成就徽章 | V14 |
+| 15 | `worn_badge` | 用户当前佩戴的徽章（一对一） | V14 |
