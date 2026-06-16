@@ -104,17 +104,40 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 
 - **基于需求的对话** — 每条对话绑定一条需求 + 两个用户，确保沟通上下文清晰
 - **文本 + 图片消息** — 支持文字消息和图片消息两种类型
-- **轮询实时更新** — 前端每 10 秒拉取新消息，消息列表仅在有新内容时重新渲染（性能优化）
+- **WebSocket 实时推送** — 采用 STOMP over WebSocket 协议，消息和通知实时送达，无需轮询
 - **未读计数** — 全局未读消息数角标，对话列表按最近消息时间排序
 - **会话创建去重** — 同一需求 + 同一对用户仅创建一个会话（deterministic user_id 排序 + UNIQUE 约束 + DuplicateKeyException 容错）
 - **Emoji 选择器** — 前端集成 Emoji 面板，支持快速插入表情符号
 
 ### 通知中心
 
-- **七种通知类型** — 接单通知(ACCEPT)、完成通知(COMPLETE)、取消通知(CANCEL)、评价通知(EVALUATION)、组队申请(JOIN_REQUEST)、申请通过(REQUEST_APPROVED)、申请拒绝(REQUEST_REJECTED)
+- **七种通知类型** — 接单(ACCEPT)、完成(COMPLETE)、取消(CANCEL)、评价(EVALUATION)、组队申请(JOIN_REQUEST)、申请通过(REQUEST_APPROVED)、申请拒绝(REQUEST_REJECTED)、举报处理(REPORT_RESOLVED)
 - **未读标记** — 未读通知以紫色左边框 + 脉动圆点标识，全局未读数角标
 - **已读管理** — 单条标记已读 / 一键全部已读
 - **导航联动** — 每条通知携带 related_demand_id，点击即跳转到对应需求详情
+
+### 成就徽章系统
+
+- **9 种成就徽章** — 首次发布(🎉)、首次接单(🤝)、十全十美(🏆)、五星好评(⭐)、百星好评(💯)、签到达人(🔥)、乐于助人(💝)、正义使者(🛡️)、彩蛋猎人(🐱)
+- **自动检测颁发** — 发布需求/接单/完成/签到/举报处理时自动检测条件，达成即颁发
+- **徽章佩戴** — 从已获得徽章中选择一枚佩戴，显示在头像角标上（全局可见）
+- **彩蛋隐藏条件** — EASTER_EGG 徽章达成条件对用户隐藏，触发后全屏动效展示
+
+### 举报系统
+
+- **多态举报目标** — 支持举报需求（DEMAND）、用户（USER）、消息（MESSAGE）
+- **五种举报原因** — 虚假信息(MISLEADING)、骚扰/不当言论(HARASSMENT)、违禁品/违规(ILLEGAL)、垃圾广告(SPAM)、其他(OTHER)
+- **管理处理流程** — 待处理→已处理/驳回，支持关联操作（下架需求、封禁用户）
+- **举报成就联动** — 首次举报被确认处理后获得"正义使者"徽章
+
+### 需求收藏
+
+- **书签功能** — 用户可收藏感兴趣的需求，在"我的收藏"中统一查看
+- **幂等设计** — UNIQUE(demand_id, user_id) 约束保证不重复收藏，重复操作不报错
+
+### 需求编辑
+
+- **发布后修改** — 发布者可在 OPEN 状态下编辑需求的标题、描述、地点、截止时间等信息
 
 ### 匿名与隐私
 
@@ -124,7 +147,10 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 
 ### 管理后台
 
-- **用户管理** — 分页列表 + 学号/姓名关键词搜索，展示头像、角色、账户状态
+- **仪表盘概览** — 用户/需求/积分/举报四大维度统计（总量、今日新增、活跃指标、类型分布、签到率）
+- **用户管理** — 分页列表 + 学号/姓名关键词搜索，展示头像、角色、账户状态、佩戴徽章
+- **需求管理** — 按类型/状态/关键词筛选，支持管理员直接硬删除需求
+- **举报管理** — 待处理/已处理/已驳回三栏筛选，一键处理（确认/驳回）+ 关联操作（下架需求/封禁用户）
 - **封禁/解封** — 一键操作，被封禁用户在下次请求时被 JWT 过滤器拦截（状态码 403）
 - **自我保护** — 管理员不可封禁自己
 
@@ -148,14 +174,15 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 │        Spring Boot 3.2.5 + Spring Security       │
 │              https://localhost:8080              │
 │  ┌──────────────────────────────────────────┐   │
-│  │          Controller Layer (8 个)           │   │
+│  │          Controller Layer (10 个)          │   │
 │  │  User / Demand / Points / TeamMember      │   │
 │  │  Evaluation / Chat / Notification / Admin │   │
+│  │  Badge / Report                          │   │
 │  ├──────────────────────────────────────────┤   │
-│  │          Service Layer (10 个)             │   │
+│  │          Service Layer (14 个)             │   │
 │  │  业务逻辑 + @Transactional 事务边界        │   │
 │  ├──────────────────────────────────────────┤   │
-│  │          Mapper Layer (12 个)              │   │
+│  │          Mapper Layer (17 个)              │   │
 │  │  MyBatis-Plus LambdaQueryWrapper 封装     │   │
 │  ├──────────────────────────────────────────┤   │
 │  │          Security Layer                    │   │
@@ -167,7 +194,7 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 ┌────────────────────┴────────────────────────────┐
 │              MySQL / MariaDB                      │
 │          database: campus_help                    │
-│   11 tables + Flyway versioned migrations        │
+│   15 tables + Flyway versioned migrations        │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -180,7 +207,8 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 | **安全框架** | Spring Security | 6.x | 过滤器链 + 方法级授权 |
 | **JWT 库** | jjwt | 0.12.5 | 现代 API 设计（Builder 模式 + Key 类型安全） |
 | **ORM** | MyBatis-Plus | 3.5.6 | Lambda 查询避免字符串字段名，分页插件，自动填充 |
-| **数据库迁移** | Flyway | — | 版本化 SQL 迁移，checksum 校验防篡改 |
+| **数据库迁移** | Flyway | — | 版本化 SQL 迁移（V1–V14），checksum 校验防篡改 |
+| **实时通信** | WebSocket + STOMP | (Spring) | 消息和通知实时推送，替代轮询 |
 | **密码加密** | BCrypt | (Spring) | 自适应哈希，strength=10（2^10 轮） |
 | **JSON 处理** | Jackson | (Spring) | 需求 attributes JSON 列序列化/反序列化 |
 | **测试数据库** | H2 | — | 内存模式，测试隔离，无需 MySQL |
@@ -262,6 +290,9 @@ OPEN ──→ IN_PROGRESS ──→ COMPLETED
 
 // 管理员端点（需 ROLE_ADMIN）
 "/api/v1/admin/**"
+
+// WebSocket 端点（公开，STOMP 层自行认证）
+"/ws/**"
 
 // 其他所有端点（需认证）
 "/api/v1/**"
@@ -435,7 +466,7 @@ demand (1) ──── (N) evaluation        评价绑定需求
 conversation (1) ──── (N) message     会话消息
 ```
 
-### 数据表清单（11 张）
+### 数据表清单（15 张）
 
 | 表名 | 行数规模 | 核心索引 |
 |------|----------|----------|
@@ -450,10 +481,14 @@ conversation (1) ──── (N) message     会话消息
 | `notification` | ~通知数 | INDEX(user_id, is_read, create_time) |
 | `points_transaction` | ~流水数 | INDEX(user_id, create_time), INDEX(type) |
 | `daily_checkin` | ~签到数 | UNIQUE(user_id, checkin_date) |
+| `user_favorite` | ~M_fav | UNIQUE(demand_id, user_id) |
+| `report` | ~举报数 | INDEX(target_type, target_id), INDEX(status) |
+| `user_badge` | ~N×k_badge | UNIQUE(user_id, badge_key) |
+| `worn_badge` | ≤ N | UNIQUE(user_id) |
 
 ### 数据库迁移策略
 
-采用 **Flyway 版本化迁移**，共 11 版迁移脚本（V1-V11），存储在 `backend/src/main/resources/db/migration/`：
+采用 **Flyway 版本化迁移**，共 14 版迁移脚本（V1–V14），存储在 `backend/src/main/resources/db/migration/`：
 
 | 版本 | 内容 | 关键 DDL |
 |------|------|----------|
@@ -468,6 +503,9 @@ conversation (1) ──── (N) message     会话消息
 | V9 | 需求属性 JSON | demand 增加 attributes 列（TEXT，JSON 格式） |
 | V10 | 组队表 | team_member（role + status + 申请消息） |
 | V11 | 积分表 | points_transaction + daily_checkin |
+| V12 | 收藏表 | user_favorite（UNIQUE constraint） |
+| V13 | 举报表 | report（多态 target + 5 种原因 + 处理流程） |
+| V14 | 徽章表 | user_badge + worn_badge（成就系统） |
 
 **原则**：已应用的迁移文件永不修改（Flyway checksum 校验）。
 
@@ -585,14 +623,42 @@ conversation (1) ──── (N) message     会话消息
 
 | 方法 | 路径 | 权限 | 说明 |
 |------|------|------|------|
-| GET | `/api/v1/admin/users` | ADMIN | 用户列表（分页+搜索） |
+| GET | `/api/v1/admin/dashboard` | ADMIN | 仪表盘统计概览 |
+| GET | `/api/v1/admin/users` | ADMIN | 用户列表（分页+搜索+徽章） |
 | PUT | `/api/v1/admin/users/{id}/status` | ADMIN | 封禁/解封用户 |
+| GET | `/api/v1/admin/demands` | ADMIN | 需求列表（类型/状态/关键词筛选） |
+| DELETE | `/api/v1/admin/demands/{id}` | ADMIN | 删除需求（硬删除） |
+| GET | `/api/v1/admin/reports` | ADMIN | 举报列表（按状态筛选） |
+| PUT | `/api/v1/admin/reports/{id}/resolve` | ADMIN | 处理举报（已处理/驳回） |
+
+#### 举报模块 (ReportController)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/reports` | 提交举报（需求/用户/消息） |
+
+#### 成就徽章模块 (BadgeController)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/badges` | 9 种徽章及用户进度 |
+| POST | `/api/v1/badges/wear/{key}` | 佩戴徽章 |
+| DELETE | `/api/v1/badges/wear` | 取下徽章 |
+| POST | `/api/v1/badges/easter-egg` | 触发彩蛋徽章 |
+
+#### 收藏模块 (DemandController 内)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/demands/my/favorites` | 我的收藏列表 |
+| POST | `/api/v1/demands/{id}/favorite` | 收藏需求 |
+| DELETE | `/api/v1/demands/{id}/favorite` | 取消收藏 |
 
 ---
 
 ## 前端架构
 
-### 页面路由（12 条）
+### 页面路由（18 条）
 
 | 路径 | 组件 | 权限 | 说明 |
 |------|------|------|------|
@@ -600,14 +666,20 @@ conversation (1) ──── (N) message     会话消息
 | `/register` | Register.vue | 游客 | 分栏式注册页 |
 | `/` | Home.vue | 登录 | 首页：问候/积分统计/签到/功能入口 |
 | `/profile` | Profile.vue | 登录 | 个人资料 + 隐私设置 + 密码修改 |
-| `/demands` | DemandList.vue | 登录 | 需求广场：搜索/筛选/排序/分页 |
+| `/demands` | DemandList.vue | 登录 | 需求广场：搜索/筛选/排序/分页/收藏 |
 | `/demands/publish` | DemandPublish.vue | 登录 | 发布需求：动态表单（6 种类型） |
-| `/demands/:id` | DemandDetail.vue | 登录 | 需求详情：状态流/组队审批/评价 |
+| `/demands/:id` | DemandDetail.vue | 登录 | 需求详情：状态流/组队审批/评价/管理删除 |
 | `/orders` | MyOrders.vue | 登录 | 我的订单：三标签页（发布/接取/队伍） |
 | `/points/history` | PointsHistory.vue | 登录 | 积分明细：余额总览 + 分类流水 |
 | `/notifications` | Notifications.vue | 登录 | 通知中心：系统消息 + 私信会话 |
 | `/chat/:id` | ChatDetail.vue | 登录 | 私信聊天：文本/图片/Emoji |
-| `/admin/users` | AdminUserList.vue | ADMIN | 用户管理：搜索/封禁/解封 |
+| `/badges` | BadgeList.vue | 登录 | 成就徽章：全部 9 种徽章展示 + 佩戴/取下 |
+| `/admin` | AdminDashboard.vue | ADMIN | 管理仪表盘：统计概览 + 快速入口 |
+| `/admin/users` | UserList.vue | ADMIN | 用户管理：搜索/封禁/解封/徽章展示 |
+| `/admin/demands` | DemandList.vue | ADMIN | 需求管理：表格+列表双模式/筛选/删除 |
+| `/admin/reports` | ReportList.vue | ADMIN | 举报管理：状态栏筛选/处理操作面板 |
+| `/demands/my/favorites` | FavoriteList.vue | 登录 | 我的收藏：分页浏览已收藏需求 |
+| `/settings` | Settings.vue | 登录 | 设置：关于/彩蛋/退出登录 |
 
 ### 导航守卫
 
@@ -626,6 +698,11 @@ if (管理员路由 && 角色≠ADMIN)     → redirect('/')
 - 持久化：登录时写入 localStorage，页面刷新时自动恢复
 - 退出：清除 localStorage + Pinia state，路由重定向
 
+**BadgeToastStore** (`stores/badgeToast.js`)：
+- 持久化：`earnedBadgeKeys` 存入 localStorage，防止重复弹窗
+- `checkNewBadges()`：异步检测新获得徽章并加入弹窗队列
+- 全屏动画：`<teleport to="body">` 实现跨路由覆盖层动效
+
 ### API 层设计
 
 **Axios 实例** (`api/client.js`)：
@@ -633,7 +710,7 @@ if (管理员路由 && 角色≠ADMIN)     → redirect('/')
 - **请求拦截器**：自动从 localStorage 读取 Token 并注入 Authorization 头
 - **响应拦截器**：自动解包 `response.data.body.data`；非 200 状态码提取错误信息并 Toast 提示；401 自动清除登录态跳转登录页；网络错误统一 Toast "网络错误"
 
-**API 模块**（7 个）：`user.js`, `demand.js`, `points.js`, `chat.js`, `notification.js`, `evaluation.js`, `admin.js` — 每个模块导出纯函数，返回 Promise。
+**API 模块**（10 个）：`user.js`, `demand.js`, `points.js`, `chat.js`, `notification.js`, `evaluation.js`, `admin.js`, `badge.js`, `report.js`, `favorite.js` — 每个模块导出纯函数，返回 Promise。
 
 ### 共享常量
 
@@ -674,7 +751,7 @@ if (管理员路由 && 角色≠ADMIN)     → redirect('/')
 
 | 工具 | 用途 |
 |------|------|
-| **Flyway** | 数据库版本迁移，11 版 SQL 脚本，支持从零建库到最新 Schema |
+| **Flyway** | 数据库版本迁移，14 版 SQL 脚本（V1–V14），支持从零建库到最新 Schema |
 | **`prepare_for_demo.sh`** | 演示数据填充脚本（471 行），通过 REST API 创建 11 个用户 + ~28 条需求 + 签到/组队/评价/隐私数据 |
 | **SSL 证书生成命令** | README 内提供完整的 keytool + openssl 命令，一键生成前后端开发证书 |
 | **环境变量覆盖** | `JWT_SECRET` 和 `DB_PASSWORD` 支持环境变量注入，避免敏感信息硬编码 |
@@ -690,17 +767,17 @@ if (管理员路由 && 角色≠ADMIN)     → redirect('/')
 │   │   ├── common/                   # ApiResult、ResultCode、BusinessException、全局异常处理
 │   │   ├── config/                   # SecurityConfig、CorsConfig、MyBatisPlusConfig、DataInitializer
 │   │   ├── security/                 # JwtTokenProvider、JwtAuthenticationFilter、JwtProperties
-│   │   ├── entity/                   # 数据实体：User、Demand、UserAccount、PointsTransaction 等
-│   │   │   └── enums/                # 常量类：DemandStatus、PointsTransactionType、NotificationType、RewardType 等 6 个
+│   │   ├── entity/                   # 数据实体：User、Demand、UserAccount、Favorite、Report 等 15 个
+│   │   │   └── enums/                # 常量类：DemandStatus、PointsTransactionType、BadgeDefinition 等 7 个
 │   │   ├── dto/                      # 请求/响应 DTO（request/response 子包）
-│   │   ├── mapper/                   # MyBatis-Plus Mapper 接口（12 个）
-│   │   ├── service/                  # 业务接口 + impl 实现（10 个 Service）
-│   │   └── controller/               # REST 控制器（8 个 Controller）
+│   │   ├── mapper/                   # MyBatis-Plus Mapper 接口（17 个）
+│   │   ├── service/                  # 业务接口 + impl 实现（14 个 Service）
+│   │   └── controller/               # REST 控制器（10 个 Controller）
 │   └── src/main/resources/
 │       ├── application.yml           # 全局配置
 │       ├── application-dev.yml       # 开发环境（MySQL 连接、Flyway、JWT）
 │       ├── application-test.yml      # 测试环境（H2 内存库）
-│       └── db/migration/             # Flyway 迁移脚本 V1-V11
+│       └── db/migration/             # Flyway 迁移脚本 V1-V14
 ├── frontend/                         # Vue 3 前端
 │   └── src/
 │       ├── router/index.js           # 路由配置（12 页 + 导航守卫）
@@ -710,17 +787,21 @@ if (管理员路由 && 角色≠ADMIN)     → redirect('/')
 │       │   ├── user.js / demand.js / points.js
 │       │   ├── chat.js / notification.js
 │       │   └── evaluation.js / admin.js
-│       ├── views/                    # 12 个页面组件
+│       ├── views/                    # 18 个页面组件
 │       │   ├── Login.vue / Register.vue
-│       │   ├── Home.vue / Profile.vue
+│       │   ├── Home.vue / Profile.vue / Settings.vue
 │       │   ├── DemandList.vue / DemandPublish.vue / DemandDetail.vue
-│       │   ├── MyOrders.vue / PointsHistory.vue
-│       │   ├── Notifications.vue / ChatDetail.vue
-│       │   └── admin/UserList.vue
+│       │   ├── MyOrders.vue / PointsHistory.vue / FavoriteList.vue
+│       │   ├── Notifications.vue / ChatDetail.vue / BadgeList.vue
+│       │   └── admin/
+│       │       ├── AdminDashboard.vue / UserList.vue
+│       │       ├── DemandList.vue / ReportList.vue
 │       ├── components/               # 可复用组件
 │       │   ├── NavActions.vue        # 导航栏右侧操作区
 │       │   ├── ImageViewer.vue       # 全屏图片预览
-│       │   └── EmojiPicker.vue       # Emoji 选择面板
+│       │   ├── EmojiPicker.vue       # Emoji 选择面板
+│       │   ├── BadgeOverlay.vue      # 徽章角标（头像叠加）
+│       │   └── BadgeToast.vue        # 徽章获得全屏动效
 │       ├── constants/
 │       │   └── demandTypes.js        # 需求类型共享常量（单一数据源）
 │       └── styles/
@@ -881,6 +962,8 @@ mariadb -u root campus_help < dump.sql
 | 完成需求 | 5 条 | 经 accept→complete 完整流程，产生积分转移 |
 | 组队 | 5 个队伍 | 含 7 条申请和 5 条审批（有 pending 状态） |
 | 互评 | 10 条 | 5 对完成需求的双向评价 |
+| 举报数据 | 3 条 | 含 pending/resolved/dismissed 各状态 |
+| 徽章数据 | 部分用户 | 自动检测颁发的各项成就徽章 |
 | 匿名用户 | 2 人 | "热心市民小王""匿名雷锋"，测试匿名发布效果 |
 
 脚本特性：
