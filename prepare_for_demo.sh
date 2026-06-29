@@ -185,76 +185,76 @@ publish_demand() {
 # --- 跑腿代取 (errand) ---
 info "跑腿代取…"
 D_errand_1=$(publish_demand "zs"  "代取韵达快递 [张三→李四 已完成]" \
-  '{"type":"errand","title":"代取韵达快递","description":"韵达快递在2号驿站，快递单号YT123456789，比较大件最好带个小推车。取件码在短信里。","location":"2号菜鸟驿站","rewardType":"point","rewardAmount":20,"attributes":{"pickup_location":"东区2号菜鸟驿站"},"deadline":"2026-06-12T18:00:00"}')
+  '{"type":"errand","title":"代取韵达快递","description":"韵达快递在2号驿站，快递单号YT123456789，比较大件最好带个小推车。取件码在短信里。","location":"2号菜鸟驿站","rewardType":"point","rewardAmount":20,"attributes":{"pickup_location":"东区2号菜鸟驿站"},"deadline":"2028-06-12T18:00:00"}')
 D_errand_2=$(publish_demand "ww"  "南门代取外卖 [王五→张三 进行中]" \
-  '{"type":"errand","title":"南门代取外卖","description":"外卖快到了，我下午有公司不方便出校门。美团外卖，在保卫处旁边的外卖架。","location":"南门保卫处旁外卖架","rewardType":"point","rewardAmount":15,"attributes":{"pickup_location":"南门保卫处旁外卖架"},"deadline":"2026-06-11T13:00:00"}')
+  '{"type":"errand","title":"南门代取外卖","description":"外卖快到了，我下午有公司不方便出校门。美团外卖，在保卫处旁边的外卖架。","location":"南门保卫处旁外卖架","rewardType":"point","rewardAmount":15,"attributes":{"pickup_location":"南门保卫处旁外卖架"},"deadline":"2028-06-11T13:00:00"}')
 D_errand_3=$(publish_demand "ls"  "图书馆代还书 [李四 开放]" \
-  '{"type":"errand","title":"图书馆代还书","description":"有两本书到期了，《算法导论》和《计算机网络》，在三楼西区。帮忙去图书馆还一下就行！","location":"校图书馆三楼西区","rewardType":"point","rewardAmount":10,"attributes":{"pickup_location":"校图书馆"},"deadline":"2026-06-13T10:00:00"}')
+  '{"type":"errand","title":"图书馆代还书","description":"有两本书到期了，《算法导论》和《计算机网络》，在三楼西区。帮忙去图书馆还一下就行！","location":"校图书馆三楼西区","rewardType":"point","rewardAmount":10,"attributes":{"pickup_location":"校图书馆"},"deadline":"2028-06-13T10:00:00"}')
 D_errand_4=$(publish_demand "zl"  "代买早餐包子豆浆 [赵六 开放]" \
-  '{"type":"errand","title":"代买早餐包子豆浆","description":"明天早上帮我带两个肉包一杯豆浆，二号食堂一楼包子铺，宿舍送到北区 5 号楼。","location":"二号食堂","rewardType":"point","rewardAmount":8,"attributes":{"pickup_location":"二号食堂一楼"},"deadline":"2026-06-12T08:00:00"}')
+  '{"type":"errand","title":"代买早餐包子豆浆","description":"明天早上帮我带两个肉包一杯豆浆，二号食堂一楼包子铺，宿舍送到北区 5 号楼。","location":"二号食堂","rewardType":"point","rewardAmount":8,"attributes":{"pickup_location":"二号食堂一楼"},"deadline":"2028-06-12T08:00:00"}')
 D_errand_5=$(publish_demand "sq"  "代打印明天考试资料 [孙七 已取消]" \
-  '{"type":"errand","title":"代打印明天考试资料","description":"打印明天的模电考试资料，大概10页，黑白双面。图书馆打印室就行。","location":"图书馆打印室","rewardType":"point","rewardAmount":12,"attributes":{"pickup_location":"图书馆打印室"},"deadline":"2026-06-11T18:00:00"}')
+  '{"type":"errand","title":"代打印明天考试资料","description":"打印明天的模电考试资料，大概10页，黑白双面。图书馆打印室就行。","location":"图书馆打印室","rewardType":"point","rewardAmount":12,"attributes":{"pickup_location":"图书馆打印室"},"deadline":"2028-06-11T18:00:00"}')
 D_errand_6=$(publish_demand "cxh" "代取京东快递 [陈小红 开放]" \
-  '{"type":"errand","title":"代取京东快递","description":"京东快递到了，在一号驿站。是个小包裹，很轻。取件码 JD987654。","location":"一号驿站","rewardType":"point","rewardAmount":25,"attributes":{"pickup_location":"一号驿站"},"deadline":"2026-06-15T12:00:00"}')
+  '{"type":"errand","title":"代取京东快递","description":"京东快递到了，在一号驿站。是个小包裹，很轻。取件码 JD987654。","location":"一号驿站","rewardType":"point","rewardAmount":25,"attributes":{"pickup_location":"一号驿站"},"deadline":"2028-06-15T12:00:00"}')
 
 # --- 二手交易 (trade) ---
 info "二手交易…"
 D_trade_1=$(publish_demand "zs"  "出售二手《数据结构》教材 [张三→王五 已完成]" \
-  '{"type":"trade","title":"出售二手《数据结构》教材","description":"严蔚敏版本，九成新，几乎没有笔记。期末考试复习必备！附赠往年期末真题。","location":"北区宿舍 7 号楼","rewardType":"point","rewardAmount":30,"deadline":"2026-06-20T12:00:00"}')
+  '{"type":"trade","title":"出售二手《数据结构》教材","description":"严蔚敏版本，九成新，几乎没有笔记。期末考试复习必备！附赠往年期末真题。","location":"北区宿舍 7 号楼","rewardType":"point","rewardAmount":30,"deadline":"2028-06-20T12:00:00"}')
 D_trade_2=$(publish_demand "ls"  "出售九成新台灯 [李四 开放]" \
-  '{"type":"trade","title":"出售九成新台灯","description":"LED护眼台灯，三档调光，USB充电。原价89，毕业带不走。","location":"南区宿舍 3 号楼","rewardType":"point","rewardAmount":25,"deadline":"2026-06-25T12:00:00"}')
+  '{"type":"trade","title":"出售九成新台灯","description":"LED护眼台灯，三档调光，USB充电。原价89，毕业带不走。","location":"南区宿舍 3 号楼","rewardType":"point","rewardAmount":25,"deadline":"2028-06-25T12:00:00"}')
 D_trade_3=$(publish_demand "zb"  "出售闲置机械键盘 [周八 开放]" \
-  '{"type":"trade","title":"出售闲置机械键盘","description":"IKBC C87 红轴，用了半年，换了新的所以出。手感很好，送一套 PBT 键帽。","location":"北区宿舍 2 号楼","rewardType":"point","rewardAmount":80,"deadline":"2026-06-30T12:00:00"}')
+  '{"type":"trade","title":"出售闲置机械键盘","description":"IKBC C87 红轴，用了半年，换了新的所以出。手感很好，送一套 PBT 键帽。","location":"北区宿舍 2 号楼","rewardType":"point","rewardAmount":80,"deadline":"2028-06-30T12:00:00"}')
 D_trade_4=$(publish_demand "sq"  "出售二手自行车 [孙七→张三 进行中]" \
-  '{"type":"trade","title":"出售二手自行车","description":"捷安特 ATX 660，七成新，变速正常，前后轮胎刚换新的。有车锁。","location":"北区车棚","rewardType":"point","rewardAmount":150,"deadline":"2026-06-28T12:00:00"}')
+  '{"type":"trade","title":"出售二手自行车","description":"捷安特 ATX 660，七成新，变速正常，前后轮胎刚换新的。有车锁。","location":"北区车棚","rewardType":"point","rewardAmount":150,"deadline":"2028-06-28T12:00:00"}')
 D_trade_5=$(publish_demand "ww"  "出售《算法导论》二手 [王五 已取消]" \
-  '{"type":"trade","title":"出售《算法导论》二手","description":"CLRS 原版影印，计算机专业圣经。书角有轻微折痕，但不影响阅读。","location":"南区宿舍 5 号楼","rewardType":"point","rewardAmount":35,"deadline":"2026-06-22T12:00:00"}')
+  '{"type":"trade","title":"出售《算法导论》二手","description":"CLRS 原版影印，计算机专业圣经。书角有轻微折痕，但不影响阅读。","location":"南区宿舍 5 号楼","rewardType":"point","rewardAmount":35,"deadline":"2028-06-22T12:00:00"}')
 D_trade_6=$(publish_demand "zs2" "二手显示器 24寸 [郑十 开放]" \
-  '{"type":"trade","title":"二手显示器 24寸","description":"Dell U2415 24寸 1080P IPS屏，色彩很棒，做设计/写代码都很合适。箱说全。","location":"南区宿舍 1 号楼","rewardType":"point","rewardAmount":200,"deadline":"2026-06-30T12:00:00"}')
+  '{"type":"trade","title":"二手显示器 24寸","description":"Dell U2415 24寸 1080P IPS屏，色彩很棒，做设计/写代码都很合适。箱说全。","location":"南区宿舍 1 号楼","rewardType":"point","rewardAmount":200,"deadline":"2028-06-30T12:00:00"}')
 
 # --- 组队匹配 (team) ---
 info "组队匹配…"
 D_team_1=$(publish_demand "zb"  "组队参加蓝桥杯校赛 [周八 开放]" \
-  '{"type":"team","title":"组队参加蓝桥杯校赛","description":"蓝桥杯校赛选拔，需要一个三人小队。我擅长算法，再找两个队友。最好有 C++/Java 基础。","location":"信息学院实验室","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"competition"},"deadline":"2026-06-25T12:00:00"}')
+  '{"type":"team","title":"组队参加蓝桥杯校赛","description":"蓝桥杯校赛选拔，需要一个三人小队。我擅长算法，再找两个队友。最好有 C++/Java 基础。","location":"信息学院实验室","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"competition"},"deadline":"2028-06-25T12:00:00"}')
 D_team_2=$(publish_demand "zs"  "周末打篮球 4缺1 [张三 开放]" \
-  '{"type":"team","title":"周末打篮球 4缺1","description":"周末下午在体育馆篮球场组队打球，现在有3个人，再来1个就能凑一波。水平不限～","location":"体育馆篮球场","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"club"},"deadline":"2026-06-14T14:00:00"}')
+  '{"type":"team","title":"周末打篮球 4缺1","description":"周末下午在体育馆篮球场组队打球，现在有3个人，再来1个就能凑一波。水平不限～","location":"体育馆篮球场","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"club"},"deadline":"2028-06-14T14:00:00"}')
 D_team_3=$(publish_demand "cxh" "图书馆组队自习 [陈小红 进行中]" \
-  '{"type":"team","title":"图书馆组队自习","description":"期末季，找个学习搭子一起泡图书馆互相监督。每天 8:00-22:00，可以轮流占座。","location":"校图书馆","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"course_project"},"deadline":"2026-06-20T12:00:00"}')
+  '{"type":"team","title":"图书馆组队自习","description":"期末季，找个学习搭子一起泡图书馆互相监督。每天 8:00-22:00，可以轮流占座。","location":"校图书馆","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":4,"team_type":"course_project"},"deadline":"2028-06-20T12:00:00"}')
 D_team_4=$(publish_demand "wj"  "组队参加大创项目 [吴九 开放]" \
-  '{"type":"team","title":"组队参加大创项目","description":"大创项目申报，课题是「校园互助小程序优化」，需要2-3个队友。欢迎有前端/后端经验的同学。","location":"创新楼 301","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":3,"team_type":"competition"},"deadline":"2026-06-30T12:00:00"}')
+  '{"type":"team","title":"组队参加大创项目","description":"大创项目申报，课题是「校园互助小程序优化」，需要2-3个队友。欢迎有前端/后端经验的同学。","location":"创新楼 301","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":3,"team_type":"competition"},"deadline":"2028-06-30T12:00:00"}')
 D_team_5=$(publish_demand "lxm" "求羽毛球搭子 [林小明 开放]" \
-  '{"type":"team","title":"求羽毛球搭子","description":"平时晚上或周末打羽毛球，我水平中等（学过一年多）。希望在体育馆打。","location":"体育馆羽毛球馆","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":2,"team_type":"club"},"deadline":"2026-06-18T12:00:00"}')
+  '{"type":"team","title":"求羽毛球搭子","description":"平时晚上或周末打羽毛球，我水平中等（学过一年多）。希望在体育馆打。","location":"体育馆羽毛球馆","rewardType":"donation","rewardAmount":0,"attributes":{"team_size":2,"team_type":"club"},"deadline":"2028-06-18T12:00:00"}')
 
 # --- 失物招领 (lost_found) ---
 info "失物招领…"
 D_lf_1=$(publish_demand "zl"  "失物：校园卡（学号 2023...） [赵六 开放]" \
-  '{"type":"lost_found","title":"失物：校园卡（学号 20230112...）","description":"今天上午在二教到食堂的路上丢了校园卡，卡号记不太清了，是2023开头的。有捡到的同学麻烦联系我！","location":"二教→食堂沿线","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"LOST"},"deadline":"2026-06-18T12:00:00"}')
+  '{"type":"lost_found","title":"失物：校园卡（学号 20230112...）","description":"今天上午在二教到食堂的路上丢了校园卡，卡号记不太清了，是2023开头的。有捡到的同学麻烦联系我！","location":"二教→食堂沿线","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"LOST"},"deadline":"2028-06-18T12:00:00"}')
 D_lf_2=$(publish_demand "zs"  "捡到一把钥匙（二教 301） [张三 开放]" \
-  '{"type":"lost_found","title":"捡到一把钥匙（二教 301）","description":"在二教 301 教室捡到一把钥匙，上面有一个卡通钥匙扣。失主请联系我认领。","location":"二教 301","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"FOUND"},"deadline":"2026-06-20T12:00:00"}')
+  '{"type":"lost_found","title":"捡到一把钥匙（二教 301）","description":"在二教 301 教室捡到一把钥匙，上面有一个卡通钥匙扣。失主请联系我认领。","location":"二教 301","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"FOUND"},"deadline":"2028-06-20T12:00:00"}')
 D_lf_3=$(publish_demand "sq"  "丢失黑色钱包 [孙七 已取消]" \
-  '{"type":"lost_found","title":"丢失黑色钱包","description":"昨天在一食堂一楼吃饭时遗失黑色钱包，里面有身份证和银行卡。已经挂失了。","location":"一号食堂一楼","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"LOST"},"deadline":"2026-06-15T12:00:00"}')
+  '{"type":"lost_found","title":"丢失黑色钱包","description":"昨天在一食堂一楼吃饭时遗失黑色钱包，里面有身份证和银行卡。已经挂失了。","location":"一号食堂一楼","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"LOST"},"deadline":"2028-06-15T12:00:00"}')
 D_lf_4=$(publish_demand "ls"  "捡到 U 盘（图书馆三楼） [李四 开放]" \
-  '{"type":"lost_found","title":"捡到 U 盘（图书馆三楼）","description":"在图书馆三楼自习室捡到一个 U 盘，金士顿 32G 蓝色。失主可以通过描述文件内容来认领。","location":"图书馆三楼自习室","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"FOUND"},"deadline":"2026-06-25T12:00:00"}')
+  '{"type":"lost_found","title":"捡到 U 盘（图书馆三楼）","description":"在图书馆三楼自习室捡到一个 U 盘，金士顿 32G 蓝色。失主可以通过描述文件内容来认领。","location":"图书馆三楼自习室","rewardType":"donation","rewardAmount":0,"attributes":{"lf_type":"FOUND"},"deadline":"2028-06-25T12:00:00"}')
 
 # --- 学习互助 (study) ---
 info "学习互助…"
 D_study_1=$(publish_demand "lxm" "求辅导高等数学 [林小明 开放]" \
-  '{"type":"study","title":"求辅导高等数学","description":"高数下册，多重积分和曲线曲面积分不太懂。希望找一个数学好的同学辅导 2-3 次，每次 1 小时。","location":"图书馆或自习室","rewardType":"point","rewardAmount":50,"deadline":"2026-06-25T12:00:00"}')
+  '{"type":"study","title":"求辅导高等数学","description":"高数下册，多重积分和曲线曲面积分不太懂。希望找一个数学好的同学辅导 2-3 次，每次 1 小时。","location":"图书馆或自习室","rewardType":"point","rewardAmount":50,"deadline":"2028-06-25T12:00:00"}')
 D_study_2=$(publish_demand "cxh" "辅导 C 语言编程 [陈小红→张三 进行中]" \
-  '{"type":"study","title":"辅导 C 语言编程","description":"大一下 C 语言，指针和链表部分需要辅导。最好有项目经验的学长学姐。","location":"信息学院机房","rewardType":"point","rewardAmount":40,"deadline":"2026-06-20T12:00:00"}')
+  '{"type":"study","title":"辅导 C 语言编程","description":"大一下 C 语言，指针和链表部分需要辅导。最好有项目经验的学长学姐。","location":"信息学院机房","rewardType":"point","rewardAmount":40,"deadline":"2028-06-20T12:00:00"}')
 D_study_3=$(publish_demand "hxg" "求线性代数期末辅导 [黄小刚 开放]" \
-  '{"type":"study","title":"求线性代数期末辅导","description":"线代期末冲刺！特征值特征向量、二次型这块比较薄弱。求学霸救命！","location":"图书馆","rewardType":"point","rewardAmount":60,"deadline":"2026-06-22T12:00:00"}')
+  '{"type":"study","title":"求线性代数期末辅导","description":"线代期末冲刺！特征值特征向量、二次型这块比较薄弱。求学霸救命！","location":"图书馆","rewardType":"point","rewardAmount":60,"deadline":"2028-06-22T12:00:00"}')
 D_study_4=$(publish_demand "zl"  "求辅导英语四级 [赵六→陈小红 已完成]" \
-  '{"type":"study","title":"求辅导英语四级","description":"四级考试快到了，求英语好的同学辅导，重点在阅读和写作。","location":"外语楼","rewardType":"point","rewardAmount":30,"deadline":"2026-06-10T18:00:00"}')
+  '{"type":"study","title":"求辅导英语四级","description":"四级考试快到了，求英语好的同学辅导，重点在阅读和写作。","location":"外语楼","rewardType":"point","rewardAmount":30,"deadline":"2028-06-10T18:00:00"}')
 
 # --- 其他 (other) ---
 info "其他…"
 D_other_1=$(publish_demand "hxg" "帮忙搬家（北区宿舍→南区） [黄小刚 开放]" \
-  '{"type":"other","title":"帮忙搬家（北区宿舍→南区）","description":"从北区 7 号楼搬到南区 3 号楼，东西不算多（几个纸箱+被子+小家电）。需要一个帮手，大约 1-2 小时。","location":"北区7号楼→南区3号楼","rewardType":"point","rewardAmount":100,"deadline":"2026-06-18T12:00:00"}')
+  '{"type":"other","title":"帮忙搬家（北区宿舍→南区）","description":"从北区 7 号楼搬到南区 3 号楼，东西不算多（几个纸箱+被子+小家电）。需要一个帮手，大约 1-2 小时。","location":"北区7号楼→南区3号楼","rewardType":"point","rewardAmount":100,"deadline":"2028-06-18T12:00:00"}')
 D_other_2=$(publish_demand "zs2" "帮忙装系统 win11 [郑十 开放]" \
-  '{"type":"other","title":"帮忙装系统 win11","description":"笔记本想重装 win11 系统，需要有 U 盘启动盘。我对装机不太熟，求帮忙。","location":"南区宿舍 1 号楼","rewardType":"point","rewardAmount":20,"deadline":"2026-06-20T12:00:00"}')
+  '{"type":"other","title":"帮忙装系统 win11","description":"笔记本想重装 win11 系统，需要有 U 盘启动盘。我对装机不太熟，求帮忙。","location":"南区宿舍 1 号楼","rewardType":"point","rewardAmount":20,"deadline":"2028-06-20T12:00:00"}')
 D_other_3=$(publish_demand "lxm" "求帮忙修理自行车链条 [林小明→李四 已完成]" \
-  '{"type":"other","title":"求帮忙修理自行车链条","description":"自行车链条掉了，自己装不回去，求会修车的同学帮忙。在北区车棚。","location":"北区车棚","rewardType":"point","rewardAmount":15,"deadline":"2026-06-09T18:00:00"}')
+  '{"type":"other","title":"求帮忙修理自行车链条","description":"自行车链条掉了，自己装不回去，求会修车的同学帮忙。在北区车棚。","location":"北区车棚","rewardType":"point","rewardAmount":15,"deadline":"2028-06-09T18:00:00"}')
 
 # ---------------------------------------------------------------------------
 # Step 5: 操作需求（接单/完成/取消）
