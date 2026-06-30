@@ -1,0 +1,111 @@
+@startuml
+skinparam backgroundColor white
+skinparam packageBackgroundColor #FAFAFA
+skinparam packageBorderColor #333333
+skinparam packageFontSize 15
+skinparam componentFontSize 12
+skinparam defaultFontSize 12
+skinparam ArrowColor #666666
+skinparam titleFontSize 18
+scale 1.2
+
+title 校园互助平台 — 逻辑包图（Package Diagram）
+
+package "cn.seecoder.campushelp" #F5F5F5 {
+
+  package "controller" as ctrl #E3F2FD {
+    [UserController]
+    [DemandController]
+    [ChatController]
+    [AdminController]
+    [BadgeController]
+    [EvaluationController]
+    [NotificationController]
+    [PointsController]
+    [ReportController]
+    [TeamMemberController]
+  }
+
+  package "service" as svc #E8F5E9 {
+    [UserService]
+    [DemandService]
+    [ChatService]
+    [AdminService]
+    [BadgeService]
+    [EvaluationService]
+    [NotificationService]
+    [PointsService]
+    [ReportService]
+    [FavoriteService]
+    [TeamMemberService]
+  }
+
+  package "mapper" as mapper #FFF3E0 {
+    [UserMapper]
+    [DemandMapper]
+    [ConversationMapper]
+    [MessageMapper]
+    [EvaluationMapper]
+    [NotificationMapper]
+    [PointsTransactionMapper]
+    [DailyCheckinMapper]
+    [ReportMapper]
+    [TeamMemberMapper]
+    [FavoriteMapper]
+    [BadgeMapper]
+    [UserBadgeMapper]
+    [WornBadgeMapper]
+    [UserAccountMapper]
+    [PrivacyProfileMapper]
+  }
+
+  package "entity" as entity #FCE4EC {
+    [User]
+    [Demand]
+    [Conversation]
+    [Message]
+    [Evaluation]
+    [Notification]
+    [PointsTransaction]
+    [DailyCheckin]
+    [Report]
+    [TeamMember]
+    [Favorite]
+    [Badge / UserBadge\n/ WornBadge]
+    [UserAccount]
+    [PrivacyProfile]
+  }
+
+  package "dto" as dto #F3E5F5 {
+    [request/* (13个)]
+    [response/* (10个)]
+  }
+
+  package "config" as config #ECEFF1 {
+    [SecurityConfig]
+    [WebSocketConfig]
+    [CorsConfig]
+    [WebMvcConfig]
+    [MyBatisPlusConfig]
+  }
+
+  package "security" as sec #E0E0E0 {
+    [JwtTokenProvider]
+    [JwtAuthFilter]
+  }
+
+  package "common" as common #E0E0E0 {
+    [ApiResult]
+    [BusinessException]
+    [GlobalExceptionHandler]
+  }
+}
+
+ctrl ..> svc : «use»
+ctrl ..> dto : «use»
+svc ..> mapper : «use»
+svc ..> dto : «use»
+mapper ..> entity : «use»
+sec ..> config : «use»
+
+@enduml

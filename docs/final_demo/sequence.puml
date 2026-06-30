@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontSize 13
+skinparam sequenceFontSize 13
+skinparam ArrowColor #444444
+skinparam ActorBackgroundColor #E3F2FD
+skinparam ActorBorderColor #1565C0
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #333333
+skinparam ParticipantFontSize 14
+skinparam titleFontSize 18
+skinparam noteFontSize 12
+scale 1.2
+
+title 校园互助平台 — 系统顺序图：「发布跑腿需求」
+
+actor "用户\n(发布者)" as user
+
+participant "展示层\n(Vue 3)" as ui
+participant "逻辑层\n(DemandController\n+ DemandService)" as logic
+participant "数据层\n(DemandMapper\n+ PointsMapper)" as data
+
+user -> ui : 填写表单（类型/标题/描述/报酬）
+ui -> ui : 前端校验（必填字段、\n图片大小、积分余额）
+
+user -> ui : 点击「发布」按钮
+
+ui -> logic : POST /api/v1/demands\n{type, title, description,\nrewardType, rewardAmount}
+
+logic -> data : INSERT demand\n(status=OPEN)
+data --> logic : demandId
+
+logic -> data : INSERT points_transaction\n(type=PUBLISH, amount=-30)
+data --> logic : txId
+
+logic -> data : UPDATE user_account\nSET frozen_points += 30
+data --> logic : ok
+
+logic --> ui : ApiResult<DemandResponse>\n{code=200, data={demandId,...}}
+ui --> user : Toast「发布成功」\n自动跳转需求列表
+
+note over ui, data
+  <b>接口定义</b>
+  展示层→逻辑层: DemandService.publish(userId, CreateDemandRequest) → DemandResponse
+  逻辑层→数据层: DemandMapper.insert(Demand) → int
+                   PointsTransactionMapper.insert(tx) → int
+                   UserAccountMapper.update(account) → int
+end note
+
+@enduml

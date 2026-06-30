@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontSize 14
+skinparam stateFontSize 16
+skinparam ArrowColor #444444
+skinparam stateBackgroundColor #F5F5F5
+skinparam stateBorderColor #333333
+skinparam titleFontSize 18
+skinparam noteFontSize 13
+scale 1.5
+
+title 校园互助平台 — Demand 需求状态图（State Diagram）
+
+[*] -right-> OPEN : 发布需求\n[entry / 冻结积分、创建通知]
+
+OPEN -down-> IN_PROGRESS : 接单\n[action: 设置接单人\n冻结积分给发布者\n通知双方]
+OPEN -right-> CANCELLED : 取消\n[action: 退积分解冻\n通知相关方]
+
+IN_PROGRESS -down-> COMPLETED : 完成\n[action: 解冻积分转账\n解锁徽章检测\n创建评价通知]
+IN_PROGRESS -right-> CANCELLED : 取消\n[action: 退积分解冻\n通知相关方]
+
+COMPLETED -down-> [*] : 评价完成\n[系统归档]
+CANCELLED -down-> [*]
+
+note right of IN_PROGRESS
+  <b>主体: 需求订单</b>
+  每个状态对应一个有穷的
+  时间区间
+end note
+
+note bottom of COMPLETED
+  完成不可逆 —— 一旦完成
+  不能取消或重新打开
+end note
+
+@enduml

@@ -1,0 +1,77 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontSize 14
+skinparam usecaseFontSize 14
+skinparam actorFontSize 14
+skinparam ArrowColor #444444
+skinparam ActorBackgroundColor #E3F2FD
+skinparam ActorBorderColor #1565C0
+skinparam usecaseBackgroundColor #F5F5F5
+skinparam usecaseBorderColor #333333
+skinparam titleFontSize 18
+skinparam packageFontSize 15
+scale 1.3
+
+title 校园互助平台 — 用例图（Use Case Diagram）
+
+left to right direction
+
+actor "注册用户" as user #E3F2FD
+actor "管理员" as admin #FFE0B2
+
+rectangle "校园互助平台" #FAFAFA {
+
+  package "用户功能" #E8F5E9 {
+    usecase "注册 / 登录" as UC1
+    usecase "签到获取积分" as UC2
+    usecase "管理个人信息" as UC3
+  }
+
+  package "需求核心" #E3F2FD {
+    usecase "发布需求" as UC4
+    usecase "浏览与搜索需求" as UC5
+    usecase "接单 / 完成需求" as UC6
+    usecase "取消需求" as UC7
+    usecase "收藏需求" as UC8
+    usecase "编辑已发布需求" as UC9
+  }
+
+  package "协作与社交" #F3E5F5 {
+    usecase "组队（申请/审批）" as UC10
+    usecase "私信聊天" as UC11
+    usecase "评价与评分" as UC12
+    usecase "成就徽章展示" as UC13
+    usecase "举报不当内容" as UC14
+  }
+
+  package "管理后台" #FFE0B2 {
+    usecase "仪表盘统计" as UC15
+    usecase "用户管理（封禁）" as UC16
+    usecase "需求管理（删除）" as UC17
+    usecase "举报处理" as UC18
+  }
+}
+
+user --> UC1
+user --> UC2
+user --> UC3
+user --> UC4
+user --> UC5
+user --> UC6
+user --> UC7
+user --> UC8
+user --> UC9
+user --> UC10
+user --> UC11
+user --> UC12
+user --> UC13
+user --> UC14
+
+admin --> UC15
+admin --> UC16
+admin --> UC17
+admin --> UC18
+
+admin --> UC1 : 登录
+
+@enduml
